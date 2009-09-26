@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <generic.h>
 
 #include "hw.h"
 #include "led.h"
@@ -38,6 +39,10 @@ nmea_PGN_t 			inPGN, outPGN;
 
 nmea_CA_NAME_t		nmea_CA_Name;
 
+WORD				nmea_HW_EN_Reg_Addr;
+WORD				nmea_HW_EN_Reg_Bit;
+WORD				nmea_HW_Rate_Reg_Addr;
+WORD				nmea_HW_Rate_Reg_Bit;
 
 //---------------------------------------------------------------------------------------------
 // Set up CAN Module for baud rate = 250kBit, 12 TQ with sample point at 80% of bit time.
@@ -132,7 +137,7 @@ void nmea_Initialize() {
 	C1CTRL1bits.REQOP = 0;
     while( C1CTRL1bits.OPMODE != 0 );
 
-	nmea_DRIVER_ENABLE = 1;	// Go on bus;
+	hw_WritePort( hw_CAN_EN, 1);	// Go on bus;
 }
 
 
@@ -299,6 +304,21 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 		events_Push( event_NMEA_MESSAGE, 0, 0 );
 	}
 }
+
+//---------------------------------------------------------------------------------------------
+// Indirectly addressed hardware manipulation
+/*
+void nmea_EnableDriver() {
+	__asm__(
+		"BTST.Z W0, W1 \n MOV W0, 0 \n "
+		:""(nmea_HW_EN_Reg_Addr) 
+		:""(nmea_HW_EN_Reg_Bit)
+	);
+}
+
+void nmea_DisableDriver() {
+}
+*/
 
 //---------------------------------------------------------------------------------------------
 // DMA interrupt handlers.

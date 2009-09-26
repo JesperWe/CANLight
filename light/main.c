@@ -4,6 +4,7 @@
 #include <pps.h>
 #include <libpic30.h>
 #include <limits.h>
+#include <generic.h>
 
 #include "hw.h"
 #include "led.h"
@@ -13,9 +14,9 @@
 
 void goodnight( void );
 
-_FOSCSEL( FNOSC_FRCPLL )
-_FWDT( FWDTEN_OFF )
-_FICD( ICS_PGD1 )
+//_FOSCSEL( FNOSC_FRCPLL )
+//_FWDT( FWDTEN_OFF )
+//_FICD( ICS_PGD1 )
 
 int main (void)
 {
@@ -26,21 +27,29 @@ int main (void)
 
 	hw_Initialize();
 
-	TRISBbits.TRISB14 = 0; // Debug
+	switch( hw_Type ) {
 
-	led_Initialize();
-
-	led_PresetLevel[ led_RED ] = 1.0;
-	led_PresetLevel[ led_WHITE ] = 0.5;
-
-	led_FadeToLevel( led_RED, 0.0, 2.0 );
-	led_FadeToLevel( led_WHITE, 0.0, 2.0 );
+		case hw_LEDLIGHT: {
+			led_Initialize();
+			led_PresetLevel[ led_RED ] = 1.0;
+			led_PresetLevel[ led_WHITE ] = 0.5;
+			led_FadeToLevel( led_RED, 0.0, 2.0 );
+			led_FadeToLevel( led_WHITE, 0.0, 2.0 );
+			break;
+		}
+		
+		case hw_SWITCH: {
+			ctrlkey_Initialize();
+			led_Initialize();
+			led_PresetLevel[ led_RED ] = 1.0;
+			led_CurrentLevel[ led_RED ] = led_GetPWMLevel( led_RED );
+			led_FadeToLevel( led_RED, 0.0, 2.0 );
+			break;
+		}
+	}
 
 	events_Initialize();
-
 	nmea_Initialize();
-
-	ctrlkey_Initialize();
 
 	// Main event loop. Send NMEA events on the bus if keys clicked,
 	// and respond to incoming commands.

@@ -9,20 +9,17 @@
 #define CTRLKEY_H_
 
 
-#define ctrlkey_NO_KEYS 0
-
-#define ctrlkey_KEY_0_PIN	PORTBbits.RB10
-#define ctrlkey_KEY_0_DIR	TRISBbits.TRISB10
-#define ctrlkey_KEY_0_CN	CNEN2bits.CN16IE
+#define ctrlkey_MAX_NO_KEYS 3
 
 #define ctrlkey_HOLDING_THRESHOLD 300
 
 //---------------------------------------------------------------------------------------------
 // Globals.
 
-extern unsigned char ctrlkey_KeyState[ctrlkey_NO_KEYS];
+extern unsigned char ctrlkey_KeyState[ctrlkey_MAX_NO_KEYS];
 extern unsigned short ctrlkey_States[3];
 extern unsigned short ctrlkey_Samples;
+extern unsigned short ctrlkey_NoKeys;
 extern unsigned char ctrlkey_EventPending;
 extern unsigned char ctrlkey_KeyHolding;
 

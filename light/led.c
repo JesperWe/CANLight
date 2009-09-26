@@ -1,5 +1,8 @@
 #include <p24hxxxx.h>
+#include <libpic30.h>
+#include <generic.h>
 #include "led.h"
+#include "hw.h"
 
 // Remappable pins:
 // RP20 - Red LED
@@ -19,13 +22,14 @@
 
 // Globals
 
-unsigned short led_FadeInProgress[led_NO_CHANNELS];	// True if we are fading the channel.
-unsigned short led_FadeStep[led_NO_CHANNELS];		// Current step in the fade.
-unsigned short led_FadeSteps[led_NO_CHANNELS];		// Total steps in the fade.
-float led_PresetLevel[led_NO_CHANNELS];
-float led_FadeTargetLevel[led_NO_CHANNELS];
-float led_FadeFromLevel[led_NO_CHANNELS];
-float led_CurrentLevel[led_NO_CHANNELS];
+unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];	// True if we are fading the channel.
+unsigned short led_FadeStep[led_MAX_NO_CHANNELS];		// Current step in the fade.
+unsigned short led_FadeSteps[led_MAX_NO_CHANNELS];		// Total steps in the fade.
+unsigned short led_NoChannels;
+float led_PresetLevel[led_MAX_NO_CHANNELS];
+float led_FadeTargetLevel[led_MAX_NO_CHANNELS];
+float led_FadeFromLevel[led_MAX_NO_CHANNELS];
+float led_CurrentLevel[led_MAX_NO_CHANNELS];
 
 unsigned char led_CanSleep;				// If all leds are fully on or off we can sleep.
 unsigned short led_SleepTimer;			// Actually this sleep timer is used for all modules, but it needs to be declared somewhere...
@@ -34,6 +38,13 @@ unsigned short led_SleepTimer;			// Actually this sleep timer is used for all mo
 // Set up PWM timers and fade LEDs to off.
 
 void led_Initialize( void ) {
+	int i;
+
+	switch( hw_Type ) {
+		case hw_LEDLIGHT:	led_NoChannels = 2; break;
+		case hw_SWITCH:		led_NoChannels = 1; break;
+		default:			led_NoChannels = 0; return;
+	}
 
 	// OC Module defaults:
 	//	Run in idle mode.
@@ -56,8 +67,6 @@ void led_Initialize( void ) {
 	led_CanSleep = 1;
 	led_SleepTimer = 0;
 
-	TRISC = 0xCF;	// RC4 and RC5 outputs;
-
 	// We use Timer3 for fades, set it up for level changes every 40 ms.
 
 	T3CONbits.TCS = 0;  		// Internal Clock.
@@ -66,27 +75,37 @@ void led_Initialize( void ) {
 	PR3 = 1094;					// For 25Hz.
 	T3CONbits.TON = 1;  		// Start Timer.
 
+	for( i=0; i<led_NoChannels; i++ ) {
+		led_CurrentLevel[i] = led_FadeFromLevel[i] = led_GetPWMLevel( i );
+		led_FadeInProgress[i] = 0;
+	}
+
 }
 
 
 //---------------------------------------------------------------------------------------------
 // Set one of the LED channels to a percentage brightness.
-// Attempt to linearize light output as function of duty cycle.
-// It turns out a square characteristic produces a nice feeling curve.
 
 void led_SetLevel( unsigned char color, float level ) {
 
 	float modLevel;
 	short dutycycle;
 
-	led_CurrentLevel[color] = level;
+	led_CurrentLevel[color] = modLevel = level;
+
+	// Attempt to linearize light output as function of duty cycle.
+	// It turns out a square characteristic produces a nice feeling curve.
 
 	modLevel = level * level;
 
 	modLevel = modLevel * led_PWM_PERIOD;
-	dutycycle = led_PWM_PERIOD - (short)modLevel;
 
-	if( dutycycle == led_PWM_PERIOD ) dutycycle++; // Remove last clock cycle for fully off.
+	if( !hw_PWMInverted ) {
+		dutycycle = led_PWM_PERIOD - (short)modLevel;
+		if( dutycycle == led_PWM_PERIOD ) dutycycle++; // Remove last clock cycle for fully off.
+	}
+
+	else dutycycle = (short)modLevel;
 
 	switch( color ) {
 		case led_RED: { OC1RS = dutycycle; break;	}
@@ -99,12 +118,17 @@ void led_SetLevel( unsigned char color, float level ) {
 // Get level from PWM registers.
 
 unsigned short led_PWMLevel( unsigned char color ) {
-
+	short level;
+	level = 0;
 	switch( color ) {
-		case led_RED:   { return OC1RS; }
-		case led_WHITE: { return OC2RS; }
+		case led_RED:   { level = OC1RS; break; }
+		case led_WHITE: { level = OC2RS; break;}
 	}
-	return 0;
+	if( hw_PWMInverted ) {
+		level = led_PWM_PERIOD - level;
+		if( level < 0 ) level = 0;
+	}
+	return level;
 }
 
 
@@ -181,7 +205,7 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
 	led_CanSleep = 1;
 	led_SleepTimer++;
 
-	for( i=0; i<led_NO_CHANNELS; i++ ) {
+	for( i=0; i<led_NoChannels; i++ ) {
 
 		if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
 			led_CanSleep = 0;

@@ -16,9 +16,10 @@
 //---------------------------------------------------------------------------------------------
 // Globals
 
-unsigned char ctrlkey_KeyState[ctrlkey_NO_KEYS];
+unsigned char ctrlkey_KeyState[ctrlkey_MAX_NO_KEYS];
 unsigned short ctrlkey_States[3];
 unsigned short ctrlkey_Samples;
+unsigned short ctrlkey_NoKeys;
 unsigned char ctrlkey_EventPending;
 unsigned char ctrlkey_KeyHolding;
 
@@ -26,22 +27,27 @@ unsigned char ctrlkey_KeyHolding;
 //---------------------------------------------------------------------------------------------
 
 void ctrlkey_Initialize( void ) {
-	char keyNo;
 
-	if( ctrlkey_NO_KEYS ) {
-	
-		for( keyNo=0; keyNo<ctrlkey_NO_KEYS; keyNo++ ) {
-			switch( keyNo ) {
-				case 0: ctrlkey_KEY_0_DIR = 1; ctrlkey_KEY_0_CN = 1; break;
-			}
-		}
-		
-		// Setup Change Notification Interrupts.
-	
-		CNEN2 = CNEN2bits.CN16IE;	// RB10
-		IEC1bits.CNIE = 1;
-		_CNIF = 0;
+	// XXX This is not hardware version independent at the moment, since we only have
+	// XXX one version which has any keys.
+
+	switch( hw_Type ) {
+		case hw_LEDLIGHT:	ctrlkey_NoKeys = 0; return;
+		case hw_SWITCH:		ctrlkey_NoKeys = 3; break;
+		default:			ctrlkey_NoKeys = 0; return;
 	}
+
+	hw_InputPort( hw_KEY1 );
+	hw_InputPort( hw_KEY2 );
+	hw_InputPort( hw_KEY3 );
+	
+	// Setup Change Notification Interrupts.
+
+	CNEN2bits.CN28IE = 1;	// RC3
+	CNEN2bits.CN26IE = 1;	// RC5
+	CNEN2bits.CN17IE = 1;	// RC7
+	IEC1bits.CNIE = 1;
+	_CNIF = 0;
 
 	// Timer 1 will be our debounce and press&hold timer.
 
@@ -60,19 +66,13 @@ void ctrlkey_Initialize( void ) {
 // Read all defined keys into a bit mask.
 
 unsigned short ctrlkey_ReadKeys( void ) {
-	short keyNo;
 	unsigned short newstate;
 
 	newstate = 0;
 
-	for( keyNo=ctrlkey_NO_KEYS-1; keyNo>=0; keyNo-- ) {
-
-		newstate = newstate << 1;
-
-		switch( keyNo ) {
-			case 0: newstate |= ctrlkey_KEY_0_PIN; break;
-		}
-	}
+	newstate |= hw_ReadPort( hw_KEY1 ); 
+	newstate |= hw_ReadPort( hw_KEY2 ) << 1;
+	newstate |= hw_ReadPort( hw_KEY3 ) << 2;
 
 	return newstate;
 }
@@ -84,7 +84,7 @@ unsigned short ctrlkey_ReadKeys( void ) {
 // key held or key released events accordingly.
 
 void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
-	static unsigned short holdingSamples[ctrlkey_NO_KEYS];
+	static unsigned short holdingSamples[ctrlkey_MAX_NO_KEYS];
 	unsigned short diffKeys, currentState;
 	short keyNo;
 
@@ -95,7 +95,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	if( hw_WDTCounter == 0 ) events_Push( event_WDT_RESET, 0, 0 );
 
 	if( ctrlkey_KeyHolding ) {
-		for( keyNo=0; keyNo<ctrlkey_NO_KEYS; keyNo++ ) {
+		for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 			if( holdingSamples[keyNo] ) {
 				holdingSamples[keyNo]++;
 				if( holdingSamples[keyNo] == ctrlkey_HOLDING_THRESHOLD ) {
@@ -120,7 +120,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 
 				ctrlkey_KeyHolding = 0;
 
-				for( keyNo=0; keyNo<ctrlkey_NO_KEYS; keyNo++ ) {
+				for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 
 					// Did this key change?
 					if( diffKeys & 0x0001 ) {

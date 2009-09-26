@@ -34,6 +34,7 @@ void events_Push( unsigned char eventType, unsigned char eventData, unsigned sho
 	event_t newEvent;
 
 	// We really can't handle a full queue in any meaningful way.
+	// This is an embedded system after all...
 	// Ignoring pushes to make sure we don't corrupt.
 
 	if( events_QueueFull ) {

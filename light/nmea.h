@@ -136,6 +136,10 @@ extern nmea_MsgBuffer_t	nmea_TxQueue[nmea_NO_MSG_BUFFERS];
 extern unsigned char	nmea_TxQueueHead;
 extern unsigned char	nmea_TxQueueTail;
 extern unsigned char	nmea_TxQueueFull;
+extern WORD				nmea_HW_EN_Reg_Addr;
+extern WORD				nmea_HW_EN_Reg_Bit;
+extern WORD				nmea_HW_Rate_Reg_Addr;
+extern WORD				nmea_HW_Rate_Reg_Bit;
 
 //---------------------------------------------------------------------------------------------
 // Prototypes.
