@@ -31,8 +31,6 @@ void led_FadeToLevel( unsigned char color, float level, float fadeSeconds );
 
 unsigned short led_Level( unsigned char color );
 
-float led_GetLevel( unsigned char color );
-
 void led_Toggle( unsigned char color, float fadeTime );
 
 void led_StopFade( unsigned char color );

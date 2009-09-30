@@ -1,7 +1,7 @@
 #include <limits.h>
 #include "led.h"
 
-#define ENABLE 			1
+#define ENABLE 		1
 #define DISABLE 		0
 #define CLEAR			0
 
@@ -79,6 +79,8 @@ void led_Initialize( void ) {
 		led_FadeInProgress[i] = 0;
 	}
 
+	led_CurrentColor = led_RED;
+	led_Interval = 0;
 }
 
 
@@ -151,6 +153,7 @@ void led_Toggle( unsigned char color, float fadeTime ) {
 		led_FadeToLevel( color, led_PresetLevel[color], fadeTime );
 	}
 	else {
+		led_PresetLevel[color] = led_CurrentLevel[color];
 		led_FadeToLevel( color, 0.0, fadeTime );
 	}
 }
@@ -198,12 +201,14 @@ void led_FadeToLevel( unsigned char color, float level, float fadeSeconds ) {
 void led_ProcessEvent( event_t *event, unsigned char function ) {
 
 	led_LastTimer = led_ThisTimer;
-	led_ThisTimer = eventPtr->atTimer;
-	led_Interval = led_ThisTimer - led_LastTimer;
+	led_ThisTimer = event->atTimer;
+
+	if( led_Interval == 0 ) led_Interval = USHRT_MAX; // Only first event after Power Up.
+	else led_Interval = led_ThisTimer - led_LastTimer;
 
 	if( led_Interval < 0 ) led_Interval += USHRT_MAX;
 
-	switch( event->type ) {
+	switch( event->data ) {
 		case e_KEY_HOLDING: {
 			ctrlkey_Holding = 1;
 			if( led_CurrentLevel[led_CurrentColor] > 0.5 ) led_CurFadeStep = -0.1;
@@ -216,7 +221,7 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 		}
 		case e_KEY_CLICKED: {
 
-			// Double or single click?
+			// Double click?
 
 			if( led_Interval < 400 ) {
 				led_StopFade( led_CurrentColor );
@@ -228,6 +233,9 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 				else led_CurrentColor = led_RED;
 
 			} else {
+
+				// Single click.
+
 				led_LastLevel = led_CurrentLevel[led_CurrentColor];
 				led_Toggle( led_CurrentColor, 3.0 );
 			}

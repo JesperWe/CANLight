@@ -16,8 +16,7 @@ void goodnight( void );
 
 int main (void)
 {
-	unsigned char currentColor = led_RED;
-	float newLevel, fadeStep;
+	float newLevel;
 	cfg_Event_t *listenEvent;
 
 	hw_Initialize();
@@ -95,7 +94,6 @@ int main (void)
 					nmea_SendMessage( &outPGN );
 
 					if( loopbackEnabled ) {
-						//event_LoopbackMapper( eventPtr );
 						events_Push(
 							e_NMEA_MESSAGE,
 							nmea_LIGHTING_COMMAND,
@@ -108,6 +106,7 @@ int main (void)
 
 					break;
 				}
+
 				case e_KEY_HOLDING: {
 					led_SleepTimer = 0;
 					nmea_MakePGN( &outPGN, 0, nmea_MAINTAIN_POWER, 0 );
@@ -118,8 +117,21 @@ int main (void)
 					outPGN.data[2] = (eventPtr->atTimer&0xFF00) >> 8;
 					outPGN.data[3] = eventPtr->atTimer&0x00FF;
 					nmea_SendMessage( &outPGN );
+
+					if( loopbackEnabled ) {
+						events_Push(
+							e_NMEA_MESSAGE,
+							nmea_LIGHTING_COMMAND,
+							cfg_MyDeviceId,
+							eventPtr->ctrlFunc,
+							e_KEY_HOLDING,
+							eventPtr->atTimer
+						);
+					}
+
 					break;
 				}
+
 				case e_KEY_RELEASED: {
 					led_SleepTimer = 0;
 					nmea_MakePGN( &outPGN, 0, nmea_MAINTAIN_POWER, 0 );
@@ -130,15 +142,28 @@ int main (void)
 					outPGN.data[2] = (eventPtr->atTimer&0xFF00) >> 8;
 					outPGN.data[3] = eventPtr->atTimer&0x00FF;
 					nmea_SendMessage( &outPGN );
+
+					if( loopbackEnabled ) {
+						events_Push(
+							e_NMEA_MESSAGE,
+							nmea_LIGHTING_COMMAND,
+							cfg_MyDeviceId,
+							eventPtr->ctrlFunc,
+							e_KEY_RELEASED,
+							eventPtr->atTimer
+						);
+					}
+
 					break;
 				}
+
 				case e_WDT_RESET: {
 					if( ctrlkey_Holding ) {
-						newLevel = led_CurrentLevel[currentColor];
-						newLevel += fadeStep;
-						if( newLevel > 1.0 ) { fadeStep = - fadeStep; newLevel = 1.0; }
-						if( newLevel < 0.0 ) { fadeStep = - fadeStep; newLevel = 0.0; }
-						led_SetLevel( currentColor, newLevel );
+						newLevel = led_CurrentLevel[led_CurrentColor];
+						newLevel += led_CurFadeStep;
+						if( newLevel > 1.0 ) { led_CurFadeStep = - led_CurFadeStep; newLevel = 1.0; }
+						if( newLevel < 0.0 ) { led_CurFadeStep = - led_CurFadeStep; newLevel = 0.0; }
+						led_SetLevel( led_CurrentColor, newLevel );
 					}
 					break;
 				}
