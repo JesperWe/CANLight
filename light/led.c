@@ -1,12 +1,5 @@
-#include <p24hxxxx.h>
-#include <libpic30.h>
-#include <generic.h>
+#include <limits.h>
 #include "led.h"
-#include "hw.h"
-
-// Remappable pins:
-// RP20 - Red LED
-// RP21 - White LEDs
 
 #define ENABLE 			1
 #define DISABLE 		0
@@ -26,10 +19,16 @@ unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];	// True if we are fading
 unsigned short led_FadeStep[led_MAX_NO_CHANNELS];		// Current step in the fade.
 unsigned short led_FadeSteps[led_MAX_NO_CHANNELS];		// Total steps in the fade.
 unsigned short led_NoChannels;
+unsigned short led_CurrentColor;
+
 float led_PresetLevel[led_MAX_NO_CHANNELS];
 float led_FadeTargetLevel[led_MAX_NO_CHANNELS];
 float led_FadeFromLevel[led_MAX_NO_CHANNELS];
 float led_CurrentLevel[led_MAX_NO_CHANNELS];
+float led_LastLevel, led_CurFadeStep;
+
+long led_LastTimer, led_ThisTimer, led_Interval;
+
 
 unsigned char led_CanSleep;				// If all leds are fully on or off we can sleep.
 unsigned short led_SleepTimer;			// Actually this sleep timer is used for all modules, but it needs to be declared somewhere...
@@ -146,13 +145,13 @@ float led_GetPWMLevel( unsigned char color ) {
 //---------------------------------------------------------------------------------------------
 // Toggles between off and a preset level.
 
-void led_Toggle( unsigned char color ) {
+void led_Toggle( unsigned char color, float fadeTime ) {
 
 	if( led_CurrentLevel[color] == 0.0 ) {
-		led_FadeToLevel( color, led_PresetLevel[color], 3.0 );
+		led_FadeToLevel( color, led_PresetLevel[color], fadeTime );
 	}
 	else {
-		led_FadeToLevel( color, 0.0, 3.0 );
+		led_FadeToLevel( color, 0.0, fadeTime );
 	}
 }
 
@@ -189,6 +188,51 @@ void led_FadeToLevel( unsigned char color, float level, float fadeSeconds ) {
 	if( _T3IE == DISABLE ) {
 		_T3IF = CLEAR;
 		_T3IE = ENABLE;
+	}
+}
+
+
+//---------------------------------------------------------------------------------------------
+// Interrupt fade in progress.
+
+void led_ProcessEvent( event_t *event, unsigned char function ) {
+
+	led_LastTimer = led_ThisTimer;
+	led_ThisTimer = eventPtr->atTimer;
+	led_Interval = led_ThisTimer - led_LastTimer;
+
+	if( led_Interval < 0 ) led_Interval += USHRT_MAX;
+
+	switch( event->type ) {
+		case e_KEY_HOLDING: {
+			ctrlkey_Holding = 1;
+			if( led_CurrentLevel[led_CurrentColor] > 0.5 ) led_CurFadeStep = -0.1;
+			else led_CurFadeStep = 0.1;
+			break;
+		}
+		case e_KEY_RELEASED: {
+			ctrlkey_Holding = 0;
+			break;
+		}
+		case e_KEY_CLICKED: {
+
+			// Double or single click?
+
+			if( led_Interval < 400 ) {
+				led_StopFade( led_CurrentColor );
+				led_SetLevel( led_CurrentColor, led_LastLevel );
+
+				// Double click switches color.
+
+				if( led_CurrentColor == led_RED ) led_CurrentColor = led_WHITE;
+				else led_CurrentColor = led_RED;
+
+			} else {
+				led_LastLevel = led_CurrentLevel[led_CurrentColor];
+				led_Toggle( led_CurrentColor, 3.0 );
+			}
+			break;
+		}
 	}
 }
 

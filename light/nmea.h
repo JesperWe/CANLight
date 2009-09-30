@@ -44,15 +44,15 @@
 #define nmea_ECU_INSTANCE			0
 
 #define nmea_MANUFACTURER_CODE		2000		// 11 bits
-#define nmea_IDENTITY_NUMBER		471101		// 21 bits
+#define nmea_IDENTITY_NUMBER		0x001700	// 21 bits
 
 #define nmea_GLOBAL_ADDRESS			255
 #define nmea_NULL_ADDRESS			254
 
-#define nmea_NORMAL_MSG				0b00
-#define nmea_REMOTE_TX_MSG			0b10
-#define nmea_STANDARD_ID			0b00
-#define nmea_EXTENDED_ID			0b01
+#define nmea_NORMAL_MSG				0x0
+#define nmea_REMOTE_TX_MSG			0x2
+#define nmea_STANDARD_ID			0x0
+#define nmea_EXTENDED_ID			0x1
 
 // Message and Message Buffer sizes.
 

@@ -8,10 +8,15 @@
 #ifndef CTRLKEY_H_
 #define CTRLKEY_H_
 
+#include "hw.h"
+#include "events.h"
+#include "config.h"
+#include "config_groups.h"
 
 #define ctrlkey_MAX_NO_KEYS 3
 
 #define ctrlkey_HOLDING_THRESHOLD 300
+
 
 //---------------------------------------------------------------------------------------------
 // Globals.
@@ -22,6 +27,7 @@ extern unsigned short ctrlkey_Samples;
 extern unsigned short ctrlkey_NoKeys;
 extern unsigned char ctrlkey_EventPending;
 extern unsigned char ctrlkey_KeyHolding;
+extern unsigned char ctrlkey_Holding;
 
 
 //---------------------------------------------------------------------------------------------

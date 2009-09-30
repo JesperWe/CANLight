@@ -54,16 +54,16 @@ void nmea_Initialize() {
 
 	// Build CA NAME.
 
-	nmea_CA_Name.arbitrary_addr = hw_Config[1];
-	nmea_CA_Name.industry_group = hw_Config[2];
-	nmea_CA_Name.vehicle_syst = hw_Config[3];
+	nmea_CA_Name.arbitrary_addr = hw_Config.data[1];
+	nmea_CA_Name.industry_group = hw_Config.data[2];
+	nmea_CA_Name.vehicle_syst = hw_Config.data[3];
 	nmea_CA_Name.vehicle_syst_inst = 0;
 	nmea_CA_Name.reserved = 0;
-	nmea_CA_Name.function = hw_Config[4];
-	nmea_CA_Name.function_inst = hw_Config[5];
+	nmea_CA_Name.function = hw_Config.data[4];
+	nmea_CA_Name.function_inst = hw_Config.data[5];
 	nmea_CA_Name.ecu_inst = 5;
-	nmea_CA_Name.manufacturer = hw_Config[6];
-	nmea_CA_Name.identity = (((unsigned long)hw_Config[7])<<16) | hw_Config[8];
+	nmea_CA_Name.manufacturer = hw_Config.data[6];
+	nmea_CA_Name.identity = hw_Config.nmeaIdentityNumber;
 
 	// Go to config mode.
 
@@ -82,15 +82,15 @@ void nmea_Initialize() {
 	C1CFG2bits.SEG2PH = 1;
 	C1CFG2bits.SAM = 0;
 
-	C1FCTRLbits.DMABS=0b000;		// 4 Buffers.
+	C1FCTRLbits.DMABS=0;		// 4 Buffers.
 
 	C1TR01CONbits.TXEN0=1;			// Buffer 0 is a Transmit Buffer.
-	C1TR01CONbits.TX0PRI=0b10; 		// Message Buffer 0 Priority Level = High.
+	C1TR01CONbits.TX0PRI=0x2; 		// Message Buffer 0 Priority Level = High.
 
 	// Set up one filter and mask, accept only PGN # 65089, Lighing Command.
 
 	C1FEN1bits.FLTEN0=1;			// Filter 0 active.
-	C1FMSKSEL1bits.F0MSK=0b00;		// Select Acceptance Filter Mask 0 for Acceptance Filter 0.
+	C1FMSKSEL1bits.F0MSK=0;		// Select Acceptance Filter Mask 0 for Acceptance Filter 0.
 
 	C1CTRL1bits.WIN = 0x1;
 	C1RXM0SID = 0x07E3;				// The 8 PDUFormat bits...
@@ -144,7 +144,7 @@ void nmea_Initialize() {
 //---------------------------------------------------------------------------------------------
 
 void nmea_ControllerMode( unsigned char mode ) {
-	unsigned char modebits = mode & 0b111;
+	unsigned char modebits = mode & 0x7;
 	C1CTRL1bits.REQOP = modebits;
     while( C1CTRL1bits.OPMODE != modebits );
 }
@@ -294,6 +294,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 	}
 
     if(C1INTFbits.RBIF) {
+		unsigned short timer;
 		C1INTFbits.RBIF = 0;
 
 		// Retrieve data from buffer 1 and mark it as free.
@@ -301,24 +302,14 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 		C1RXFUL1bits.RXFUL1 = 0;
 		C1RXOVF1bits.RXOVF1 = 0;
 
-		events_Push( event_NMEA_MESSAGE, 0, 0 );
+		nmea_GetReceivedPGN( &inPGN );
+		timer = inPGN.data[2];
+		timer = timer<<8 | inPGN.data[3];
+
+		events_Push( e_NMEA_MESSAGE, inPGN.PGN, inPGN.data[4], inPGN.data[5], inPGN.data[0], timer );
 	}
 }
 
-//---------------------------------------------------------------------------------------------
-// Indirectly addressed hardware manipulation
-/*
-void nmea_EnableDriver() {
-	__asm__(
-		"BTST.Z W0, W1 \n MOV W0, 0 \n "
-		:""(nmea_HW_EN_Reg_Addr) 
-		:""(nmea_HW_EN_Reg_Bit)
-	);
-}
-
-void nmea_DisableDriver() {
-}
-*/
 
 //---------------------------------------------------------------------------------------------
 // DMA interrupt handlers.

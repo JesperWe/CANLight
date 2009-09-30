@@ -8,18 +8,32 @@
 #ifndef EVENTS_H_
 #define EVENTS_H_
 
+#include "hw.h"
+#include "config_groups.h"
+#include "config.h"
+
 #define events_QUEUESIZE	10
 
-#define event_KEY_CLICKED	0x01
-#define event_KEY_HOLDING	0x02
-#define event_KEY_RELEASED	0x03
-
-#define event_WDT_RESET		0x04
-
-#define event_NMEA_MESSAGE	0x05
+enum event_Events {
+	e_KEY_CLICKED,
+	e_KEY_HOLDING,
+	e_KEY_RELEASED,
+	e_KEY_DBLCLICKED,
+	e_SWITCH_ON,
+	e_SWITCH_OFF,
+	e_SWITCH_FAIL,
+	e_FADE_START,
+	e_FADE_STOP,
+	e_WDT_RESET,
+	e_NMEA_MESSAGE,
+	e_NO_EVENTS
+};
 
 typedef struct {
 	unsigned char type;
+	unsigned short PGN;
+	unsigned char ctrlDev;
+	unsigned char ctrlFunc;
 	unsigned char data;
 	unsigned short atTimer;
 } event_t;
@@ -32,7 +46,25 @@ extern unsigned char events_QueueFull;
 extern event_t *eventPtr;
 
 void events_Initialize( void );
-void events_Push( unsigned char eventType, unsigned char eventData, unsigned short atTimer );
+
+void events_Push( 
+		unsigned char eventType, 
+		unsigned short nmeaPGN, 
+		unsigned char ctrlDev, 
+		unsigned char ctrlFunc, 
+		unsigned char eventData, 
+		unsigned short atTimer );
+
 event_t* events_Pop( void );
+
+// In case of events from one device targeting another function inside that same device
+// we are not receiving our own NMEA messages. So we need to generate loopback events in
+// our own event queue. This feature can be enabled or disabled, and the mapping of
+// controller to function set below.
+
+extern unsigned char loopbackEnabled;
+
+unsigned char event_Discard( event_t* event );
+cfg_Event_t* event_FindNextListener( cfg_Event_t *fromAccept, event_t* event );
 
 #endif /* EVENTS_H_ */

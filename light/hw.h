@@ -5,6 +5,11 @@
  *      Author: Jesper W
  */
 
+#include <p24hxxxx.h>
+#include <pps.h>
+#include <libpic30.h>
+#include <generic.h>
+
 #ifndef HW_H_
 #define HW_H_
 
@@ -20,6 +25,10 @@ enum hw_PortNames {
 	hw_LED1,
 	hw_LED2,
 	hw_LED3,
+	hw_SWITCH1,
+	hw_SWITCH2,
+	hw_SWITCH3,
+	hw_SWITCH4,
 	hw_KEY1,
 	hw_KEY2,
 	hw_KEY3,
@@ -39,8 +48,27 @@ typedef struct hw_Port_s {
    int bit;
 } hw_Port_t;
 
+typedef union hw_Config_u {
+	int		data[_FLASH_ROW];
+	struct {
+		unsigned short MagicWord;
+		unsigned short nmeaArbitraryAddress;
+		unsigned short nmeaIndustryGroup;
+		unsigned short nmeaVehicleSystem;
+		unsigned short nmeaFunctionSwitch;
+		unsigned short nmeaFunctionInstance;
+		unsigned short nmeaManufacturerCode;
+		unsigned long  nmeaIdentityNumber;
+		unsigned short cfgSequenceNumber;
+		unsigned char cfgFile[];
+	};
+} hw_Config_t;
+
+
+//---------------------------------------------------------------------------------------------
+
 extern unsigned short __attribute__((space(prog),aligned(_FLASH_PAGE*2))) hw_ConfigData[];
-extern int hw_Config[_FLASH_ROW];
+extern hw_Config_t hw_Config;
 extern _prog_addressT hw_ConfigPtr;
 extern unsigned short hw_WDTCounter;
 extern unsigned short hw_Type;
@@ -52,5 +80,6 @@ void hw_InputPort(enum hw_PortNames port);
 void hw_OutputPort(enum hw_PortNames port);
 void hw_WritePort(enum hw_PortNames, int value);
 void hw_Initialize( void );
+unsigned char hw_IsPWM( unsigned short hw_Port );
 
 #endif /* HW_H_ */

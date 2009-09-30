@@ -5,12 +5,6 @@
  *      Author: Jesper We
  */
 
-#include <p24hxxxx.h>
-#include <libpic30.h>
-#include <stdlib.h>
-
-#include "hw.h"
-#include "events.h"
 #include "ctrlkey.h"
 
 //---------------------------------------------------------------------------------------------
@@ -22,6 +16,8 @@ unsigned short ctrlkey_Samples;
 unsigned short ctrlkey_NoKeys;
 unsigned char ctrlkey_EventPending;
 unsigned char ctrlkey_KeyHolding;
+unsigned char ctrlkey_Holding;
+static const unsigned char ctrlkey_Key2Function[] = { hw_KEY1, hw_KEY2, hw_KEY3 };
 
 
 //---------------------------------------------------------------------------------------------
@@ -40,7 +36,7 @@ void ctrlkey_Initialize( void ) {
 	hw_InputPort( hw_KEY1 );
 	hw_InputPort( hw_KEY2 );
 	hw_InputPort( hw_KEY3 );
-	
+
 	// Setup Change Notification Interrupts.
 
 	CNEN2bits.CN28IE = 1;	// RC3
@@ -52,7 +48,7 @@ void ctrlkey_Initialize( void ) {
 	// Timer 1 will be our debounce and press&hold timer.
 
 	T1CONbits.TSIDL = 1;
-	T1CONbits.TCKPS = 0b00;		// Prescaler = 1
+	T1CONbits.TCKPS = 0;		// Prescaler = 1
 	T1CONbits.TCS = 0;			// CLock Select = Fcy.
 	PR1 = 0x1B7D;				// Timer cycle.
 	_T1IF = 0;
@@ -70,7 +66,7 @@ unsigned short ctrlkey_ReadKeys( void ) {
 
 	newstate = 0;
 
-	newstate |= hw_ReadPort( hw_KEY1 ); 
+	newstate |= hw_ReadPort( hw_KEY1 );
 	newstate |= hw_ReadPort( hw_KEY2 ) << 1;
 	newstate |= hw_ReadPort( hw_KEY3 ) << 2;
 
@@ -91,15 +87,21 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	_T1IF = 0;
 	ctrlkey_Samples++;
 
+	// We also use this timer for Watchdog resets.
+	// In addition, if we are in the middle of a PWM LED fade, WDT resets will
+	// step the fade level.
+
 	hw_WDTCounter = ++hw_WDTCounter % 500;
-	if( hw_WDTCounter == 0 ) events_Push( event_WDT_RESET, 0, 0 );
+	if( hw_WDTCounter == 0 && ctrlkey_Holding ) events_Push( e_WDT_RESET, 0, cfg_MyDeviceId, e_WDT_RESET, 0, 0 );
 
 	if( ctrlkey_KeyHolding ) {
 		for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 			if( holdingSamples[keyNo] ) {
 				holdingSamples[keyNo]++;
 				if( holdingSamples[keyNo] == ctrlkey_HOLDING_THRESHOLD ) {
-					events_Push( event_KEY_HOLDING, keyNo, ctrlkey_Samples );
+					events_Push( e_KEY_HOLDING, 0, 
+						cfg_MyDeviceId, ctrlkey_Key2Function[keyNo], 
+						keyNo, ctrlkey_Samples );
 				}
 			}
 		}
@@ -135,9 +137,9 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 						else if( (currentState&0x0001) == 1 ) {
 
 							if( holdingSamples[keyNo] < ctrlkey_HOLDING_THRESHOLD )
-								events_Push( event_KEY_CLICKED, keyNo, ctrlkey_Samples );
+								events_Push( e_KEY_CLICKED, 0, cfg_MyDeviceId, ctrlkey_Key2Function[keyNo], keyNo, ctrlkey_Samples );
 							else
-								events_Push( event_KEY_RELEASED, keyNo, ctrlkey_Samples );
+								events_Push( e_KEY_RELEASED, 0, cfg_MyDeviceId, ctrlkey_Key2Function[keyNo], keyNo, ctrlkey_Samples );
 
 							holdingSamples[keyNo] = 0;
 						}
