@@ -24,26 +24,31 @@ static const unsigned char ctrlkey_Key2Function[] = { hw_KEY1, hw_KEY2, hw_KEY3 
 
 void ctrlkey_Initialize( void ) {
 
-	// XXX This is not hardware version independent at the moment, since we only have
-	// XXX one version which has any keys.
-
 	switch( hw_Type ) {
-		case hw_LEDLIGHT:	ctrlkey_NoKeys = 0; return;
-		case hw_SWITCH:		ctrlkey_NoKeys = 3; break;
+
+		case hw_LEDLIGHT: {
+			ctrlkey_NoKeys = 0;
+			break;;
+		}
+
+		case hw_SWITCH:	 {
+			ctrlkey_NoKeys = 3;
+			hw_InputPort( hw_KEY1 );
+			hw_InputPort( hw_KEY2 );
+			hw_InputPort( hw_KEY3 );
+
+			// Setup Change Notification Interrupts.
+
+			CNEN2bits.CN28IE = 1;	// RC3
+			CNEN2bits.CN26IE = 1;	// RC5
+			CNEN2bits.CN17IE = 1;	// RC7
+			IEC1bits.CNIE = 1;
+			_CNIF = 0;
+			break;
+		}
+
 		default:			ctrlkey_NoKeys = 0; return;
 	}
-
-	hw_InputPort( hw_KEY1 );
-	hw_InputPort( hw_KEY2 );
-	hw_InputPort( hw_KEY3 );
-
-	// Setup Change Notification Interrupts.
-
-	CNEN2bits.CN28IE = 1;	// RC3
-	CNEN2bits.CN26IE = 1;	// RC5
-	CNEN2bits.CN17IE = 1;	// RC7
-	IEC1bits.CNIE = 1;
-	_CNIF = 0;
 
 	// Timer 1 will be our debounce and press&hold timer.
 
@@ -55,7 +60,8 @@ void ctrlkey_Initialize( void ) {
 	IEC0bits.T1IE = 1;
 	T1CONbits.TON = 1;			// Start Timer.
 
-	ctrlkey_States[2] = ctrlkey_States[1] = ctrlkey_States[0] = ctrlkey_ReadKeys();
+	if( ctrlkey_NoKeys != 0 )
+		ctrlkey_States[2] = ctrlkey_States[1] = ctrlkey_States[0] = ctrlkey_ReadKeys();
 }
 
 //---------------------------------------------------------------------------------------------
@@ -92,7 +98,9 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	// step the fade level.
 
 	hw_WDTCounter = ++hw_WDTCounter % 300;
-	if( hw_WDTCounter == 0 && ctrlkey_Holding ) events_Push( e_WDT_RESET, 0, hw_DeviceID, 0, e_WDT_RESET, 0, 0 );
+	if( hw_WDTCounter == 0 && ctrlkey_Holding ) {
+		events_Push( e_WDT_RESET, 0, hw_DeviceID, 0, e_WDT_RESET, 0, 0 );
+	}
 
 	if( ctrlkey_KeyHolding ) {
 		for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {

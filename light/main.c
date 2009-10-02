@@ -33,7 +33,6 @@ int main (void)
 		}
 
 		case hw_SWITCH: {
-			ctrlkey_Initialize();
 			led_Initialize();
 			led_PresetLevel[ led_RED ] = 1.0;
 			led_CurrentLevel[ led_RED ] = led_GetPWMLevel( led_RED );
@@ -42,6 +41,7 @@ int main (void)
 		}
 	}
 
+	ctrlkey_Initialize();
 	cfg_Initialize();
 	events_Initialize();
 	nmea_Initialize();
