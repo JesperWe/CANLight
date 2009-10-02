@@ -91,8 +91,8 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	// In addition, if we are in the middle of a PWM LED fade, WDT resets will
 	// step the fade level.
 
-	hw_WDTCounter = ++hw_WDTCounter % 500;
-	if( hw_WDTCounter == 0 && ctrlkey_Holding ) events_Push( e_WDT_RESET, 0, cfg_MyDeviceId, e_WDT_RESET, 0, 0 );
+	hw_WDTCounter = ++hw_WDTCounter % 300;
+	if( hw_WDTCounter == 0 && ctrlkey_Holding ) events_Push( e_WDT_RESET, 0, hw_DeviceID, 0, e_WDT_RESET, 0, 0 );
 
 	if( ctrlkey_KeyHolding ) {
 		for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
@@ -100,7 +100,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 				holdingSamples[keyNo]++;
 				if( holdingSamples[keyNo] == ctrlkey_HOLDING_THRESHOLD ) {
 					events_Push( e_KEY_HOLDING, 0, 
-						cfg_MyDeviceId, ctrlkey_Key2Function[keyNo], 
+						hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_HOLDING,
 						keyNo, ctrlkey_Samples );
 				}
 			}
@@ -137,9 +137,9 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 						else if( (currentState&0x0001) == 1 ) {
 
 							if( holdingSamples[keyNo] < ctrlkey_HOLDING_THRESHOLD )
-								events_Push( e_KEY_CLICKED, 0, cfg_MyDeviceId, ctrlkey_Key2Function[keyNo], keyNo, ctrlkey_Samples );
+								events_Push( e_KEY_CLICKED, 0, hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_CLICKED, keyNo, ctrlkey_Samples );
 							else
-								events_Push( e_KEY_RELEASED, 0, cfg_MyDeviceId, ctrlkey_Key2Function[keyNo], keyNo, ctrlkey_Samples );
+								events_Push( e_KEY_RELEASED, 0, hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_RELEASED, keyNo, ctrlkey_Samples );
 
 							holdingSamples[keyNo] = 0;
 						}

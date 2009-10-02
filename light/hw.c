@@ -18,6 +18,7 @@ unsigned short 			hw_WDTCounter = 0;
 unsigned short			hw_PWMInverted = 0;
 
 unsigned short			hw_Type;
+unsigned short			hw_DeviceID;
 
 
 //-------------------------------------------------------------------------------
@@ -130,6 +131,18 @@ void hw_Initialize( void ) {
 	if( fidc_ics == 0x3 ) hw_Type = hw_LEDLIGHT;
 	if( fidc_ics == 0x2 ) hw_Type = hw_SWITCH;
 
+	// Load unique device ID (Microchip refers to this as Unit ID)
+	// The LS 8 bits is our device ID in the system.
+
+	fidc.Val = 0xf80016;
+
+	TBLPAG = fidc.word.HW;
+
+	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+
+	hw_DeviceID = fidc_ics = fidc_data.byte.LB;
+
 	// Check configuration area, erase it if it is non-zero but seems corrupted.
 	// This can happen if the code has been recompiled and the compiler
 	// has moved the hw_ConfigData area to a new address.
@@ -144,7 +157,7 @@ void hw_Initialize( void ) {
 		hw_Config.data[2] = nmea_INDUSTRY_GROUP;
 		hw_Config.data[3] = nmea_VEHICLE_SYSTEM;
 		hw_Config.data[4] = nmea_FUNCTION_SWITCH;
-		hw_Config.data[5] = nmea_FUNCTION_INSTANCE;
+		hw_Config.data[5] = hw_DeviceID;
 		hw_Config.data[6] = nmea_MANUFACTURER_CODE;
 		hw_Config.data[7] = (unsigned short)((nmea_IDENTITY_NUMBER & 0x001F0000) >> 16);
 		hw_Config.data[8] = (unsigned short)(nmea_IDENTITY_NUMBER & 0xFFFF);

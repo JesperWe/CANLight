@@ -31,11 +31,12 @@ void events_Initialize( void ) {
 // events_QueueTail points to one behind last, events_QueueHead points to first.
 
 void events_Push( 
-		unsigned char eventType, 
+		unsigned char type,
 		unsigned short nmeaPGN, 
 		unsigned char ctrlDev, 
 		unsigned char ctrlFunc, 
-		unsigned char eventData, 
+		unsigned char ctrlEvent,
+		unsigned char data,
 		unsigned short atTimer )
 {
 	event_t newEvent;
@@ -48,11 +49,12 @@ void events_Push(
 		return;
 	}
 
-	newEvent.type = eventType;
+	newEvent.type = type;
 	newEvent.ctrlDev = ctrlDev;
 	newEvent.ctrlFunc = ctrlFunc;
+	newEvent.ctrlEvent = ctrlEvent;
 	newEvent.PGN = nmeaPGN;
-	newEvent.data = eventData;
+	newEvent.data = data;
 	newEvent.atTimer = atTimer;
 
 	events_Queue[events_QueueTail] = newEvent;
@@ -105,7 +107,7 @@ cfg_Event_t* event_FindNextListener( cfg_Event_t *fromAccept, event_t* event ) {
 		// For NMEA message events, look at the originating event type.
 
 		if( event->type == e_NMEA_MESSAGE ) {
-			if( accept->ctrlEvent != event->data ) goto next; 
+			if( accept->ctrlEvent != event->ctrlEvent ) goto next;
 		}
 		else {
 			if( accept->ctrlEvent != event->type ) goto next; 

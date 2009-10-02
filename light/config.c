@@ -33,10 +33,6 @@ void cfg_Initialize() {
 	cfg_MyEvents->group = gEnd; // Indicates empty entry.
 	cfg_MyEvents->next = 0;
 
-	// Get divice number from last part of NMEA id.
-
-	cfg_MyDeviceId = hw_Config.nmeaIdentityNumber & 0x00FF;
-
 	// Copy default config to RAM config if there is no config in Flash.
 
 	if( hw_Config.cfgSequenceNumber == 0 ) {
@@ -60,7 +56,7 @@ void cfg_Initialize() {
 		cfgPtr++; // Go to first device of current group.
 
 		while( *cfgPtr != gEnd ) {
-			if( *cfgPtr == cfg_MyDeviceId ) {
+			if( *cfgPtr == hw_DeviceID ) {
 				cfgPtr++;
 				func = *cfgPtr;
 				cfg_AddControlEvents( group, cfgPtr, func );

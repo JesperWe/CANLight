@@ -81,20 +81,20 @@
 
 
 #define cfg_DEFAULT_CONFIG_FILE \
-{ grp00, 00, hw_LED_RED, gEnd, \
-  00, hw_KEY1, e_KEY_CLICKED, e_KEY_HOLDING, e_KEY_RELEASED, gEnd, \
+{ grp00, 07, hw_LED_RED, gEnd, \
+  07, hw_KEY1, e_KEY_CLICKED, e_KEY_HOLDING, e_KEY_RELEASED, gEnd, \
   gEnd, \
 \
-  grp01, 00, hw_LED1, gEnd, \
-  00, hw_LED_RED, e_SWITCH_ON, e_SWITCH_OFF, gEnd, \
+  grp01, 07, hw_LED3, gEnd, \
+  23, hw_LED_RED, e_SWITCH_ON, e_SWITCH_OFF, gEnd, \
   gEnd, \
 \
-  grp02, 00, hw_LED3, gEnd, \
-  00, hw_KEY2, e_KEY_CLICKED, gEnd, \
+  grp02, 07, hw_LED2, gEnd, \
+  07, hw_KEY2, e_KEY_CLICKED, gEnd, \
   gEnd, \
 \
-  grp03, 00, hw_LED2, gEnd, \
-  00, hw_KEY3, e_KEY_CLICKED, gEnd, \
+  grp03, 23, hw_LED_RED, gEnd, \
+  07, hw_KEY3, e_KEY_CLICKED, e_KEY_HOLDING, e_KEY_RELEASED, gEnd, \
   gEnd, \
 \
 endConfig }

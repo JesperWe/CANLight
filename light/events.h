@@ -34,6 +34,7 @@ typedef struct {
 	unsigned short PGN;
 	unsigned char ctrlDev;
 	unsigned char ctrlFunc;
+	unsigned char ctrlEvent;
 	unsigned char data;
 	unsigned short atTimer;
 } event_t;
@@ -51,7 +52,8 @@ void events_Push(
 		unsigned char eventType, 
 		unsigned short nmeaPGN, 
 		unsigned char ctrlDev, 
-		unsigned char ctrlFunc, 
+		unsigned char ctrlFunc,
+		unsigned char ctrlEvent,
 		unsigned char eventData, 
 		unsigned short atTimer );
 
@@ -59,8 +61,7 @@ event_t* events_Pop( void );
 
 // In case of events from one device targeting another function inside that same device
 // we are not receiving our own NMEA messages. So we need to generate loopback events in
-// our own event queue. This feature can be enabled or disabled, and the mapping of
-// controller to function set below.
+// our own event queue. This feature can be enabled or disabled.
 
 extern unsigned char loopbackEnabled;
 

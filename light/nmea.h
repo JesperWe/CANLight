@@ -5,6 +5,8 @@
  *      Author: Jesper W
  */
 
+#include "events.h"
+
 #ifndef NMEA_H_
 #define NMEA_H_
 
@@ -40,7 +42,6 @@
 #define nmea_FUNCTION_SWITCH		130
 #define nmea_FUNCTION_LOAD			140
 
-#define nmea_FUNCTION_INSTANCE		0
 #define nmea_ECU_INSTANCE			0
 
 #define nmea_MANUFACTURER_CODE		2000		// 11 bits
@@ -146,12 +147,16 @@ extern WORD				nmea_HW_Rate_Reg_Bit;
 
 void nmea_Initialize();
 
-void nmea_MakePGN( nmea_PGN_t *pgn,
+void nmea_Wakeup();
+
+void nmea_MakePGN( 
 		unsigned short pdn_priority,
 		unsigned short pgn_no,
 		unsigned short msg_bytes );
 
-unsigned char nmea_SendMessage( nmea_PGN_t *pgn );
+unsigned char nmea_SendEvent( event_t *event );
+
+unsigned char nmea_SendMessage();
 
 void nmea_ControllerMode( unsigned char mode );
 

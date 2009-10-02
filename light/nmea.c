@@ -4,12 +4,6 @@
  *  Created on: 2009-jun-01
  *      Author: Jesper W
  */
-#include <p24hxxxx.h>
-#include <libpic30.h>
-
-#include <stdlib.h>
-#include <string.h>
-#include <generic.h>
 
 #include "hw.h"
 #include "led.h"
@@ -172,7 +166,30 @@ void nmea_PackName( unsigned char name[], nmea_CA_NAME_t nameFields ) {
 
 //---------------------------------------------------------------------------------------------
 
-unsigned char nmea_SendMessage( nmea_PGN_t *pgn )
+void nmea_Wakeup() {
+	nmea_MakePGN( 0, nmea_MAINTAIN_POWER, 0 );
+	nmea_SendMessage();
+}
+
+
+//---------------------------------------------------------------------------------------------
+
+unsigned char nmea_SendEvent( event_t *event )
+{
+	nmea_MakePGN( 0, nmea_LIGHTING_COMMAND, 8 );
+	outPGN.data[0] = event->type;
+	outPGN.data[1] = event->data;
+	outPGN.data[2] = (event->atTimer&0xFF00) >> 8;
+	outPGN.data[3] = event->atTimer&0x00FF;
+	outPGN.data[4] = event->ctrlDev;
+	outPGN.data[5] = event->ctrlFunc;
+	outPGN.data[6] = event->ctrlEvent;
+	return nmea_SendMessage();
+}
+
+//---------------------------------------------------------------------------------------------
+
+unsigned char nmea_SendMessage()
 {
 	unsigned long SID, SIDExt;
 
@@ -184,19 +201,19 @@ unsigned char nmea_SendMessage( nmea_PGN_t *pgn )
 
 	memset( &msg, 0, nmea_MSG_BUFFER_BYTES );
 
-	SID = pgn->Priority << 8;
-	SID = SID | (pgn->PDUFormat & 0xFC) >> 2;
+	SID = outPGN.Priority << 8;
+	SID = SID | (outPGN.PDUFormat & 0xFC) >> 2;
 
-	SIDExt = ((unsigned long)(pgn->PDUFormat & 0x03)) << 16;
-	SIDExt = SIDExt | ((unsigned long)pgn->PDUSpecific) << 8;
-	SIDExt = SIDExt | pgn->SourceAddress;
+	SIDExt = ((unsigned long)(outPGN.PDUFormat & 0x03)) << 16;
+	SIDExt = SIDExt | ((unsigned long)outPGN.PDUSpecific) << 8;
+	SIDExt = SIDExt | outPGN.SourceAddress;
 
 
 	msg[0] = (SID << 2) | nmea_NORMAL_MSG | nmea_EXTENDED_ID;
 	msg[1] = (SIDExt & 0x3FFC0) >> 6;
-	msg[2] = ( (SIDExt & 0x3F) << 10 ) | nmea_NORMAL_MSG | pgn->bytes;
+	msg[2] = ( (SIDExt & 0x3F) << 10 ) | nmea_NORMAL_MSG | outPGN.bytes;
 
-	memcpy( (&msg[3]), pgn->data, pgn->bytes );
+	memcpy( (&msg[3]), outPGN.data, outPGN.bytes );
 
 	if( nmea_TX_IN_PROGRESS ) {
 
@@ -225,21 +242,21 @@ unsigned char nmea_SendMessage( nmea_PGN_t *pgn )
 //---------------------------------------------------------------------------------------------
 // Build NMEA PGN
 
-void nmea_MakePGN( nmea_PGN_t *pgn,
+void nmea_MakePGN(
 		unsigned short pgn_priority,
 		unsigned short pgn_no,
 		unsigned short msg_bytes ) {
 
 	// Build NMEA PGN
 
-	pgn->PGN			= pgn_no;
-	pgn->PDUFormat 		= (pgn_no & 0xFF00) >> 8;
-	pgn->PDUSpecific 	= pgn_no & 0x00FF;
-	pgn->Datapage		= 0;
-	pgn->_Reserved		= 0;
-	pgn->Priority		= pgn_priority;
-	pgn->SourceAddress 	= nmea_CA_Address;
-	pgn->bytes		 	= msg_bytes;
+	outPGN.PGN				= pgn_no;
+	outPGN.PDUFormat 		= (pgn_no & 0xFF00) >> 8;
+	outPGN.PDUSpecific 		= pgn_no & 0x00FF;
+	outPGN.Datapage			= 0;
+	outPGN._Reserved		= 0;
+	outPGN.Priority			= pgn_priority;
+	outPGN.SourceAddress 	= nmea_CA_Address;
+	outPGN.bytes		 	= msg_bytes;
 }
 
 //---------------------------------------------------------------------------------------------
@@ -293,6 +310,8 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 		}
 	}
 
+	// Any received messages?
+
     if(C1INTFbits.RBIF) {
 		unsigned short timer;
 		C1INTFbits.RBIF = 0;
@@ -306,7 +325,11 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 		timer = inPGN.data[2];
 		timer = timer<<8 | inPGN.data[3];
 
-		events_Push( e_NMEA_MESSAGE, inPGN.PGN, inPGN.data[4], inPGN.data[5], inPGN.data[0], timer );
+		if( inPGN.PGN == nmea_MAINTAIN_POWER ) return;
+
+		events_Push( e_NMEA_MESSAGE, inPGN.PGN, 
+			inPGN.data[4], inPGN.data[5], inPGN.data[6],
+			inPGN.data[1], timer );
 	}
 }
 

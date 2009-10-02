@@ -26,7 +26,6 @@ typedef struct cfg_Event_s {
 } cfg_Event_t;
 
 extern cfg_Event_t *cfg_MyEvents;
-extern unsigned char cfg_MyDeviceId;
 extern unsigned char cfg_Valid;
 
 void cfg_AddControlEvents( 

@@ -71,11 +71,6 @@ int main (void)
 		eventPtr = events_Pop();
 		if( eventPtr ) {
 
-			// Only process event this device is listening for.
-
-			listenEvent = event_FindNextListener( cfg_MyEvents, eventPtr );
-			if( listenEvent == 0 ) continue;
-
 			switch( eventPtr->type ) {
 
 				// Events that originates from this devices hardware usually
@@ -84,22 +79,16 @@ int main (void)
 
 				case e_KEY_CLICKED: {
 					led_SleepTimer = 0;
-					nmea_MakePGN( &outPGN, 0, nmea_MAINTAIN_POWER, 0 );
-					nmea_SendMessage( &outPGN );
-					nmea_MakePGN( &outPGN, 0, nmea_LIGHTING_COMMAND, 4 );
-					outPGN.data[0] = eventPtr->type;
-					outPGN.data[1] = eventPtr->data;
-					outPGN.data[2] = (eventPtr->atTimer&0xFF00) >> 8;
-					outPGN.data[3] = eventPtr->atTimer&0x00FF;
-					nmea_SendMessage( &outPGN );
+					nmea_Wakeup();
+					nmea_SendEvent( eventPtr );
 
 					if( loopbackEnabled ) {
 						events_Push(
 							e_NMEA_MESSAGE,
 							nmea_LIGHTING_COMMAND,
-							cfg_MyDeviceId,
+							hw_DeviceID,
 							eventPtr->ctrlFunc,
-							e_KEY_CLICKED,
+							e_KEY_CLICKED, 0,
 							eventPtr->atTimer
 						);
 					}
@@ -109,22 +98,16 @@ int main (void)
 
 				case e_KEY_HOLDING: {
 					led_SleepTimer = 0;
-					nmea_MakePGN( &outPGN, 0, nmea_MAINTAIN_POWER, 0 );
-					nmea_SendMessage( &outPGN );
-					nmea_MakePGN( &outPGN, 0, nmea_LIGHTING_COMMAND, 4 );
-					outPGN.data[0] = eventPtr->type;
-					outPGN.data[1] = eventPtr->data;
-					outPGN.data[2] = (eventPtr->atTimer&0xFF00) >> 8;
-					outPGN.data[3] = eventPtr->atTimer&0x00FF;
-					nmea_SendMessage( &outPGN );
+					nmea_Wakeup();
+					nmea_SendEvent( eventPtr );
 
 					if( loopbackEnabled ) {
 						events_Push(
 							e_NMEA_MESSAGE,
 							nmea_LIGHTING_COMMAND,
-							cfg_MyDeviceId,
+							hw_DeviceID,
 							eventPtr->ctrlFunc,
-							e_KEY_HOLDING,
+							e_KEY_HOLDING, 0,
 							eventPtr->atTimer
 						);
 					}
@@ -134,22 +117,16 @@ int main (void)
 
 				case e_KEY_RELEASED: {
 					led_SleepTimer = 0;
-					nmea_MakePGN( &outPGN, 0, nmea_MAINTAIN_POWER, 0 );
-					nmea_SendMessage( &outPGN );
-					nmea_MakePGN( &outPGN, 0, nmea_LIGHTING_COMMAND, 4 );
-					outPGN.data[0] = eventPtr->type;
-					outPGN.data[1] = eventPtr->data;
-					outPGN.data[2] = (eventPtr->atTimer&0xFF00) >> 8;
-					outPGN.data[3] = eventPtr->atTimer&0x00FF;
-					nmea_SendMessage( &outPGN );
+					nmea_Wakeup();
+					nmea_SendEvent( eventPtr );
 
 					if( loopbackEnabled ) {
 						events_Push(
 							e_NMEA_MESSAGE,
 							nmea_LIGHTING_COMMAND,
-							cfg_MyDeviceId,
+							hw_DeviceID,
 							eventPtr->ctrlFunc,
-							e_KEY_RELEASED,
+							e_KEY_RELEASED, 0,
 							eventPtr->atTimer
 						);
 					}
@@ -172,6 +149,12 @@ int main (void)
 				// out what function it controls, and take the appropriate action.
 
 				case e_NMEA_MESSAGE: {
+
+					// Only process event this device is listening for.
+
+					listenEvent = event_FindNextListener( cfg_MyEvents, eventPtr );
+					if( listenEvent == 0 ) break;
+
 					led_SleepTimer = 0;
 
 					if( eventPtr->PGN != nmea_LIGHTING_COMMAND ) break; // Some other NMEA device?

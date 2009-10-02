@@ -9,13 +9,15 @@
 #include <pps.h>
 #include <libpic30.h>
 #include <generic.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifndef HW_H_
 #define HW_H_
 
 #define NOP __builtin_nop()
 
-#define hw_CONFIG_MAGIC_WORD	4711
+#define hw_CONFIG_MAGIC_WORD	4712
 
 enum hw_PortNames {
 	hw_CAN_RATE,
@@ -72,6 +74,7 @@ extern hw_Config_t hw_Config;
 extern _prog_addressT hw_ConfigPtr;
 extern unsigned short hw_WDTCounter;
 extern unsigned short hw_Type;
+extern unsigned short hw_DeviceID;
 extern unsigned short hw_PWMInverted;
 extern const unsigned short hw_NoKeys[hw_NoVariants];
 
