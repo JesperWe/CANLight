@@ -18,8 +18,8 @@ void switch_ProcessEvent( event_t *event, unsigned char function ) {
 	setting = hw_ReadPort( function );
 
 	if( event->data == e_KEY_CLICKED ) setting = (setting == 0);
-	if( event->data == e_SWITCH_ON ) setting = 0;
-	if( event->data == e_SWITCH_OFF ) setting = 1;
+	if( event->data == e_SWITCH_ON ) setting = 1;
+	if( event->data == e_SWITCH_OFF ) setting = 0;
 
 	hw_WritePort( function, setting );
 

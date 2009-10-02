@@ -15,8 +15,12 @@ unsigned short ctrlkey_States[3];
 unsigned short ctrlkey_Samples;
 unsigned short ctrlkey_NoKeys;
 unsigned char ctrlkey_EventPending;
+unsigned short ctrlkey_ClickPending;
 unsigned char ctrlkey_KeyHolding;
 unsigned char ctrlkey_Holding;
+unsigned char ctrlkey_ClickCount;
+unsigned char ctrlkey_ClickPendingKeyNo;
+
 static const unsigned char ctrlkey_Key2Function[] = { hw_KEY1, hw_KEY2, hw_KEY3 };
 
 
@@ -24,9 +28,15 @@ static const unsigned char ctrlkey_Key2Function[] = { hw_KEY1, hw_KEY2, hw_KEY3 
 
 void ctrlkey_Initialize( void ) {
 
+	ctrlkey_EventPending = 0;
+	ctrlkey_ClickPending = 0;
+	ctrlkey_KeyHolding = 0;
+	ctrlkey_Holding = 0;
+	ctrlkey_ClickCount = 0;
+
 	switch( hw_Type ) {
 
-		case hw_LEDLIGHT: {
+		case hw_LEDLAMP: {
 			ctrlkey_NoKeys = 0;
 			break;;
 		}
@@ -90,8 +100,30 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	unsigned short diffKeys, currentState;
 	short keyNo;
 
+	_RB14 = !_RB14;
+
 	_T1IF = 0;
 	ctrlkey_Samples++;
+
+	// If we have pending clicks waiting for a double/tripple sequence check
+	// and time has run out, ship it!
+
+	ctrlkey_ClickPending++;
+
+	if( ctrlkey_ClickCount != 0 && ctrlkey_ClickPending > ctrlkey_DOUBLECLICK_THRESHOLD ) {
+		unsigned char clickEvent = e_KEY_CLICKED;
+		if( ctrlkey_ClickCount == 2 ) clickEvent = e_KEY_DOUBLECLICKED;
+		if( ctrlkey_ClickCount > 2 ) clickEvent = e_KEY_TRIPLECLICKED;
+
+		events_Push( clickEvent, 0,
+				hw_DeviceID,
+				ctrlkey_Key2Function[ctrlkey_ClickPendingKeyNo],
+				clickEvent, ctrlkey_ClickPendingKeyNo,
+				ctrlkey_Samples );
+
+		ctrlkey_ClickPending = 0;
+		ctrlkey_ClickCount = 0;
+	}
 
 	// We also use this timer for Watchdog resets.
 	// In addition, if we are in the middle of a PWM LED fade, WDT resets will
@@ -101,6 +133,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	if( hw_WDTCounter == 0 && ctrlkey_Holding ) {
 		events_Push( e_WDT_RESET, 0, hw_DeviceID, 0, e_WDT_RESET, 0, 0 );
 	}
+
 
 	if( ctrlkey_KeyHolding ) {
 		for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
@@ -144,10 +177,24 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 						// Is it a release?
 						else if( (currentState&0x0001) == 1 ) {
 
-							if( holdingSamples[keyNo] < ctrlkey_HOLDING_THRESHOLD )
-								events_Push( e_KEY_CLICKED, 0, hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_CLICKED, keyNo, ctrlkey_Samples );
-							else
-								events_Push( e_KEY_RELEASED, 0, hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_RELEASED, keyNo, ctrlkey_Samples );
+							if( holdingSamples[keyNo] > ctrlkey_HOLDING_THRESHOLD ) {
+
+								events_Push( e_KEY_RELEASED, 0,
+										hw_DeviceID,
+										ctrlkey_Key2Function[keyNo],
+										e_KEY_RELEASED, keyNo,
+										ctrlkey_Samples );
+							}
+
+							else {
+
+								// The key was released before being considered held, so it is a click.
+								// Don't send it until we have determined if it is a double/tripple click.
+
+								ctrlkey_ClickCount++;
+								ctrlkey_ClickPending = 0;
+								ctrlkey_ClickPendingKeyNo = keyNo;
+							}
 
 							holdingSamples[keyNo] = 0;
 						}

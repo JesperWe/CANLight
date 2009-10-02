@@ -1,5 +1,7 @@
 #include <limits.h>
 #include "led.h"
+#include "events.h"
+#include "nmea.h"
 
 #define ENABLE 		1
 #define DISABLE 		0
@@ -20,15 +22,13 @@ unsigned short led_FadeStep[led_MAX_NO_CHANNELS];		// Current step in the fade.
 unsigned short led_FadeSteps[led_MAX_NO_CHANNELS];		// Total steps in the fade.
 unsigned short led_NoChannels;
 unsigned short led_CurrentColor;
+unsigned char led_LastControlledFunction;
 
 float led_PresetLevel[led_MAX_NO_CHANNELS];
 float led_FadeTargetLevel[led_MAX_NO_CHANNELS];
 float led_FadeFromLevel[led_MAX_NO_CHANNELS];
 float led_CurrentLevel[led_MAX_NO_CHANNELS];
 float led_LastLevel, led_CurFadeStep;
-
-long led_LastTimer, led_ThisTimer, led_Interval;
-
 
 unsigned char led_CanSleep;				// If all leds are fully on or off we can sleep.
 unsigned short led_SleepTimer;			// Actually this sleep timer is used for all modules, but it needs to be declared somewhere...
@@ -40,7 +40,7 @@ void led_Initialize( void ) {
 	int i;
 
 	switch( hw_Type ) {
-		case hw_LEDLIGHT:	led_NoChannels = 2; break;
+		case hw_LEDLAMP:	led_NoChannels = 2; break;
 		case hw_SWITCH:		led_NoChannels = 1; break;
 		default:			led_NoChannels = 0; return;
 	}
@@ -80,7 +80,6 @@ void led_Initialize( void ) {
 	}
 
 	led_CurrentColor = led_RED;
-	led_Interval = 0;
 }
 
 
@@ -89,9 +88,11 @@ void led_Initialize( void ) {
 
 void led_SetLevel( unsigned char color, float level ) {
 
-	float modLevel;
+	float modLevel, lastLevel;
 	short dutycycle;
+	event_t response;
 
+	lastLevel = led_CurrentLevel[color];
 	led_CurrentLevel[color] = modLevel = level;
 
 	// Attempt to linearize light output as function of duty cycle.
@@ -112,6 +113,27 @@ void led_SetLevel( unsigned char color, float level ) {
 		case led_RED: { OC1RS = dutycycle; break;	}
 		case led_WHITE: { OC2RS = dutycycle; break; }
 	}
+
+	// Response message back to controller.
+	// Going to or from level=0 (off) from/to any other level triggers a response.
+	// If the composite lamp is addressed, only consider it off if both channels are off.
+
+	if( lastLevel == 0.0 || modLevel == 0.0 ) {
+		response.PGN = 0;
+		response.atTimer = 0;
+		response.ctrlDev = hw_DeviceID;
+		response.ctrlFunc = led_LastControlledFunction;
+		response.ctrlEvent = (level == 0.0) ? e_SWITCH_OFF : e_SWITCH_ON;
+
+		// No "off" response if other channel is still on.
+		if( response.ctrlEvent == e_SWITCH_OFF
+			&& led_CurrentLevel[1-color] > 0.0
+			&& led_LastControlledFunction == hw_LED_LIGHT
+		) return;
+
+		nmea_SendEvent( &response );
+	}
+
 }
 
 
@@ -200,13 +222,9 @@ void led_FadeToLevel( unsigned char color, float level, float fadeSeconds ) {
 
 void led_ProcessEvent( event_t *event, unsigned char function ) {
 
-	led_LastTimer = led_ThisTimer;
-	led_ThisTimer = event->atTimer;
+	led_LastControlledFunction = function;
 
-	if( led_Interval == 0 ) led_Interval = USHRT_MAX; // Only first event after Power Up.
-	else led_Interval = led_ThisTimer - led_LastTimer;
-
-	if( led_Interval < 0 ) led_Interval += USHRT_MAX;
+	if( function != hw_LED_LIGHT ) led_CurrentColor = (function==hw_LED_RED) ? led_RED : led_WHITE;
 
 	switch( event->ctrlEvent ) {
 		case e_KEY_HOLDING: {
@@ -220,24 +238,13 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_KEY_CLICKED: {
-
-			// Double click?
-
-			if( led_Interval < 400 ) {
-				led_StopFade( led_CurrentColor );
-				led_SetLevel( led_CurrentColor, led_LastLevel );
-
-				// Double click switches color.
-
-				if( led_CurrentColor == led_RED ) led_CurrentColor = led_WHITE;
-				else led_CurrentColor = led_RED;
-
-			} else {
-
-				// Single click.
-
-				led_LastLevel = led_CurrentLevel[led_CurrentColor];
-				led_Toggle( led_CurrentColor, 3.0 );
+			led_LastLevel = led_CurrentLevel[led_CurrentColor];
+			led_Toggle( led_CurrentColor, 3.0 );
+			break;
+		}
+		case e_KEY_DOUBLECLICKED: {
+			if( hw_Type == hw_LEDLAMP && function == hw_LED_LIGHT ) {
+				led_CurrentColor = (led_CurrentColor==led_RED) ? led_WHITE : led_RED;
 			}
 			break;
 		}

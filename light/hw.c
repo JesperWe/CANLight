@@ -128,7 +128,7 @@ void hw_Initialize( void ) {
 
 	fidc_ics = fidc_data.byte.LB & 0x03; // Filter out ICS bits.
 
-	if( fidc_ics == 0x3 ) hw_Type = hw_LEDLIGHT;
+	if( fidc_ics == 0x3 ) hw_Type = hw_LEDLAMP;
 	if( fidc_ics == 0x2 ) hw_Type = hw_SWITCH;
 
 	// Load unique device ID (Microchip refers to this as Unit ID)
@@ -169,7 +169,7 @@ void hw_Initialize( void ) {
 	// IO setup for SN65HVD234 CANBus driver.
 	// The wiring is different on different versions of the hardware.
 
-	// hw_Type					hw_LEDLIGHT		hw_SWITCH
+	// hw_Type					hw_LEDLAMP		hw_SWITCH
 	//--------------------------------------------------------------
 	// Slew Rate control pin	Pin  8 RB10		Pin 20 RA1
 	// Driver Enable			Pin  9 RB11		Pin 22 RB1
@@ -188,7 +188,7 @@ void hw_Initialize( void ) {
 
 	switch( hw_Type ) {
 
-		case hw_LEDLIGHT: {
+		case hw_LEDLAMP: {
 
 			hw_OutputPort( hw_LED_RED );
 			hw_OutputPort( hw_LED_WHITE );
@@ -227,8 +227,12 @@ void hw_Initialize( void ) {
 //-------------------------------------------------------------------------------
 
 unsigned char hw_IsPWM( unsigned short hw_Port ) {
-	if( hw_Port == hw_LED_RED ) return 1;
-	if( hw_Port == hw_LED_WHITE ) return 1;
+
+	if( hw_Port == hw_LED_RED ||
+		hw_Port == hw_LED_WHITE ||
+		hw_Port == hw_LED_LIGHT
+	) return 1;
+
 	return 0;
 }
 

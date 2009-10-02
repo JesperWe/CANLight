@@ -23,7 +23,7 @@ int main (void)
 
 	switch( hw_Type ) {
 
-		case hw_LEDLIGHT: {
+		case hw_LEDLAMP: {
 			led_Initialize();
 			led_PresetLevel[ led_RED ] = 1.0;
 			led_PresetLevel[ led_WHITE ] = 0.5;
@@ -73,9 +73,9 @@ int main (void)
 
 			switch( eventPtr->type ) {
 
-				// Events that originates from this devices hardware usually
-				// generate NMEA messages. We always start with a MAINTAIN_POWER
-				// message to allow devices which are sleeping to have a CAN Bus wakeup.
+				// Events that originates from this device's hardware usually
+				// generate NMEA messages. We always start with a MAINTAIN_POWER message
+				// to allow devices which are sleeping to have a CAN Bus interrupt.
 
 				case e_KEY_CLICKED: {
 					led_SleepTimer = 0;
@@ -89,6 +89,25 @@ int main (void)
 							hw_DeviceID,
 							eventPtr->ctrlFunc,
 							e_KEY_CLICKED, 0,
+							eventPtr->atTimer
+						);
+					}
+
+					break;
+				}
+
+				case e_KEY_DOUBLECLICKED: {
+					led_SleepTimer = 0;
+					nmea_Wakeup();
+					nmea_SendEvent( eventPtr );
+
+					if( loopbackEnabled ) {
+						events_Push(
+							e_NMEA_MESSAGE,
+							nmea_LIGHTING_COMMAND,
+							hw_DeviceID,
+							eventPtr->ctrlFunc,
+							e_KEY_DOUBLECLICKED, 0,
 							eventPtr->atTimer
 						);
 					}
@@ -134,6 +153,9 @@ int main (void)
 					break;
 				}
 
+				// Do a watchdog reset and at the same time step intensity levels for channels
+				// that are being faded up or down.
+
 				case e_WDT_RESET: {
 					if( ctrlkey_Holding ) {
 						newLevel = led_CurrentLevel[led_CurrentColor];
@@ -145,7 +167,7 @@ int main (void)
 					break;
 				}
 
-				// When we get a NMEA message that we are listening to we find
+				// When we get a NMEA message (that we are listening to!) we find
 				// out what function it controls, and take the appropriate action.
 
 				case e_NMEA_MESSAGE: {

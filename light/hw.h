@@ -34,11 +34,12 @@ enum hw_PortNames {
 	hw_KEY1,
 	hw_KEY2,
 	hw_KEY3,
+	hw_LED_LIGHT,	// Composite function RED+WHITE
 	hw_NoPortNames
 };
 
 enum hw_Variants {
-	hw_LEDLIGHT,
+	hw_LEDLAMP,
 	hw_SWITCH,
 	hw_UNKNOWN,
 	hw_NoVariants

@@ -16,12 +16,11 @@ extern float led_CurrentLevel[];
 extern float led_LastLevel, led_CurFadeStep;
 
 extern unsigned char led_CanSleep;
+extern unsigned char led_LastControlledFunction;
 extern unsigned short led_NoChannels;
 extern unsigned short led_CurrentColor;
 extern unsigned short led_SleepTimer;
 extern unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];
-
-extern long led_LastTimer, led_ThisTimer, led_Interval;
 
 void led_Initialize( void );
 

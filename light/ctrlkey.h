@@ -16,6 +16,7 @@
 #define ctrlkey_MAX_NO_KEYS 3
 
 #define ctrlkey_HOLDING_THRESHOLD 300
+#define ctrlkey_DOUBLECLICK_THRESHOLD 500
 
 
 //---------------------------------------------------------------------------------------------
@@ -26,6 +27,8 @@ extern unsigned short ctrlkey_States[3];
 extern unsigned short ctrlkey_Samples;
 extern unsigned short ctrlkey_NoKeys;
 extern unsigned char ctrlkey_EventPending;
+extern unsigned short ctrlkey_ClickPending;
+extern unsigned char ctrlkey_ClickCount;
 extern unsigned char ctrlkey_KeyHolding;
 extern unsigned char ctrlkey_Holding;
 

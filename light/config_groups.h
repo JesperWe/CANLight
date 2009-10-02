@@ -86,15 +86,15 @@
   gEnd, \
 \
   grp01, 07, hw_LED3, gEnd, \
-  23, hw_LED_RED, e_SWITCH_ON, e_SWITCH_OFF, gEnd, \
+  23, hw_LED_LIGHT, e_SWITCH_ON, e_SWITCH_OFF, gEnd, \
   gEnd, \
 \
   grp02, 07, hw_LED2, gEnd, \
   07, hw_KEY2, e_KEY_CLICKED, gEnd, \
   gEnd, \
 \
-  grp03, 23, hw_LED_RED, gEnd, \
-  07, hw_KEY3, e_KEY_CLICKED, e_KEY_HOLDING, e_KEY_RELEASED, gEnd, \
+  grp03, 23, hw_LED_LIGHT, gEnd, \
+  07, hw_KEY3, e_KEY_CLICKED, e_KEY_DOUBLECLICKED, e_KEY_HOLDING, e_KEY_RELEASED, gEnd, \
   gEnd, \
 \
 endConfig }
