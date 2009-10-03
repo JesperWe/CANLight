@@ -15,23 +15,23 @@
 #define events_QUEUESIZE	10
 
 enum event_Events {
-	e_KEY_CLICKED,
-	e_KEY_HOLDING,
-	e_KEY_RELEASED,
-	e_KEY_DOUBLECLICKED,
-	e_KEY_TRIPLECLICKED,
-	e_SWITCH_ON,
-	e_SWITCH_OFF,
-	e_SWITCH_FAIL,
-	e_FADE_START,
-	e_FADE_STOP,
-	e_WDT_RESET,
-	e_NMEA_MESSAGE,
-	e_NIGHTMODE,
-	e_DAYLIGHTMODE,
-	e_BACKLIGHT_LEVEL,
-	e_BLACKOUT,
-	e_NO_EVENTS
+	/* 00 */ e_KEY_CLICKED,
+	/* 01 */ e_KEY_HOLDING,
+	/* 02 */ e_KEY_RELEASED,
+	/* 03 */ e_KEY_DOUBLECLICKED,
+	/* 04 */ e_KEY_TRIPLECLICKED,
+	/* 05 */ e_SWITCH_ON,
+	/* 06 */ e_SWITCH_OFF,
+	/* 07 */ e_SWITCH_FAIL,
+	/* 08 */ e_FADE_START,
+	/* 09 */ e_FADE_STOP,
+	/* 10 */ e_WDT_RESET,
+	/* 11 */ e_NMEA_MESSAGE,
+	/* 12 */ e_NIGHTMODE,
+	/* 13 */ e_DAYLIGHTMODE,
+	/* 14 */ e_BACKLIGHT_LEVEL,
+	/* 15 */ e_BLACKOUT,
+	/* 16 */ e_NO_EVENTS
 };
 
 typedef struct {
