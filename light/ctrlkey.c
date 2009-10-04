@@ -94,6 +94,8 @@ unsigned short ctrlkey_ReadKeys( void ) {
 // Timer 1 Interrupt. Keep track of all key changes, accept them as de-bounced if they
 // are stable over two periods. Then track key pressed times, and generate key clicked,
 // key held or key released events accordingly.
+//
+// Timer 1 should run with an Interrupt Interval of about 1ms.
 
 void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	static unsigned short holdingSamples[ctrlkey_MAX_NO_KEYS];

@@ -1,6 +1,7 @@
 #include <limits.h>
 #include "led.h"
 #include "events.h"
+#include "display.h"
 #include "nmea.h"
 
 #define ENABLE 		1
@@ -254,12 +255,16 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 
 //---------------------------------------------------------------------------------------------
 // Timer3 Interrupt service is responsible for smooth lighting transitions.
+// We also use this interrupt for polling the I2C keypad if there is one attached.
+//
+// Timer 3 should run with an Interupt Interval of 40ms.
 
 void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
 	unsigned short i, curStep;
 	float fadePos, multiplier, value;
 
 	_T3IE = DISABLE;
+	_T3IF = CLEAR;
 
 	led_CanSleep = 1;
 	led_SleepTimer++;
@@ -283,7 +288,28 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
 		}
 	}
 
-	_T3IF = CLEAR;
-	//if( led_FadeInProgress[0]==1 || led_FadeInProgress[1]==1 )
+	if( hw_I2C_Installed ) {
+
+		// We can either poll the keypad or process a pressed key in one interrupt cycle.
+		// The display is too slow to poll and process in the same cycle, it will protest.
+
+		if( display_PendingKeypress == 0 ) {
+
+			display_PendingKeypress = display_ReadKeypad();
+			if( display_PendingKeypress != 0x00 ) {
+
+				// If MSB is set there was a negative status which means the display
+				// did not ACK. It is propably busy. So we try again next interrupt cycle.
+
+				if( (display_PendingKeypress & 0x80) != 0 ) display_PendingKeypress = 0;
+			}
+		}
+
+		else {
+			display_Keypress( display_PendingKeypress );
+			display_PendingKeypress = 0;
+		}
+	}
+
 	_T3IE = ENABLE;
 }

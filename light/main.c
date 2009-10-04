@@ -69,7 +69,7 @@ int main (void)
 
 	while(1) {
 
-		_RB14 = 0;
+		//_RB14 = 0;
 		//if( led_SleepTimer > 250 ) goodnight();
 
 		eventPtr = events_Pop();
