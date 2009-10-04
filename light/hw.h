@@ -15,7 +15,13 @@
 #ifndef HW_H_
 #define HW_H_
 
+#define FCY 698800UL
+
 #define NOP __builtin_nop()
+
+#define hw_ECAN_MODE_NORMAL	0x0
+#define hw_ECAN_MODE_DISABLE	0x1
+
 
 #define hw_CONFIG_MAGIC_WORD	4712
 
@@ -75,6 +81,7 @@ extern hw_Config_t hw_Config;
 extern _prog_addressT hw_ConfigPtr;
 extern unsigned short hw_WDTCounter;
 extern unsigned short hw_Type;
+extern unsigned char  hw_I2C_Installed;
 extern unsigned short hw_DeviceID;
 extern unsigned short hw_PWMInverted;
 extern const unsigned short hw_NoKeys[hw_NoVariants];

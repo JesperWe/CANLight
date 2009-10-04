@@ -18,6 +18,9 @@ unsigned short 			hw_WDTCounter = 0;
 unsigned short			hw_PWMInverted = 0;
 
 unsigned short			hw_Type;
+unsigned char			hw_I2C_Installed = 0;
+unsigned char			hw_ConfigByte = 0;
+
 unsigned short			hw_DeviceID;
 
 
@@ -135,13 +138,20 @@ void hw_Initialize( void ) {
 	// The LS 8 bits is our device ID in the system.
 
 	fidc.Val = 0xf80016;
-
-	TBLPAG = fidc.word.HW;
-
 	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
 	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
 
 	hw_DeviceID = fidc_ics = fidc_data.byte.LB;
+
+	// Find out additional individual config parameters from second Unit ID byte.
+
+	fidc.Val = 0xf80014;
+	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+
+	hw_ConfigByte = fidc_data.byte.LB;
+
+	hw_I2C_Installed = ((hw_ConfigByte & 0x01) != 0);
 
 	// Check configuration area, erase it if it is non-zero but seems corrupted.
 	// This can happen if the code has been recompiled and the compiler
@@ -208,6 +218,10 @@ void hw_Initialize( void ) {
 			hw_OutputPort( hw_LED1 );
 			hw_OutputPort( hw_LED2 );
 			hw_OutputPort( hw_LED3 );
+
+			hw_WritePort( hw_LED1, 0 );
+			hw_WritePort( hw_LED2, 0 );
+			hw_WritePort( hw_LED3, 0 );
 
 			PPSUnLock;
 			PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to RP5.

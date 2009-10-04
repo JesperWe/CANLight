@@ -1,5 +1,3 @@
-#define FCY 698800UL
-
 #include "hw.h"
 #include "led.h"
 #include "nmea.h"
@@ -7,12 +5,9 @@
 #include "events.h"
 #include "config.h"
 #include "ctrlkey.h"
+#include "display.h"
 
 void goodnight( void );
-
-//_FOSCSEL( FNOSC_FRCPLL )
-//_FWDT( FWDTEN_OFF )
-//_FICD( ICS_PGD1 )
 
 int main (void)
 {
@@ -45,6 +40,15 @@ int main (void)
 	cfg_Initialize();
 	events_Initialize();
 	nmea_Initialize();
+
+	if( hw_I2C_Installed ) {
+		display_Initialize();
+		display_Clear();
+		display_SetPosition( 5,2 );
+		display_Write( "Journeyman 60" );
+		display_SetPosition( 5,3 );
+		display_Write( "Control System" );
+	}
 
 	// No point in running if we have no valid system configuration,
 	// so stay here waiting for one to arrive and flash something to show
@@ -205,7 +209,8 @@ int main (void)
 void goodnight( void ) {
 
 	_RB14 = 1;
-	nmea_ControllerMode( 1 ); // Disable
+
+	nmea_ControllerMode( hw_ECAN_MODE_DISABLE );
 
 	if( led_CanSleep ) {
 		asm volatile ("PWRSAV #0");
@@ -216,5 +221,6 @@ void goodnight( void ) {
 
 	_RB14 = 0;
 	led_SleepTimer = 0;
-	nmea_ControllerMode( 0 ); // Normal Operation
+
+	nmea_ControllerMode( hw_ECAN_MODE_NORMAL );
 }
