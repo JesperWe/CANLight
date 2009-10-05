@@ -6,6 +6,7 @@
 #include "config.h"
 #include "ctrlkey.h"
 #include "display.h"
+#include "menu.h"
 
 void goodnight( void );
 
@@ -43,11 +44,7 @@ int main (void)
 
 	if( hw_I2C_Installed ) {
 		display_Initialize();
-		display_Clear();
-		display_SetPosition( 5,2 );
-		display_Write( "Journeyman 60" );
-		display_SetPosition( 5,3 );
-		display_Write( "Control System" );
+		menu_Initialize();
 	}
 
 	// No point in running if we have no valid system configuration,

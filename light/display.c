@@ -14,11 +14,11 @@ short display_Contrast = 0x80;
 
 
 void display_Keypress( unsigned char key ) {
-/*	char line1[20];
+	char line1[20];
 	display_SetPosition(1,1);
 	sprintf( line1, "Key: 0x%02X", key );
 	display_Write( line1 );
-*/
+
 	switch( key ) {
 
 		case DISPLAY_KEY_ONOFF:		{
@@ -68,7 +68,7 @@ void display_Keypress( unsigned char key ) {
 
 		case DISPLAY_KEY_LEFT:		{ break; }
 		case DISPLAY_KEY_STOP:		{ break; }
-		case DISPLAY_KEY_FWD:		{ break; }
+		case DISPLAY_KEY_PLAY:		{ break; }
 		case DISPLAY_KEY_RIGHT:		{ break; }
 		case DISPLAY_KEY_NORTH:		{ break; }
 		case DISPLAY_KEY_SOUTH:		{ break; }
@@ -91,14 +91,32 @@ void display_Initialize() {
 	           I2C1_START_DIS);
 	OpenI2C1(config1,config2);
 
-
 	display_Send3bytes( DISPLAY_CMD, DISPLAY_RS232_AUTOXMIT, 0 );
 	display_Send3bytes( DISPLAY_CMD, DISPLAY_DEBOUNCE, 12 );
 	display_Send2bytes( DISPLAY_CMD, DISPLAY_WRAP_ON );
-	for( config1=0; config1<1000; config1++) __delay32(11);
+	display_Send2bytes( DISPLAY_CMD, DISPLAY_FLUSH_KEYS );
+
 	display_SetBrightness( display_Brightness );
-	for( config1=0; config1<1000; config1++) __delay32(11);
+
 	display_SetContrast( display_Contrast );
+
+/* Code below only needed when initializing a factory reset display.
+   Maybe we should set up a RS232 connection to do this is the future?
+	do {
+		status = display_Address(0);
+		if( status != 0 ) continue;
+		status = MasterWriteI2C1( DISPLAY_CMD );
+		IdleI2C1();
+		if( status != 0 ) continue;
+		status = MasterWriteI2C1( 0x40 );
+		IdleI2C1();
+		if( status != 0 ) continue;
+	} while( status != 0 );
+	//               1234567890123456789||234567890123456789||234567890123456789||2345678901234567890
+	MasterputsI2C1( "                         JOURNEYMAN        CONTROL SYSTEM                       " );
+	IdleI2C1();
+	StopI2C1();
+	IdleI2C1(); */
 }
 
 
@@ -120,6 +138,7 @@ unsigned char display_Write( char *str ) {
 	MasterputsI2C1( (unsigned char*)str );
 	IdleI2C1();
 	StopI2C1();
+	IdleI2C1();
 	return status;
 }
 
@@ -265,8 +284,9 @@ unsigned char display_ReadKeypad() {
 	unsigned char status;
 	status = display_Address(1);
 	if( status != 0 ) return status;
-	return MasterReadI2C1();
+	status = MasterReadI2C1();
 	IdleI2C1();
 	StopI2C1();
 	IdleI2C1();
+	return status;
 }

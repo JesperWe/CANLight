@@ -3,6 +3,7 @@
 #include "events.h"
 #include "display.h"
 #include "nmea.h"
+#include "menu.h"
 
 #define ENABLE 		1
 #define DISABLE 		0
@@ -306,7 +307,7 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
 		}
 
 		else {
-			display_Keypress( display_PendingKeypress );
+			menu_ProcessKey( display_PendingKeypress );
 			display_PendingKeypress = 0;
 		}
 	}
