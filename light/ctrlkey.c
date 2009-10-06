@@ -127,13 +127,16 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 		ctrlkey_ClickCount = 0;
 	}
 
-	// We also use this timer for Watchdog resets.
-	// In addition, if we are in the middle of a PWM LED fade, WDT resets will
+	// We also use this timer for the heartbeat timers. (Slow = 3s / Fast = 0.3s)
+	// In addition, if we are in the middle of a PWM LED fade, heartbeats will
 	// step the fade level.
 
-	hw_WDTCounter = ++hw_WDTCounter % 300;
-	if( hw_WDTCounter == 0 && ctrlkey_Holding ) {
-		events_Push( e_WDT_RESET, 0, hw_DeviceID, 0, e_WDT_RESET, 0, 0 );
+	hw_HeartbeatCounter = ++hw_HeartbeatCounter % 3000;
+	if( (hw_HeartbeatCounter % 300) == 0 && ctrlkey_Holding ) {
+		events_Push( e_FAST_HEARTBEAT, 0, hw_DeviceID, 0, e_FAST_HEARTBEAT, 0, 0 );
+	}
+	if( hw_HeartbeatCounter == 0 ) {
+		events_Push( e_SLOW_HEARTBEAT, 0, hw_DeviceID, 0, e_SLOW_HEARTBEAT, 0, 0 );
 	}
 
 

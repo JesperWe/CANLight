@@ -176,6 +176,7 @@ void nmea_Wakeup() {
 
 unsigned char nmea_SendEvent( event_t *event )
 {
+	unsigned char status;
 	nmea_MakePGN( 0, nmea_LIGHTING_COMMAND, 8 );
 	outPGN.data[0] = event->type;
 	outPGN.data[1] = event->data;
@@ -184,7 +185,21 @@ unsigned char nmea_SendEvent( event_t *event )
 	outPGN.data[4] = event->ctrlDev;
 	outPGN.data[5] = event->ctrlFunc;
 	outPGN.data[6] = event->ctrlEvent;
-	return nmea_SendMessage();
+	status = nmea_SendMessage();
+
+	if( loopbackEnabled ) {
+		events_Push(
+			e_NMEA_MESSAGE,
+			nmea_LIGHTING_COMMAND,
+			hw_DeviceID,
+			eventPtr->ctrlFunc,
+			eventPtr->ctrlEvent,
+			eventPtr->data,
+			eventPtr->atTimer
+		);
+	}
+
+	return status;
 }
 
 //---------------------------------------------------------------------------------------------

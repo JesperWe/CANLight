@@ -14,14 +14,17 @@ unsigned short __attribute__((space(prog),aligned(_FLASH_PAGE*2)))
 hw_Config_t hw_Config;
 
 _prog_addressT			hw_ConfigPtr;
-unsigned short 			hw_WDTCounter = 0;
+unsigned short 		hw_HeartbeatCounter = 0;
 unsigned short			hw_PWMInverted = 0;
 
 unsigned short			hw_Type;
 unsigned char			hw_I2C_Installed = 0;
+unsigned char			hw_Detector_Installed = 0;
 unsigned char			hw_ConfigByte = 0;
 
 unsigned short			hw_DeviceID;
+
+unsigned char			hw_AmbientLevel;
 
 
 //-------------------------------------------------------------------------------
@@ -102,11 +105,11 @@ void hw_WritePort(enum hw_PortNames port, int value) {
 
 void hw_Initialize( void ) {
 	DWORD_VAL fidc, fidc_data;
-	short fidc_ics;
+	//short fidc_ics;
 
 	CLKDIVbits.DOZE = 0;			// To make Fcy = Fosc/2
 
-	AD1PCFGL = 0x1FFF;					// ANx eats ECAN1 SNAFU!
+	AD1PCFGL = 0x1FFF;				// ANx eats ECAN1 SNAFU!
 
 	// Set up clock oscillator.
 
@@ -129,10 +132,10 @@ void hw_Initialize( void ) {
 	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
 	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
 
-	fidc_ics = fidc_data.byte.LB & 0x03; // Filter out ICS bits.
+	//fidc_ics = fidc_data.byte.LB & 0x03; // Filter out ICS bits.
 
-	if( fidc_ics == 0x3 ) hw_Type = hw_LEDLAMP;
-	if( fidc_ics == 0x2 ) hw_Type = hw_SWITCH;
+	//if( fidc_ics == 0x3 ) hw_Type = hw_LEDLAMP;
+	//if( fidc_ics == 0x2 ) hw_Type = hw_SWITCH;
 
 	// Load unique device ID (Microchip refers to this as Unit ID)
 	// The LS 8 bits is our device ID in the system.
@@ -141,7 +144,7 @@ void hw_Initialize( void ) {
 	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
 	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
 
-	hw_DeviceID = fidc_ics = fidc_data.byte.LB;
+	hw_DeviceID = fidc_data.byte.LB;
 
 	// Find out additional individual config parameters from second Unit ID byte.
 
@@ -151,7 +154,9 @@ void hw_Initialize( void ) {
 
 	hw_ConfigByte = fidc_data.byte.LB;
 
-	hw_I2C_Installed = ((hw_ConfigByte & 0x01) != 0);
+	hw_I2C_Installed = ((hw_ConfigByte & 0x10) != 0);
+	hw_Detector_Installed = ((hw_ConfigByte & 0x20) != 0);
+	hw_Type = hw_ConfigByte & 0x0F;
 
 	// Check configuration area, erase it if it is non-zero but seems corrupted.
 	// This can happen if the code has been recompiled and the compiler
@@ -233,8 +238,23 @@ void hw_Initialize( void ) {
 		}
 	}
 
-	hw_WDTCounter = 0;
+	hw_HeartbeatCounter = 0;
+	
+	// Lastly check that we have a valid device Id.
+	// Device ID = 0xFF is not allowed. It indicates that the device was programmed
+	// with default 0xFFFFFFFF in the Unit ID form of MPLAB.
 
+	if( hw_DeviceID == 0xFF ) {
+		unsigned short i;
+		_TRISB5 = 0;
+		_TRISB11 = 0;
+		while(1) {
+			_RB5 = _RB11 = 0;
+			for( i=0; i<50000; i++) __delay32(11);
+			_RB5 = _RB11 = 0;
+			for( i=0; i<10000; i++) __delay32(11);
+		}
+	}
 }
 
 
@@ -253,3 +273,23 @@ unsigned char hw_IsPWM( unsigned short hw_Port ) {
 
 //-------------------------------------------------------------------------------
 
+void ADC_Initialize(void) {
+	AD1CON1bits.ADON = 0;
+	AD1PCFGLbits.PCFG11 = 0;	// AN11 to Analog Mode.
+	AD1CON1 = 0x00E0;			// Idle=Stop, 10bit, unsigned, Auto conversion.
+	AD1CON2bits.VCFG = 0x0;		// AVss/AVdd
+	AD1CON3 = 0x0800;			// System clock, Ts = 8xTad, Tad=1xTcy.
+
+	AD1CHS0bits.CH0SA = 0x0B;	// Sample A input = Channel AN11
+	AD1CHS0bits.CH0SB = 0x0B;	// Sample A input = Channel AN11
+
+	AD1CSSL = 0x0000;			// No scanning.
+	IFS0bits.AD1IF = 0;
+	AD1CON1bits.ADON = 1;
+}
+
+unsigned short ADC_Read() {
+	AD1CON1bits.SAMP = 1;
+	while (!AD1CON1bits.DONE);
+	return ADC1BUF0;
+}

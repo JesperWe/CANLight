@@ -156,6 +156,19 @@ void menu_ProcessKey( unsigned char keypress ) {
 				menu_NextStateId = menu_CurState->events[menu_NextIndex+1].id;
 				break;
 			}
+
+		// Not part of the State Machine, just switch backlight on or off.
+		case DISPLAY_KEY_ONOFF: {
+				if( display_IsOn ) {
+					display_Off();
+					display_IsOn = 0;
+				}
+				else {
+					display_On();
+					display_IsOn = 1;
+				}
+				return;
+			}
 	}
 
 	menu_SetState( menu_NextStateId );

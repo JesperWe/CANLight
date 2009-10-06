@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "hw.h"
 #include "led.h"
 #include "nmea.h"
@@ -16,6 +18,15 @@ int main (void)
 	cfg_Event_t *listenEvent;
 
 	hw_Initialize();
+
+	if( hw_I2C_Installed ) {
+		display_Initialize();
+		menu_Initialize();
+	}
+
+	if( hw_Detector_Installed ) {
+		ADC_Initialize();
+	}
 
 	switch( hw_Type ) {
 
@@ -41,11 +52,6 @@ int main (void)
 	cfg_Initialize();
 	events_Initialize();
 	nmea_Initialize();
-
-	if( hw_I2C_Installed ) {
-		display_Initialize();
-		menu_Initialize();
-	}
 
 	// No point in running if we have no valid system configuration,
 	// so stay here waiting for one to arrive and flash something to show
@@ -82,18 +88,6 @@ int main (void)
 					led_SleepTimer = 0;
 					nmea_Wakeup();
 					nmea_SendEvent( eventPtr );
-
-					if( loopbackEnabled ) {
-						events_Push(
-							e_NMEA_MESSAGE,
-							nmea_LIGHTING_COMMAND,
-							hw_DeviceID,
-							eventPtr->ctrlFunc,
-							e_KEY_CLICKED, 0,
-							eventPtr->atTimer
-						);
-					}
-
 					break;
 				}
 
@@ -101,18 +95,6 @@ int main (void)
 					led_SleepTimer = 0;
 					nmea_Wakeup();
 					nmea_SendEvent( eventPtr );
-
-					if( loopbackEnabled ) {
-						events_Push(
-							e_NMEA_MESSAGE,
-							nmea_LIGHTING_COMMAND,
-							hw_DeviceID,
-							eventPtr->ctrlFunc,
-							e_KEY_DOUBLECLICKED, 0,
-							eventPtr->atTimer
-						);
-					}
-
 					break;
 				}
 
@@ -120,18 +102,6 @@ int main (void)
 					led_SleepTimer = 0;
 					nmea_Wakeup();
 					nmea_SendEvent( eventPtr );
-
-					if( loopbackEnabled ) {
-						events_Push(
-							e_NMEA_MESSAGE,
-							nmea_LIGHTING_COMMAND,
-							hw_DeviceID,
-							eventPtr->ctrlFunc,
-							e_KEY_HOLDING, 0,
-							eventPtr->atTimer
-						);
-					}
-
 					break;
 				}
 
@@ -139,31 +109,59 @@ int main (void)
 					led_SleepTimer = 0;
 					nmea_Wakeup();
 					nmea_SendEvent( eventPtr );
-
-					if( loopbackEnabled ) {
-						events_Push(
-							e_NMEA_MESSAGE,
-							nmea_LIGHTING_COMMAND,
-							hw_DeviceID,
-							eventPtr->ctrlFunc,
-							e_KEY_RELEASED, 0,
-							eventPtr->atTimer
-						);
-					}
-
 					break;
 				}
 
-				// Do a watchdog reset and at the same time step intensity levels for channels
-				// that are being faded up or down.
+				// Step intensity levels for channels that are being faded up or down.
+				// XXX Watchdog reset too.
 
-				case e_WDT_RESET: {
+				case e_FAST_HEARTBEAT: {
 					if( ctrlkey_Holding ) {
 						newLevel = led_CurrentLevel[led_CurrentColor];
 						newLevel += led_CurFadeStep;
 						if( newLevel > 1.0 ) { led_CurFadeStep = - led_CurFadeStep; newLevel = 1.0; }
 						if( newLevel < 0.0 ) { led_CurFadeStep = - led_CurFadeStep; newLevel = 0.0; }
 						led_SetLevel( led_CurrentColor, newLevel );
+					}
+					break;
+				}
+
+				case e_SLOW_HEARTBEAT: {
+					{
+						if( hw_Detector_Installed ) {
+							unsigned short pvVoltage;
+							char line1[20];
+							event_t	ambientEvent;
+
+							pvVoltage = ADC_Read();
+
+							// Set system backlight level based on ambient light.
+
+							pvVoltage = pvVoltage >> 2;
+							if( hw_AmbientLevel != pvVoltage ) {
+
+							}
+								hw_AmbientLevel = pvVoltage;
+
+								ambientEvent.PGN = 0;
+								ambientEvent.atTimer = 0;
+								ambientEvent.ctrlDev = hw_DeviceID;
+								ambientEvent.ctrlFunc = hw_BACKLIGHT;
+								ambientEvent.ctrlEvent = e_AMBIENT_LIGHT_LEVEL;
+								ambientEvent.data = hw_AmbientLevel;
+
+								nmea_SendEvent( &ambientEvent );
+
+								if( hw_I2C_Installed ) {
+									unsigned short blLevel;
+									blLevel = hw_AmbientLevel + 20;
+									if( blLevel > 0xFF ) blLevel = 0xFF;
+									//display_Home();
+									//sprintf( line1, "v = %04d, bl = %03d", hw_AmbientLevel, blLevel );
+									//display_Write( line1 );
+									display_SetBrightness( blLevel );
+							}
+						}
 					}
 					break;
 				}

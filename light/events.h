@@ -25,13 +25,14 @@ enum event_Events {
 	/* 07 */ e_SWITCH_FAIL,
 	/* 08 */ e_FADE_START,
 	/* 09 */ e_FADE_STOP,
-	/* 10 */ e_WDT_RESET,
+	/* 10 */ e_FAST_HEARTBEAT,
 	/* 11 */ e_NMEA_MESSAGE,
 	/* 12 */ e_NIGHTMODE,
 	/* 13 */ e_DAYLIGHTMODE,
-	/* 14 */ e_BACKLIGHT_LEVEL,
+	/* 14 */ e_AMBIENT_LIGHT_LEVEL,
 	/* 15 */ e_BLACKOUT,
-	/* 16 */ e_NO_EVENTS
+	/* 16 */ e_SLOW_HEARTBEAT,
+	/* 17 */ e_NO_EVENTS
 };
 
 typedef struct {

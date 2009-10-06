@@ -94,7 +94,7 @@ cfg_Event_t* event_FindNextListener( cfg_Event_t *fromAccept, event_t* event ) {
 	// The WDT Reset event does not have a corresponding cfg_Event, but
 	// we need to return some none zero value here.
 
-	if( event->type == e_WDT_RESET ) return (cfg_Event_t*)1;
+	if( event->type == e_FAST_HEARTBEAT ) return (cfg_Event_t*)1;
 
 	accept = fromAccept;
 

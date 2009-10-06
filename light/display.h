@@ -56,5 +56,6 @@ void display_SetContrast( unsigned char value );
 unsigned char display_ReadKeypad();
 
 extern unsigned char display_PendingKeypress;
+extern unsigned char display_IsOn;
 
 #endif
