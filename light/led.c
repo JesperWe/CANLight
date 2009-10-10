@@ -4,6 +4,7 @@
 #include "display.h"
 #include "nmea.h"
 #include "menu.h"
+#include "engine.h"
 
 #define ENABLE 		1
 #define DISABLE 		0
@@ -287,6 +288,10 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
 				led_FadeInProgress[i] = DISABLE;
 			}
 		}
+	}
+
+	if( hw_Throttle_Installed ) {
+		engine_ReadJoystickLevel();
 	}
 
 	if( hw_I2C_Installed ) {

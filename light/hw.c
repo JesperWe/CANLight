@@ -20,6 +20,7 @@ unsigned short			hw_PWMInverted = 0;
 unsigned short			hw_Type;
 unsigned char			hw_I2C_Installed = 0;
 unsigned char			hw_Detector_Installed = 0;
+unsigned char			hw_Throttle_Installed = 0;
 unsigned char			hw_ConfigByte = 0;
 
 unsigned char			hw_DeviceID;
@@ -155,7 +156,11 @@ void hw_Initialize( void ) {
 	hw_ConfigByte = fidc_data.byte.LB;
 
 	hw_I2C_Installed = ((hw_ConfigByte & 0x10) != 0);
+
 	hw_Detector_Installed = ((hw_ConfigByte & 0x20) != 0);
+
+	hw_Throttle_Installed = ((hw_ConfigByte & 0x40) != 0);
+
 	hw_Type = hw_ConfigByte & 0x0F;
 
 	// Check configuration area, erase it if it is non-zero but seems corrupted.

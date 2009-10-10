@@ -8,6 +8,7 @@
 #include "hw.h"
 #include "display.h"
 #include "menu.h"
+#include "engine.h"
 
 
 _psv(M_TITLE)		= "JM60 Control System";
@@ -73,17 +74,28 @@ int (*menu_ActiveHandler)(void);
 // Event handlers for menu items that have custom code.
 
 int menu_Engine() {
+	display_SetPosition(1,2);
+	display_Write("Throttle:");
+	display_SetPosition(1,3);
+	display_Write("Gearbox:");
+
 	menu_ActiveHandler = menu_Engine_Status;
 	return 0;
 }
 
 
 int menu_Engine_Status() {
-	unsigned short v;
-	unsigned short div = 10;
-	v = ADC_Read(4);
-	v = v / div;
-	display_HorizontalBar( 1, 2, (unsigned char)v );
+	unsigned char gear;
+
+	display_HorizontalBar( 10, 2, engine_ThrottleSetting );
+
+	switch(engine_GearboxSetting) {
+		case -50: { gear = 1; break; }
+		case   0: { gear = 25; break; }
+		case  50: { gear = 49; break; }
+	}
+
+	display_HorizontalBar( 10, 3, gear );
 	return 0;
 }
 
@@ -151,7 +163,6 @@ void menu_SetState( unsigned char state ) {
 		display_SetPosition( display_COLS_WIDE-textLength+1, display_ROWS_HIGH );
 		display_Write( menu_CurState->events[ menu_NextIndex+1 ].descr );
 	}
-
 }
 
 

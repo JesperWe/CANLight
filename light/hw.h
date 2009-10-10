@@ -76,16 +76,17 @@ typedef union hw_Config_u {
 //---------------------------------------------------------------------------------------------
 
 extern unsigned short __attribute__((space(prog),aligned(_FLASH_PAGE*2))) hw_ConfigData[];
-extern hw_Config_t hw_Config;
-extern _prog_addressT hw_ConfigPtr;
-extern unsigned short hw_HeartbeatCounter;
-extern unsigned short hw_Type;
-extern unsigned char  hw_I2C_Installed;
-extern unsigned char  hw_Detector_Installed;
-extern unsigned char  hw_DeviceID;
-extern unsigned short hw_PWMInverted;
+extern hw_Config_t 			hw_Config;
+extern _prog_addressT		hw_ConfigPtr;
+extern unsigned short		hw_HeartbeatCounter;
+extern unsigned short		hw_Type;
+extern unsigned char 		hw_I2C_Installed;
+extern unsigned char		hw_Detector_Installed;
+extern unsigned char		hw_Throttle_Installed;
+extern unsigned char 		hw_DeviceID;
+extern unsigned short		hw_PWMInverted;
 extern const unsigned short hw_NoKeys[hw_NoVariants];
-extern unsigned char hw_AmbientLevel;
+extern unsigned char 		hw_AmbientLevel;
 
 unsigned int hw_ReadPort(enum hw_PortNames port);
 void hw_InputPort(enum hw_PortNames port);
