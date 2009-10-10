@@ -28,31 +28,36 @@ _psv(M_)			= "";
 menu_State_t menu_States[] = {
 
 	{ S_HOMESCREEN, 0, M_TITLE, 0, {
-		{ M_Lighting, S_LIGHTING },
-		{ M_Settings, S_SETTINGS },
-		{ 0, 0 }
+			{ M_Lighting, S_LIGHTING },
+			{ M_Engine, S_ENGINE },
+			{ M_Settings, S_SETTINGS },
+			{ 0, 0 }
 	} },
 
 	{ S_SETTINGS, S_HOMESCREEN, M_Settings, 0, {
-		{ 0, 0 }
+			{ 0, 0 }
 	} },
 
 	{ S_LIGHTING, S_HOMESCREEN, M_Lighting, 0, {
-		{ M_Config, S_LIGHTCONFIG },
-		{ M_Backlight, S_BACKLIGHT },
-		{ 0, 0 }
+			{ M_Config, S_LIGHTCONFIG },
+			{ M_Backlight, S_BACKLIGHT },
+			{ 0, 0 }
 	} },
 
 	{ S_LIGHTCONFIG, S_LIGHTING, M_Lighting, 0, {
-		{ 0,0 }
+			{ 0,0 }
 	} },
 
 	{ S_BACKLIGHT, S_LIGHTING, M_Backlight, 0, {
-		{ 0,0 }
+			{ 0,0 }
+	} },
+
+	{ S_ENGINE, S_HOMESCREEN, M_Engine, menu_Engine, {
+			{ 0,0 }
 	} },
 
 	{ S_TERMINATE, 0, 0, 0, {
-		{ 0,0 }
+			{ 0,0 }
 	} }
 };
 
@@ -61,7 +66,30 @@ menu_State_t menu_States[] = {
 unsigned short menu_CurStateId, menu_NextStateId, menu_ParentStateId;
 unsigned char menu_NextIndex;
 menu_State_t* menu_CurState;
+int (*menu_ActiveHandler)(void);
 
+
+//---------------------------------------------------------------------------------------------
+// Event handlers for menu items that have custom code.
+
+int menu_Engine() {
+	menu_ActiveHandler = menu_Engine_Status;
+	return 0;
+}
+
+
+int menu_Engine_Status() {
+	unsigned short v;
+	unsigned short div = 10;
+	v = ADC_Read(4);
+	v = v / div;
+	display_HorizontalBar( 1, 2, (unsigned char)v );
+	return 0;
+}
+
+
+//---------------------------------------------------------------------------------------------
+// The 3 functions below handle the menu state machine.
 
 void menu_Initialize() {
 
@@ -132,6 +160,7 @@ void menu_ProcessKey( unsigned char keypress ) {
 	switch( keypress ) {
 
 		case DISPLAY_KEY_STOP: {
+				menu_ActiveHandler = 0;
 				if( menu_CurState->id == S_HOMESCREEN ) return;
 				menu_NextStateId = menu_CurState->parent;
 				break;;

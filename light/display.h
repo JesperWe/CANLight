@@ -13,6 +13,8 @@
 #define DISPLAY_CONTRAST		80
 #define DISPLAY_DEBOUNCE		85
 #define DISPLAY_CLEAR			88
+#define DISPLAY_INIT_HBAR		104
+#define DISPLAY_PLACE_HBAR		124
 #define DISPLAY_BRIGHTNESS		152
 #define DISPLAY_RS232_AUTOXMIT	160
 
@@ -40,10 +42,7 @@ void display_Keypress( unsigned char key );
 void display_Initialize();
 unsigned char display_Address( unsigned char read );
 unsigned char display_Write( char *str );
-unsigned char display_Sendbyte( unsigned char byte );
-unsigned char display_Send2bytes( unsigned char b1, unsigned char b2 );
-unsigned char display_Send3bytes( unsigned char b1, unsigned char b2, unsigned char b3 );
-unsigned char display_Send4bytes( unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4 );
+unsigned char display_Sendbytes( int nBytes, ... );
 
 void display_Clear();
 void display_Home();
@@ -52,6 +51,7 @@ void display_Off();
 void display_SetPosition( unsigned char column, unsigned char row );
 void display_SetBrightness( unsigned char value );
 void display_SetContrast( unsigned char value );
+void display_HorizontalBar( unsigned char col, unsigned char row, unsigned char value );
 
 unsigned char display_ReadKeypad();
 

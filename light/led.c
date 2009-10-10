@@ -258,7 +258,7 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 // Timer3 Interrupt service is responsible for smooth lighting transitions.
 // We also use this interrupt for polling the I2C keypad if there is one attached.
 //
-// Timer 3 should run with an Interupt Interval of 40ms.
+// Timer 3 should run with an Interrupt Interval of 40ms.
 
 void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
 	unsigned short i, curStep;
@@ -300,7 +300,7 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
 			if( display_PendingKeypress != 0x00 ) {
 
 				// If MSB is set there was a negative status which means the display
-				// did not ACK. It is propably busy. So we try again next interrupt cycle.
+				// did not ACK. It is probably busy. So we try again next interrupt cycle.
 
 				if( (display_PendingKeypress & 0x80) != 0 ) display_PendingKeypress = 0;
 			}
@@ -309,6 +309,15 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
 		else {
 			menu_ProcessKey( display_PendingKeypress );
 			display_PendingKeypress = 0;
+		}
+
+		// Now check if we have an acive event handler function from the
+		// menu state machine. This function should then be run twice per second.
+
+		if( menu_ActiveHandler != 0 ) {
+			if( (led_SleepTimer % 12) == 0 ) {
+				menu_ActiveHandler();
+			}
 		}
 	}
 

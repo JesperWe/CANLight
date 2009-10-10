@@ -38,7 +38,7 @@ enum hw_PortNames {
 	hw_KEY1,
 	hw_KEY2,
 	hw_KEY3,
-	hw_LED_LIGHT,	// Composite function RED+WHITE
+	hw_LED_LIGHT,	// Composite port RED+WHITE
 	hw_BACKLIGHT,	// Virtual Port.
 	hw_NoPortNames
 };
@@ -82,7 +82,7 @@ extern unsigned short hw_HeartbeatCounter;
 extern unsigned short hw_Type;
 extern unsigned char  hw_I2C_Installed;
 extern unsigned char  hw_Detector_Installed;
-extern unsigned short hw_DeviceID;
+extern unsigned char  hw_DeviceID;
 extern unsigned short hw_PWMInverted;
 extern const unsigned short hw_NoKeys[hw_NoVariants];
 extern unsigned char hw_AmbientLevel;
@@ -95,6 +95,6 @@ void hw_Initialize( void );
 unsigned char hw_IsPWM( unsigned short hw_Port );
 
 void ADC_Initialize(void);
-unsigned short ADC_Read();
+unsigned int ADC_Read( unsigned char channel );
 
 #endif /* HW_H_ */

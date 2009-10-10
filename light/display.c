@@ -2,6 +2,7 @@
 
 #include <i2c.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "display.h"
 
@@ -12,6 +13,11 @@ unsigned char display_CurrentAdjust = 0;
 short display_Brightness = 0xFF;
 short display_Contrast = 0x80;
 
+// Short wait if display is to slow to keep up....
+void _display_delay() {
+	int i;
+	for( i=0; i<1000; i++ ) __delay32(11);
+}
 
 void display_Keypress( unsigned char key ) {
 	char line1[20];
@@ -91,10 +97,12 @@ void display_Initialize() {
 	           I2C1_START_DIS);
 	OpenI2C1(config1,config2);
 
-	display_Send3bytes( DISPLAY_CMD, DISPLAY_RS232_AUTOXMIT, 0 );
-	display_Send3bytes( DISPLAY_CMD, DISPLAY_DEBOUNCE, 12 );
-	display_Send2bytes( DISPLAY_CMD, DISPLAY_WRAP_ON );
-	display_Send2bytes( DISPLAY_CMD, DISPLAY_FLUSH_KEYS );
+	display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_RS232_AUTOXMIT, 0 );
+	display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_DEBOUNCE, 12 );
+	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_WRAP_ON );
+	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_FLUSH_KEYS );
+
+	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_INIT_HBAR );
 
 	display_SetBrightness( display_Brightness );
 
@@ -142,83 +150,44 @@ unsigned char display_Write( char *str ) {
 	return status;
 }
 
-unsigned char display_Sendbyte( unsigned char byte ) {
-	unsigned char status;
+unsigned char display_Sendbytes( int nBytes, ... ) {
+	unsigned char status, byte;
+	va_list ap;
+	int i;
+
+	va_start( ap, nBytes );
+
 	status = display_Address(0);
 	if( status != 0 ) return status;
-	MasterWriteI2C1( byte );
-	IdleI2C1();
+
+	for( i=0; i<nBytes; i++ ) {
+		byte = va_arg( ap, unsigned char );
+		MasterWriteI2C1( byte );
+		IdleI2C1();
+	}
+
+	va_end( ap );
+
 	StopI2C1();
 	IdleI2C1();
+
 	return status;
 }
 
-unsigned char display_Send2bytes( unsigned char b1, unsigned char b2 ) {
-	unsigned char status;
-	status = display_Address(0);
-	if( status != 0 ) return status;
-	MasterWriteI2C1( b1 );
-	IdleI2C1();
-	MasterWriteI2C1( b2 );
-	IdleI2C1();
-	StopI2C1();
-	IdleI2C1();
-	return status;
-}
-
-unsigned char display_Send3bytes( unsigned char b1, unsigned char b2, unsigned char b3 ) {
-	unsigned char status;
-	status = display_Address(0);
-	if( status != 0 ) return status;
-	MasterWriteI2C1( b1 );
-	IdleI2C1();
-	MasterWriteI2C1( b2 );
-	IdleI2C1();
-	MasterWriteI2C1( b3 );
-	IdleI2C1();
-	StopI2C1();
-	IdleI2C1();
-	return status;
-}
-
-unsigned char display_Send4bytes( unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4 ) {
-	unsigned char status;
-	status = display_Address(0);
-	if( status != 0 ) return status;
-	status = MasterWriteI2C1( b1 );
-	if( status != 0 ) return status;
-	IdleI2C1();
-	status = MasterWriteI2C1( b2 );
-	if( status != 0 ) return status;
-	IdleI2C1();
-	status = MasterWriteI2C1( b3 );
-	if( status != 0 ) return status;
-	IdleI2C1();
-	status = MasterWriteI2C1( b4 );
-	if( status != 0 ) return status;
-	IdleI2C1();
-	StopI2C1();
-	IdleI2C1();
-	return status;
-}
 
 void display_Clear() {
-	display_Send2bytes( DISPLAY_CMD, DISPLAY_CLEAR );
+	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_CLEAR );
 }
 
 void display_Home() {
-	display_Send2bytes( DISPLAY_CMD, DISPLAY_HOME );
+	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_HOME );
 }
 
 void display_On() {
 	unsigned char status = 0;
 	do {
-		if( status != 0 ) {
-			int i;
-			for( i=0; i<1000; i++ )
-				__delay32(11);
-		}
-		status = display_Send3bytes( DISPLAY_CMD, DISPLAY_ON, 0 );
+		if( status != 0 ) _display_delay();
+		status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_ON, 0 );
 	}
 	while( status != 0 );
 }
@@ -226,12 +195,8 @@ void display_On() {
 void display_Off() {
 	unsigned char status = 0;
 	do {
-		if( status != 0 ) {
-			int i;
-			for( i=0; i<1000; i++ )
-				__delay32(11);
-		}
-		status = display_Send2bytes( DISPLAY_CMD, DISPLAY_OFF );
+		if( status != 0 ) _display_delay();
+		status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_OFF );
 	}
 	while( status != 0 );
 }
@@ -244,12 +209,8 @@ void display_SetPosition( unsigned char column, unsigned char row ) {
 	if( row > 4 ) row = 4;
 
 	do {
-		if( status != 0 ) { 
-			int i; 
-			for( i=0; i<1000; i++ ) 
-				__delay32(11);
-		}
-		status = display_Send4bytes( DISPLAY_CMD, DISPLAY_SETPOS, column, row );
+		if( status != 0 ) _display_delay();
+		status = display_Sendbytes( 4, DISPLAY_CMD, DISPLAY_SETPOS, column, row );
 	}
 	while( status != 0 );
 }
@@ -257,12 +218,8 @@ void display_SetPosition( unsigned char column, unsigned char row ) {
 void display_SetBrightness( unsigned char value ) {
 	unsigned char status = 0;
 	do {
-		if( status != 0 ) { 
-			int i; 
-			for( i=0; i<1000; i++ ) 
-				__delay32(11);
-		}
-		status = display_Send3bytes( DISPLAY_CMD, DISPLAY_BRIGHTNESS, value );
+		if( status != 0 ) _display_delay();
+		status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_BRIGHTNESS, value );
 	}
 	while( status != 0 );
 }
@@ -270,12 +227,8 @@ void display_SetBrightness( unsigned char value ) {
 void display_SetContrast( unsigned char value ) {
 	unsigned char status = 0;
 	do {
-		if( status != 0 ) { 
-			int i; 
-			for( i=0; i<1000; i++ ) 
-				__delay32(11);
-		}
-		status = display_Send3bytes( DISPLAY_CMD, DISPLAY_CONTRAST, value );
+		if( status != 0 ) _display_delay();
+		status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_CONTRAST, value );
 	}
 	while( status != 0 );
 }
@@ -289,4 +242,9 @@ unsigned char display_ReadKeypad() {
 	StopI2C1();
 	IdleI2C1();
 	return status;
+}
+
+void display_HorizontalBar( unsigned char col, unsigned char row, unsigned char value ) {
+	if( value > 100 ) value = 100;
+	display_Sendbytes( 6, DISPLAY_CMD, DISPLAY_PLACE_HBAR, col, row, 0, value );
 }

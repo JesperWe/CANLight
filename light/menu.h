@@ -10,11 +10,14 @@
 
 #define menu_MAX_EVENTS		6
 
+#define _psv(name)	char name[] __attribute__((space(auto_psv)))
+
 enum menu_States_e {
 	S_TERMINATE,
 	S_HOMESCREEN,
 	S_SETTINGS,
 	S_LIGHTING,
+	S_ENGINE,
 	S_LIGHTCONFIG,
 	S_BACKLIGHT,
 	menu_NO_STATES
@@ -42,6 +45,17 @@ void menu_Initialize();
 void menu_SetState( unsigned char state );
 void menu_ProcessKey( unsigned char keypress );
 
-#define _psv(name)	char name[] __attribute__((space(auto_psv)))
+// Event Handler Prototypes
+
+int menu_Engine();
+int menu_Engine_Status();
+
+
+// When menu_ActiveHandler is non-zero, it should point to an active event handler that
+// requires constant updates. Updating is handled by the T3 Interrupt Event Handler
+// in led.c.
+
+extern int (*menu_ActiveHandler)(void);
+
 
 #endif /* MENU_H_ */

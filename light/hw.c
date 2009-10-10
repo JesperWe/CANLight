@@ -22,7 +22,7 @@ unsigned char			hw_I2C_Installed = 0;
 unsigned char			hw_Detector_Installed = 0;
 unsigned char			hw_ConfigByte = 0;
 
-unsigned short			hw_DeviceID;
+unsigned char			hw_DeviceID;
 
 unsigned char			hw_AmbientLevel;
 
@@ -276,20 +276,28 @@ unsigned char hw_IsPWM( unsigned short hw_Port ) {
 void ADC_Initialize(void) {
 	AD1CON1bits.ADON = 0;
 	AD1PCFGLbits.PCFG11 = 0;	// AN11 to Analog Mode.
+	AD1PCFGLbits.PCFG4 = 0;		// AN4 to Analog Mode.
 	AD1CON1 = 0x00E0;			// Idle=Stop, 10bit, unsigned, Auto conversion.
 	AD1CON2bits.VCFG = 0x0;		// AVss/AVdd
+	AD1CON2bits.CHPS = 0x0;		// 1 Channel conversion.
+	AD1CON2bits.ALTS = 0x0;		// Only use MUX A.
 	AD1CON3 = 0x0800;			// System clock, Ts = 8xTad, Tad=1xTcy.
-
-	AD1CHS0bits.CH0SA = 0x0B;	// Sample A input = Channel AN11
-	AD1CHS0bits.CH0SB = 0x0B;	// Sample A input = Channel AN11
 
 	AD1CSSL = 0x0000;			// No scanning.
 	IFS0bits.AD1IF = 0;
-	AD1CON1bits.ADON = 1;
+
 }
 
-unsigned short ADC_Read() {
+unsigned int ADC_Read( unsigned char channel ) {
+
+	AD1CHS0bits.CH0SA = channel;	// Channel 0 MUX A input.
+
+	AD1CON1bits.ADON = 1;
+
 	AD1CON1bits.SAMP = 1;
 	while (!AD1CON1bits.DONE);
+
+	AD1CON1bits.ADON = 0;
+
 	return ADC1BUF0;
 }

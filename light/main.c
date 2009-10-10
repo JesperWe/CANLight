@@ -130,10 +130,10 @@ int main (void)
 					{
 						if( hw_Detector_Installed ) {
 							unsigned short pvVoltage;
-							char line1[20];
+							//char line1[20];
 							event_t	ambientEvent;
 
-							pvVoltage = ADC_Read();
+							pvVoltage = ADC_Read(11);
 
 							// Set system backlight level based on ambient light.
 
@@ -154,7 +154,7 @@ int main (void)
 
 								if( hw_I2C_Installed ) {
 									unsigned short blLevel;
-									blLevel = hw_AmbientLevel + 20;
+									blLevel = (2*hw_AmbientLevel) + 10;
 									if( blLevel > 0xFF ) blLevel = 0xFF;
 									//display_Home();
 									//sprintf( line1, "v = %04d, bl = %03d", hw_AmbientLevel, blLevel );
