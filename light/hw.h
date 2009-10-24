@@ -12,16 +12,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "engine.h"
+
 #ifndef HW_H_
 #define HW_H_
+
+//---------------------------------------------------------------------------------------------
+// Missing in pps.h:
+#define OUT_FN_PPS_OC3				0x0014				/* RPn tied to Output Compare 3 */
+#define OUT_FN_PPS_OC4				0x0015				/* RPn tied to Output Compare 4 */
+//---------------------------------------------------------------------------------------------
 
 #define NOP __builtin_nop()
 
 #define hw_ECAN_MODE_NORMAL	0x0
 #define hw_ECAN_MODE_DISABLE	0x1
 
-
-#define hw_CONFIG_MAGIC_WORD	4712
+#define hw_CONFIG_MAGIC_WORD	4713
 
 enum hw_PortNames {
 	hw_CAN_RATE,
@@ -68,6 +75,7 @@ typedef union hw_Config_u {
 		unsigned short nmeaManufacturerCode;
 		unsigned long  nmeaIdentityNumber;
 		unsigned short cfgSequenceNumber;
+		short engine_Calibration[p_NO_CALIBRATION_PARAMS];
 		unsigned char cfgFile[];
 	};
 } hw_Config_t;
@@ -83,6 +91,7 @@ extern unsigned short		hw_Type;
 extern unsigned char 		hw_I2C_Installed;
 extern unsigned char		hw_Detector_Installed;
 extern unsigned char		hw_Throttle_Installed;
+extern unsigned char		hw_Actuators_Installed;
 extern unsigned char 		hw_DeviceID;
 extern unsigned short		hw_PWMInverted;
 extern const unsigned short hw_NoKeys[hw_NoVariants];
@@ -93,6 +102,7 @@ void hw_InputPort(enum hw_PortNames port);
 void hw_OutputPort(enum hw_PortNames port);
 void hw_WritePort(enum hw_PortNames, int value);
 void hw_Initialize( void );
+void hw_WriteConfigFlash( void );
 unsigned char hw_IsPWM( unsigned short hw_Port );
 
 void ADC_Initialize(void);

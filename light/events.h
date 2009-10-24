@@ -2,7 +2,7 @@
  * events.h
  *
  *  Created on: 2009-jun-06
- *      Author: sysadm
+ *      Author: Jesper W
  */
 
 #ifndef EVENTS_H_
@@ -32,7 +32,9 @@ enum event_Events {
 	/* 14 */ e_AMBIENT_LIGHT_LEVEL,
 	/* 15 */ e_BLACKOUT,
 	/* 16 */ e_SLOW_HEARTBEAT,
-	/* 17 */ e_NO_EVENTS
+	/* 17 */ e_THROTTLE_MASTER,
+	/* 18 */ e_SET_THROTTLE,
+	/* 19 */ e_NO_EVENTS
 };
 
 typedef struct {

@@ -21,6 +21,7 @@ unsigned short			hw_Type;
 unsigned char			hw_I2C_Installed = 0;
 unsigned char			hw_Detector_Installed = 0;
 unsigned char			hw_Throttle_Installed = 0;
+unsigned char			hw_Actuators_Installed = 0;
 unsigned char			hw_ConfigByte = 0;
 
 unsigned char			hw_DeviceID;
@@ -155,13 +156,12 @@ void hw_Initialize( void ) {
 
 	hw_ConfigByte = fidc_data.byte.LB;
 
-	hw_I2C_Installed = ((hw_ConfigByte & 0x10) != 0);
+	hw_Type = hw_ConfigByte & 0x07;
 
-	hw_Detector_Installed = ((hw_ConfigByte & 0x20) != 0);
-
-	hw_Throttle_Installed = ((hw_ConfigByte & 0x40) != 0);
-
-	hw_Type = hw_ConfigByte & 0x0F;
+	hw_I2C_Installed =       ((hw_ConfigByte & 0x10) != 0);
+	hw_Detector_Installed =  ((hw_ConfigByte & 0x20) != 0); // XXX Fix bug where unit hangs in ADC if disabled!
+	hw_Throttle_Installed =  ((hw_ConfigByte & 0x40) != 0);
+	hw_Actuators_Installed = ((hw_ConfigByte & 0x80) != 0);
 
 	// Check configuration area, erase it if it is non-zero but seems corrupted.
 	// This can happen if the code has been recompiled and the compiler
@@ -182,8 +182,15 @@ void hw_Initialize( void ) {
 		hw_Config.data[7] = (unsigned short)((nmea_IDENTITY_NUMBER & 0x001F0000) >> 16);
 		hw_Config.data[8] = (unsigned short)(nmea_IDENTITY_NUMBER & 0xFFFF);
 
-		_erase_flash(hw_ConfigPtr);
-		_write_flash16(hw_ConfigPtr, hw_Config.data);
+		// Preload some sensible values if we have lost engine calibration.
+
+		hw_Config.engine_Calibration[ p_ThrottleMin ] = 212;
+		hw_Config.engine_Calibration[ p_ThrottleMax ] = 140;
+		hw_Config.engine_Calibration[ p_GearNeutral ] = 170;
+		hw_Config.engine_Calibration[ p_GearReverse ] = 216;
+		hw_Config.engine_Calibration[ p_GearForward ] = 140;
+
+		hw_WriteConfigFlash();
 	}
 
 	// IO setup for SN65HVD234 CANBus driver.
@@ -236,8 +243,14 @@ void hw_Initialize( void ) {
 			PPSUnLock;
 			PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to RP5.
 			hw_PWMInverted = 1;
-			RPOR6bits.RP12R = 0x10;			// CAN Transmit to RP12.
+			RPOR6bits.RP12R = 0x10;				// CAN Transmit to RP12.
 			RPINR26bits.C1RXR = 0;				// CAN Receive from pin RP0.
+
+			if( hw_Actuators_Installed ) {
+				PPSOutput( PPS_OC3, PPS_RP16 );
+				PPSOutput( PPS_OC4, PPS_RP18 );
+			}
+
 			PPSLock;
 			break;
 		}
@@ -265,6 +278,13 @@ void hw_Initialize( void ) {
 
 //-------------------------------------------------------------------------------
 
+void hw_WriteConfigFlash() {
+	_erase_flash(hw_ConfigPtr);
+	_write_flash16(hw_ConfigPtr, hw_Config.data);
+}
+
+//-------------------------------------------------------------------------------
+
 unsigned char hw_IsPWM( unsigned short hw_Port ) {
 
 	if( hw_Port == hw_LED_RED ||
@@ -280,8 +300,15 @@ unsigned char hw_IsPWM( unsigned short hw_Port ) {
 
 void ADC_Initialize(void) {
 	AD1CON1bits.ADON = 0;
-	AD1PCFGLbits.PCFG11 = 0;	// AN11 to Analog Mode.
-	AD1PCFGLbits.PCFG4 = 0;		// AN4 to Analog Mode.
+
+	if( hw_Detector_Installed ) {
+		AD1PCFGLbits.PCFG11 = 0;	// AN11 to Analog Mode.
+	}
+
+	if( hw_Throttle_Installed ) {
+		AD1PCFGLbits.PCFG4 = 0;		// AN4 to Analog Mode.
+	}
+
 	AD1CON1 = 0x00E0;			// Idle=Stop, 10bit, unsigned, Auto conversion.
 	AD1CON2bits.VCFG = 0x0;		// AVss/AVdd
 	AD1CON2bits.CHPS = 0x0;		// 1 Channel conversion.

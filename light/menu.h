@@ -9,6 +9,7 @@
 #define MENU_H_
 
 #define menu_MAX_EVENTS		6
+#define menu_NO_DISPLAY_UPDATE	17	// Tells state machine that this event handler wants to manage it's own display.
 
 #define _psv(name)	char name[] __attribute__((space(auto_psv)))
 
@@ -18,6 +19,10 @@ enum menu_States_e {
 	S_SETTINGS,
 	S_LIGHTING,
 	S_ENGINE,
+	S_ENGINE_CALIBRATION,
+	S_ENGINE_SAVE_CALIBRATION,
+	S_ENGINE_DO_SAVE,
+	S_ENGINE_MONITOR,
 	S_LIGHTCONFIG,
 	S_BACKLIGHT,
 	menu_NO_STATES
@@ -47,8 +52,10 @@ void menu_ProcessKey( unsigned char keypress );
 
 // Event Handler Prototypes
 
-int menu_Engine();
+int menu_MonitorEngine();
+int menu_EngineCalibrate();
 int menu_Engine_Status();
+int menu_EngineSaveCalibration();
 
 
 // When menu_ActiveHandler is non-zero, it should point to an active event handler that

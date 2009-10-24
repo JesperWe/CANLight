@@ -316,7 +316,7 @@ void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
 			display_PendingKeypress = 0;
 		}
 
-		// Now check if we have an acive event handler function from the
+		// Now check if we have an active event handler function from the
 		// menu state machine. This function should then be run twice per second.
 
 		if( menu_ActiveHandler != 0 ) {

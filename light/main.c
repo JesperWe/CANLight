@@ -9,6 +9,7 @@
 #include "ctrlkey.h"
 #include "display.h"
 #include "menu.h"
+#include "engine.h"
 
 void goodnight( void );
 
@@ -24,8 +25,12 @@ int main (void)
 		menu_Initialize();
 	}
 
-	if( hw_Detector_Installed ) {
+	if( hw_Detector_Installed || hw_Throttle_Installed ) {
 		ADC_Initialize();
+	}
+
+	if( hw_Actuators_Installed ) {
+		engine_Initialize();
 	}
 
 	switch( hw_Type ) {
