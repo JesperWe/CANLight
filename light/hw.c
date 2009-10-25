@@ -182,13 +182,17 @@ void hw_Initialize( void ) {
 		hw_Config.data[7] = (unsigned short)((nmea_IDENTITY_NUMBER & 0x001F0000) >> 16);
 		hw_Config.data[8] = (unsigned short)(nmea_IDENTITY_NUMBER & 0xFFFF);
 
-		// Preload some sensible values if we have lost engine calibration.
+		// Load some sensible values if we have lost engine calibration.
 
 		hw_Config.engine_Calibration[ p_ThrottleMin ] = 212;
 		hw_Config.engine_Calibration[ p_ThrottleMax ] = 140;
 		hw_Config.engine_Calibration[ p_GearNeutral ] = 170;
 		hw_Config.engine_Calibration[ p_GearReverse ] = 216;
 		hw_Config.engine_Calibration[ p_GearForward ] = 140;
+
+		hw_Config.engine_Calibration[ p_JoystickMin ] = 60;
+		hw_Config.engine_Calibration[ p_JoystickMid ] = 500;
+		hw_Config.engine_Calibration[ p_JoystickMax ] = 1000;
 
 		hw_WriteConfigFlash();
 	}

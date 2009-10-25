@@ -6,6 +6,8 @@
  */
 
 #include "events.h"
+#include "display.h"
+#include <stdio.h>
 
 //---------------------------------------------------------------------------------------------
 // Globals.
@@ -41,6 +43,13 @@ void events_Push(
 {
 	event_t newEvent;
 
+	// Debug Dump...
+	//if( type != e_SLOW_HEARTBEAT ){
+	//	char line[30];
+	//	sprintf( line, "%04d:%02d(%01d) %02x %02d %03d", atTimer, type, events_QueueFull, ctrlFunc, ctrlEvent, data );
+	//	display_Write( line );
+	//}
+
 	// We really can't handle a full queue in any meaningful way.
 	// This is an embedded system after all...
 	// Ignoring pushes to make sure we don't corrupt.
@@ -64,6 +73,7 @@ void events_Push(
 	if( events_QueueTail == events_QueueHead ) {
 		events_QueueFull = 1;
 	}
+	
 }
 
 event_t* events_Pop( void ) {
@@ -76,6 +86,8 @@ event_t* events_Pop( void ) {
 	eventPtr = &(events_Queue[events_QueueHead]);
 	events_QueueHead++;
 	events_QueueHead = events_QueueHead % events_QUEUESIZE;
+	
+	events_QueueFull = 0;
 
 	return eventPtr;
 }

@@ -6,6 +6,7 @@
  */
 
 #include "ctrlkey.h"
+#include "engine.h"
 
 //---------------------------------------------------------------------------------------------
 // Globals
@@ -131,14 +132,50 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	// In addition, if we are in the middle of a PWM LED fade, heartbeats will
 	// step the fade level.
 
-	hw_HeartbeatCounter = ++hw_HeartbeatCounter % 3000;
-	if( (hw_HeartbeatCounter % 300) == 0 && ctrlkey_Holding ) {
-		events_Push( e_FAST_HEARTBEAT, 0, hw_DeviceID, 0, e_FAST_HEARTBEAT, 0, 0 );
+	hw_HeartbeatCounter = ++hw_HeartbeatCounter % hw_SLOW_HEARTBEAT_MS;
+	if( (hw_HeartbeatCounter % hw_FAST_HEARTBEAT_MS) == 0 && ctrlkey_Holding ) {
+		events_Push( e_FAST_HEARTBEAT, 0, hw_DeviceID, 0, e_FAST_HEARTBEAT, 0, hw_HeartbeatCounter );
 	}
 	if( hw_HeartbeatCounter == 0 ) {
-		events_Push( e_SLOW_HEARTBEAT, 0, hw_DeviceID, 0, e_SLOW_HEARTBEAT, 0, 0 );
+		events_Push( e_SLOW_HEARTBEAT, 0, hw_DeviceID, 0, e_SLOW_HEARTBEAT, 0, hw_HeartbeatCounter );
 	}
 
+	// If we have engine actuators installed, fade approximated engine RPM towards current
+	// throttle setting. If a gear change has been requested, do it when the target RPM has been
+	// reached.
+
+	if( hw_Actuators_Installed ) {
+		if( engine_TargetRPM > engine_CurrentRPM ) engine_CurrentRPM++;
+		if( engine_TargetRPM < engine_CurrentRPM ) engine_CurrentRPM--;
+
+		// Any gear change pending?
+
+		if( engine_CurrentGear != engine_TargetGear ) {
+			if( engine_CurrentRPM == engine_TargetRPM ) {
+
+				// Require at least 1 seconds between gear changes.
+
+				short interval;
+				interval = hw_HeartbeatCounter - engine_GearSwitchTime;
+				if( interval < 0 ) interval += hw_SLOW_HEARTBEAT_MS;
+				if( interval > 1000 ) {
+
+					// Go to neutral between forward and reverse.
+
+					if( engine_TargetGear != 0 && engine_CurrentGear != 0 ) {
+						engine_SetGear( 0 );
+					}
+
+					else {
+						engine_SetGear( engine_TargetGear );
+						engine_SetThrottle( engine_TargetThrottle );
+					}
+				}
+			}
+		}
+	}
+
+	// Now see if we have a key depressed long enough to generate a holding event.
 
 	if( ctrlkey_KeyHolding ) {
 		for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {

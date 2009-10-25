@@ -171,10 +171,19 @@ int main (void)
 					break;
 				}
 
+
 				// When we get a NMEA message (that we are listening to!) we find
 				// out what function it controls, and take the appropriate action.
 
 				case e_NMEA_MESSAGE: {
+
+					// Engine events are slightly special.
+
+					if( (eventPtr->ctrlEvent == e_SET_THROTTLE) && hw_Actuators_Installed ) {
+						engine_RequestGear( eventPtr->ctrlFunc );
+						engine_RequestThrottle( eventPtr->data );
+						break;
+					}
 
 					// Only process event this device is listening for.
 

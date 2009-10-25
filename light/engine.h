@@ -8,6 +8,9 @@
 #ifndef ENGINE_H_
 #define ENGINE_H_
 
+#define engine_UNKNOWN_GEAR		17
+#define engine_UNKNOWN_JOYSTICK	4711
+
 enum engine_CalibrationParameters {
 	/* 00 */ p_None,
 	/* 01 */ p_ThrottleMin,
@@ -15,19 +18,37 @@ enum engine_CalibrationParameters {
 	/* 03 */ p_GearNeutral,
 	/* 04 */ p_GearForward,
 	/* 05 */ p_GearReverse,
-	/* 06 */ p_NO_CALIBRATION_PARAMS
+	/* 06 */ p_JoystickMin,
+	/* 07 */ p_JoystickMid,
+	/* 08 */ p_JoystickMax,
+	/* 09 */ p_NO_CALIBRATION_PARAMS
 };
 
 extern short	engine_Calibration[];
-extern short	engine_ThrottleSetting;
-extern short 	engine_GearboxSetting;
-extern short	engine_CurThrottle;
-extern short	engine_CurGearbox;
+
+extern short	engine_ThrottlePW;
+extern short 	engine_GearPW;
+extern short	engine_CurThrottlePW;
+extern short	engine_CurGearPW;
+
+extern short	engine_LastJoystickLevel;
 extern unsigned char	engine_CurMasterDevice;
+extern short 	engine_CurrentRPM;
+extern short 	engine_TargetRPM;
+extern short 	engine_GearSwitchTime;
+
+extern unsigned char	engine_TargetThrottle;
+
+extern char	engine_CurrentGear;
+extern char	engine_TargetGear;
 
 void engine_Initialize();
 void engine_ReadJoystickLevel();
 void engine_UpdateActuators();
+
+void engine_RequestGear( char direction );
+void engine_RequestThrottle( unsigned char level );
+
 void engine_SetThrottle( unsigned char level );
 void engine_SetGear( char direction );
 

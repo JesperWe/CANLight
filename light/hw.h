@@ -30,6 +30,9 @@
 
 #define hw_CONFIG_MAGIC_WORD	4713
 
+#define hw_SLOW_HEARTBEAT_MS	3000
+#define hw_FAST_HEARTBEAT_MS	300
+
 enum hw_PortNames {
 	hw_CAN_RATE,
 	hw_CAN_EN,

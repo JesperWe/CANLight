@@ -2,15 +2,17 @@
 #define __display_H
 
 #define DISPLAY_I2C_ADDR		0x50
-#define DISPLAY_CMD				0xFE
+#define DISPLAY_CMD			0xFE
 #define DISPLAY_ON				66
-#define DISPLAY_WRAP_ON			67
+#define DISPLAY_WRAP_ON		67
 #define DISPLAY_WRAP_OFF		68
 #define DISPLAY_FLUSH_KEYS		69
-#define DISPLAY_OFF				70
+#define DISPLAY_OFF			70
 #define DISPLAY_SETPOS			71
 #define DISPLAY_HOME			72
 #define DISPLAY_CONTRAST		80
+#define DISPLAY_AUTOSCROLL_ON	81
+#define DISPLAY_AUTOSCROLL_OFF	82
 #define DISPLAY_DEBOUNCE		85
 #define DISPLAY_CLEAR			88
 #define DISPLAY_INIT_HBAR		104

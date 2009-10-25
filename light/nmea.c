@@ -192,10 +192,10 @@ unsigned char nmea_SendEvent( event_t *event )
 			e_NMEA_MESSAGE,
 			nmea_LIGHTING_COMMAND,
 			hw_DeviceID,
-			eventPtr->ctrlFunc,
-			eventPtr->ctrlEvent,
-			eventPtr->data,
-			eventPtr->atTimer
+			event->ctrlFunc,
+			event->ctrlEvent,
+			event->data,
+			event->atTimer
 		);
 	}
 

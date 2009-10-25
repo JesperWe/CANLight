@@ -11,12 +11,22 @@
 #include "engine.h"
 
 short	engine_Calibration[p_NO_CALIBRATION_PARAMS];
-short	engine_ThrottleSetting;
-short	engine_GearboxSetting;
-short	engine_CurThrottle;
-short	engine_CurGearbox;
-unsigned char	engine_CurMasterDevice;
 
+short	engine_ThrottlePW;
+short	engine_GearPW;
+short	engine_CurThrottlePW;
+short	engine_CurGearPW;
+
+unsigned char	engine_CurMasterDevice;
+short	engine_LastJoystickLevel;
+short 	engine_GearSwitchTime;
+short 	engine_CurrentRPM;
+short 	engine_TargetRPM;
+
+unsigned char	engine_TargetThrottle;
+
+char	engine_CurrentGear;
+char	engine_TargetGear;
 
 //---------------------------------------------------------------------------------------------
 // Set up TIMER3 and TIMER4 to do old fashioned Hobby RC pulse control.
@@ -41,6 +51,9 @@ void engine_Initialize() {
 		engine_Calibration[i] = hw_Config.engine_Calibration[i];
 	}
 
+	engine_LastJoystickLevel = engine_UNKNOWN_JOYSTICK;
+	engine_CurrentGear = engine_UNKNOWN_GEAR;
+
 	engine_SetGear(0);		// Gear to neutral.
 	engine_SetThrottle(0);	// Throttle to idle.
 }
@@ -48,10 +61,26 @@ void engine_Initialize() {
 
 void engine_ReadJoystickLevel() {
 
-	unsigned short level;
+	short level, diff, gear;
+	unsigned char throttle;
+	static unsigned char lastThrottle = 0;
 	event_t event;
+	float floatlevel;
 
 	level = ADC_Read( 4 ); // XXX Make configurable.
+
+	// First time since device reset?
+
+	if( engine_LastJoystickLevel == engine_UNKNOWN_JOYSTICK ) {
+		engine_LastJoystickLevel = level;
+		return;
+	}
+
+	// Require a significant movement before taking action.
+
+	diff = level - engine_LastJoystickLevel;
+	if( diff<3 && diff>-3 ) return;
+	engine_LastJoystickLevel = level;
 
 	if( engine_CurMasterDevice != hw_DeviceID ) {
 
@@ -69,99 +98,135 @@ void engine_ReadJoystickLevel() {
 		engine_CurMasterDevice = hw_DeviceID;
 	}
 
-	else {
+	// Scale A/D Concerted level down to 1 0-99 integer, calibrated to the
+	// individual joystick.
 
-		// Scale A/D Concerted level down to 1 0-99 integer, calibrated to the
-		// individual joystick.
+	unsigned short range = engine_Calibration[ p_JoystickMax ] - engine_Calibration[ p_JoystickMin ];
 
-		unsigned short range = 1000; // XXX Add calibration
+	floatlevel = (float)level;
+	floatlevel -= engine_Calibration[ p_JoystickMid ];
 
-		float floatlevel = (float)level;
-		//floatlevel -= engine_ThrottleCalibration[1];
+	floatlevel = 2*floatlevel / (float)range;
+	if( floatlevel < -1.0 ) floatlevel = -1.0;
+	if( floatlevel > 1.0 ) floatlevel = 1.0;
 
-		floatlevel = 2*floatlevel / (float)range;
-		if( floatlevel < -1.0 ) floatlevel = -1.0;
-		if( floatlevel > 1.0 ) floatlevel = 1.0;
+	// Gear forward/reverse.
 
-		// Gear forward/reverse.
-
-		engine_GearboxSetting = 50;
-		if( floatlevel < 0.0 ) {
-			engine_GearboxSetting = -50;
-			floatlevel = -floatlevel;
-		}
-
-		if( floatlevel < 0.08 ) { // Idling dead-band.
-			engine_GearboxSetting = 0;
-			floatlevel = 0;
-		}
-		
-		// Decrease sensitivity near center.
-
-		floatlevel = floatlevel * (1.0 + floatlevel) / 2.0;
-
-		engine_ThrottleSetting = (unsigned char)(floatlevel * 100.0);
+	gear = 1;
+	if( floatlevel < 0.0 ) {
+		gear = -1;
+		floatlevel = -floatlevel;
 	}
 
-	// Don't generate events unless the joystick has moved significantly.
-
-	if( engine_ThrottleSetting > engine_CurThrottle )
-		level = engine_ThrottleSetting - engine_CurThrottle;
-	else
-		level = engine_CurThrottle - engine_ThrottleSetting;
-
-	if( level > 3 ) {
-
-		engine_CurThrottle = engine_ThrottleSetting;
-
-		event.PGN = 0;
-		event.atTimer = 0;
-		event.ctrlDev = hw_DeviceID;
-		event.ctrlFunc = engine_GearboxSetting;
-		event.ctrlEvent = e_SET_THROTTLE;
-		event.data = engine_ThrottleSetting;
-
-		nmea_SendEvent( &event );
+	if( floatlevel < 0.08 ) { // XXX Idling dead-band. Make configurable.
+		gear = 0;
+		floatlevel = 0;
 	}
 
+	// Decrease sensitivity near center.
+
+	floatlevel = floatlevel * (1.0 + floatlevel) / 2.0;
+	throttle = (unsigned char)(floatlevel * 100.0);
+
+	if( throttle == lastThrottle ) return;
+	lastThrottle = throttle;
+
+	// Send Throttle and Gear settings on bus.
+
+	event.PGN = 0;
+	event.atTimer = 0;
+	event.ctrlDev = hw_DeviceID;
+	event.ctrlFunc = gear;
+	event.ctrlEvent = e_SET_THROTTLE;
+	event.data = throttle;
+	event.atTimer = hw_HeartbeatCounter;
+	nmea_SendEvent( &event );
 }
 
 
 void engine_UpdateActuators() {
 
-	if( engine_ThrottleSetting != engine_CurThrottle ) {
-		OC3RS = engine_ThrottleSetting;
-		engine_CurThrottle = engine_ThrottleSetting;
+	if( engine_ThrottlePW != engine_CurThrottlePW ) {
+		OC3RS = engine_ThrottlePW;
+		engine_CurThrottlePW = engine_ThrottlePW;
 	}
 
-	if (engine_GearboxSetting != engine_CurGearbox ) {
-		OC4RS = engine_GearboxSetting;
-		engine_CurGearbox = engine_GearboxSetting;
+	if (engine_GearPW != engine_CurGearPW ) {
+		OC4RS = engine_GearPW;
+		engine_CurGearPW = engine_GearPW;
 	}
 }
 
 
 //---------------------------------------------------------------------------------------------
-// Set throttle to a level from 0 to 100.
+// Request a throttle level from 0 to 100.
+
+void engine_RequestThrottle( unsigned char level ) {
+
+	engine_TargetThrottle = level;
+
+	// We can execute the change immediately if no gear change is involved.
+
+	if( engine_CurrentGear == engine_TargetGear ) {
+		engine_SetThrottle( level );
+	}
+}
+
+
+//---------------------------------------------------------------------------------------------
+// Actually set throttle to a level from 0 to 100.
 
 void engine_SetThrottle( unsigned char level ) {
-	float fLevel = ((float)level) / 100.0;
-	short range = engine_Calibration[ p_ThrottleMax ] - engine_Calibration[ p_ThrottleMin ];
+	float fLevel;
+	short range;
+
+	// Maintain a simulated RPM counter that will slowly fade towards the requested value.
+
+	engine_TargetRPM = level * 30;
+
+	fLevel = ((float)level) / 100.0;
+
+	range = engine_Calibration[ p_ThrottleMax ] - engine_Calibration[ p_ThrottleMin ];
 	fLevel = fLevel * (float)range;
-	engine_ThrottleSetting = engine_Calibration[ p_ThrottleMin ] + (short)fLevel;
+
+	engine_ThrottlePW = engine_Calibration[ p_ThrottleMin ] + (short)fLevel;
 	engine_UpdateActuators();
 }
 
 
 //---------------------------------------------------------------------------------------------
-// Set gear. Possible values are -1, 0, +1.
+// Request a gear setting. The actual gear will not be set until engine RPM allows it.
 
-void engine_SetGear( char direction ) {
-	switch( direction ) {
-		case 0:  { engine_GearboxSetting = engine_Calibration[ p_GearNeutral ]; break; }
-		case 1:  { engine_GearboxSetting = engine_Calibration[ p_GearForward ]; break; }
-		case -1: { engine_GearboxSetting = engine_Calibration[ p_GearReverse ]; break; }
-	}
-	engine_UpdateActuators();
+void engine_RequestGear( char direction ) {
+
+	engine_TargetGear = direction;
+
+	// Do nothing if we are already in the right gear.
+
+	if( direction == engine_CurrentGear ) return;
+
+	// Always go to idle throttle before changing gears.
+	// Wait for engine rev to settle. This time is dependent on how high the rev was before
+	// gear change was commanded.
+
+	engine_SetThrottle( 0 );
 }
 
+
+//---------------------------------------------------------------------------------------------
+// Actually set gear. Possible values are -1, 0, +1.
+
+void engine_SetGear( char direction ) {
+
+	switch( direction ) {
+		case 0:  { engine_GearPW = engine_Calibration[ p_GearNeutral ]; break; }
+		case 1:  { engine_GearPW = engine_Calibration[ p_GearForward ]; break; }
+		case -1: { engine_GearPW = engine_Calibration[ p_GearReverse ]; break; }
+	}
+
+	// Now do the gear change.
+
+	engine_UpdateActuators();
+	engine_CurrentGear = direction;
+	engine_GearSwitchTime = hw_HeartbeatCounter;
+}

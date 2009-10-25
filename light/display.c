@@ -36,6 +36,7 @@ void display_Initialize() {
 	display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_RS232_AUTOXMIT, 0 );
 	display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_DEBOUNCE, 12 );
 	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_WRAP_ON );
+	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_AUTOSCROLL_ON );
 	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_FLUSH_KEYS );
 
 	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_INIT_HBAR );

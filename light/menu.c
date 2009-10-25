@@ -113,20 +113,23 @@ int menu_MonitorEngine() {
 	display_Write("Gearbox:");
 
 	menu_ActiveHandler = menu_Engine_Status;
-	return 0;
+
+	return menu_NO_DISPLAY_UPDATE;
 }
 
 
 int menu_Engine_Status() {
 	unsigned char gear;
+	float throttle;
 
-	display_HorizontalBar( 10, 2, engine_ThrottleSetting );
+	throttle = engine_ThrottlePW - engine_Calibration[ p_ThrottleMin ];
+	throttle = throttle / (float)(engine_Calibration[ p_ThrottleMax ] - engine_Calibration[ p_ThrottleMin ]);
 
-	switch(engine_GearboxSetting) {
-		case -50: { gear = 1; break; }
-		case   0: { gear = 25; break; }
-		case  50: { gear = 49; break; }
-	}
+	display_HorizontalBar( 10, 2, (unsigned char)(throttle*50) );
+
+	gear = 25;
+	if( engine_GearPW == engine_Calibration[ p_GearForward ] ) gear = 49;
+	if( engine_GearPW == engine_Calibration[ p_GearReverse ] ) gear = 1;
 
 	display_HorizontalBar( 10, 3, gear );
 	return 0;
