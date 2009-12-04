@@ -123,32 +123,20 @@ void hw_Initialize( void ) {
 
 	// Find out what hardware we are using.
 	// Currently we have two versions: Lamp and Switch/Controller.
-	// These units use different ICD Serial ports, so we can find out
-	// what we are from the _FICD<ICS> field.
+	// The 4 byte unique device ID (Microchip refers to this as Unit ID)
+	// is used to store all H/W config info.
 
-	hw_Type = hw_UNKNOWN;
-	fidc.Val = 0xF8000E;
+	// Byte 0 is our device ID in the system.
 
+	fidc.Val = 0xf80016;
 	TBLPAG = fidc.word.HW;
 
 	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
 	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
 
-	//fidc_ics = fidc_data.byte.LB & 0x03; // Filter out ICS bits.
-
-	//if( fidc_ics == 0x3 ) hw_Type = hw_LEDLAMP;
-	//if( fidc_ics == 0x2 ) hw_Type = hw_SWITCH;
-
-	// Load unique device ID (Microchip refers to this as Unit ID)
-	// The LS 8 bits is our device ID in the system.
-
-	fidc.Val = 0xf80016;
-	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
-
 	hw_DeviceID = fidc_data.byte.LB;
 
-	// Find out additional individual config parameters from second Unit ID byte.
+	// Find out additional individual config parameters from Unit ID byte 1.
 
 	fidc.Val = 0xf80014;
 	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
@@ -156,126 +144,142 @@ void hw_Initialize( void ) {
 
 	hw_ConfigByte = fidc_data.byte.LB;
 
-	hw_Type = hw_ConfigByte & 0x07;
-
 	hw_I2C_Installed =       ((hw_ConfigByte & 0x10) != 0);
 	hw_Detector_Installed =  ((hw_ConfigByte & 0x20) != 0); // XXX Fix bug where unit hangs in ADC if disabled!
 	hw_Throttle_Installed =  ((hw_ConfigByte & 0x40) != 0);
 	hw_Actuators_Installed = ((hw_ConfigByte & 0x80) != 0);
 
-	// Check configuration area, erase it if it is non-zero but seems corrupted.
-	// This can happen if the code has been recompiled and the compiler
-	// has moved the hw_ConfigData area to a new address.
+	// Byte 2 is the type of circuit board we are on.
 
-	_init_prog_address( hw_ConfigPtr, hw_ConfigData);
-	_memcpy_p2d16( &hw_Config, hw_ConfigPtr, _FLASH_ROW );
+	fidc.Val = 0xf80012;
+	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
 
-	if( hw_Config.data[0] != hw_CONFIG_MAGIC_WORD ) {
+	hw_Type = fidc_data.byte.LB;
 
-		hw_Config.data[0] = hw_CONFIG_MAGIC_WORD;
-		hw_Config.data[1] = nmea_ARBITRARY_ADDRESS;
-		hw_Config.data[2] = nmea_INDUSTRY_GROUP;
-		hw_Config.data[3] = nmea_VEHICLE_SYSTEM;
-		hw_Config.data[4] = nmea_FUNCTION_SWITCH;
-		hw_Config.data[5] = hw_DeviceID;
-		hw_Config.data[6] = nmea_MANUFACTURER_CODE;
-		hw_Config.data[7] = (unsigned short)((nmea_IDENTITY_NUMBER & 0x001F0000) >> 16);
-		hw_Config.data[8] = (unsigned short)(nmea_IDENTITY_NUMBER & 0xFFFF);
+	fidc.Val = 0xf80010;
+	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
 
-		// Load some sensible values if we have lost engine calibration.
+	// Only proceed if we seem to have the Device ID Memory set.
 
-		hw_Config.engine_Calibration[ p_ThrottleMin ] = 212;
-		hw_Config.engine_Calibration[ p_ThrottleMax ] = 140;
-		hw_Config.engine_Calibration[ p_GearNeutral ] = 170;
-		hw_Config.engine_Calibration[ p_GearReverse ] = 216;
-		hw_Config.engine_Calibration[ p_GearForward ] = 140;
+	if( hw_DeviceID != 0xFF ) {
 
-		hw_Config.engine_Calibration[ p_JoystickMin ] = 60;
-		hw_Config.engine_Calibration[ p_JoystickMid ] = 500;
-		hw_Config.engine_Calibration[ p_JoystickMax ] = 1000;
-
-		hw_WriteConfigFlash();
-	}
-
-	// IO setup for SN65HVD234 CANBus driver.
-	// The wiring is different on different versions of the hardware.
-
-	// hw_Type					hw_LEDLAMP		hw_SWITCH
-	//--------------------------------------------------------------
-	// Slew Rate control pin	Pin  8 RB10		Pin 20 RA1
-	// Driver Enable			Pin  9 RB11		Pin 22 RB1
-	// CAN Tx					Pin 10 RB12		Pin 10 RB12
-	// CAN Rx					Pin 11 RB13		Pin 21 RB0
-
-	TRISBbits.TRISB14 = 0;				// Debug trigger output.
-
-	hw_OutputPort( hw_CAN_EN );
-	hw_OutputPort( hw_CAN_RATE );
-
-	hw_WritePort( hw_CAN_EN, 0 );		// Chip Enable = 0, go off bus.
-	hw_WritePort( hw_CAN_RATE, 0 );		// RS = 0 -> Not in sleep mode.
-
-	// Peripheral mappings
-
-	switch( hw_Type ) {
-
-		case hw_LEDLAMP: {
-
-			hw_OutputPort( hw_LED_RED );
-			hw_OutputPort( hw_LED_WHITE );
-
-			PPSUnLock;
-			PPSOutput( PPS_OC1, PPS_RP20 ); 	// Red PWM to RP20.
-			PPSOutput( PPS_OC2, PPS_RP21 ); 	// White PWM to RP21.
-			RPOR6bits.RP12R = 0x10;			// CAN Transmit to RP12.
-			RPINR26bits.C1RXR = 13;				// CAN Receive from pin RP13.
-			PPSLock;
-			break;
-		}
-
-		case hw_SWITCH: {
-
-			hw_OutputPort( hw_LED_RED );
-			hw_OutputPort( hw_LED1 );
-			hw_OutputPort( hw_LED2 );
-			hw_OutputPort( hw_LED3 );
-
-			hw_WritePort( hw_LED1, 0 );
-			hw_WritePort( hw_LED2, 0 );
-			hw_WritePort( hw_LED3, 0 );
-
-			PPSUnLock;
-			PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to RP5.
-			hw_PWMInverted = 1;
-			RPOR6bits.RP12R = 0x10;				// CAN Transmit to RP12.
-			RPINR26bits.C1RXR = 0;				// CAN Receive from pin RP0.
-
-			if( hw_Actuators_Installed ) {
-				PPSOutput( PPS_OC3, PPS_RP16 );
-				PPSOutput( PPS_OC4, PPS_RP18 );
-			}
-
-			PPSLock;
-			break;
-		}
-	}
-
-	hw_HeartbeatCounter = 0;
+		// Check configuration area, erase it if it is non-zero but seems corrupted.
+		// This can happen if the code has been recompiled and the compiler
+		// has moved the hw_ConfigData area to a new address.
 	
-	// Lastly check that we have a valid device Id.
+		_init_prog_address( hw_ConfigPtr, hw_ConfigData);
+		_memcpy_p2d16( &hw_Config, hw_ConfigPtr, _FLASH_ROW );
+	
+		if( hw_Config.data[0] != hw_CONFIG_MAGIC_WORD ) {
+	
+			hw_Config.data[0] = hw_CONFIG_MAGIC_WORD;
+			hw_Config.data[1] = nmea_ARBITRARY_ADDRESS;
+			hw_Config.data[2] = nmea_INDUSTRY_GROUP;
+			hw_Config.data[3] = nmea_VEHICLE_SYSTEM;
+			hw_Config.data[4] = nmea_FUNCTION_SWITCH;
+			hw_Config.data[5] = hw_DeviceID;
+			hw_Config.data[6] = nmea_MANUFACTURER_CODE;
+			hw_Config.data[7] = (unsigned short)((nmea_IDENTITY_NUMBER & 0x001F0000) >> 16);
+			hw_Config.data[8] = (unsigned short)(nmea_IDENTITY_NUMBER & 0xFFFF);
+	
+			// Load some sensible values if we have lost engine calibration.
+	
+			hw_Config.engine_Calibration[ p_ThrottleMin ] = 212;
+			hw_Config.engine_Calibration[ p_ThrottleMax ] = 140;
+			hw_Config.engine_Calibration[ p_GearNeutral ] = 170;
+			hw_Config.engine_Calibration[ p_GearReverse ] = 216;
+			hw_Config.engine_Calibration[ p_GearForward ] = 140;
+	
+			hw_Config.engine_Calibration[ p_JoystickMin ] = 60;
+			hw_Config.engine_Calibration[ p_JoystickMid ] = 500;
+			hw_Config.engine_Calibration[ p_JoystickMax ] = 1000;
+	
+			hw_WriteConfigFlash();
+		}
+	
+		// IO setup for SN65HVD234 CANBus driver.
+		// The wiring is different on different versions of the hardware.
+	
+		// hw_Type					hw_LEDLAMP		hw_SWITCH
+		//--------------------------------------------------------------
+		// Slew Rate control pin	Pin  8 RB10		Pin 20 RA1
+		// Driver Enable			Pin  9 RB11		Pin 22 RB1
+		// CAN Tx					Pin 10 RB12		Pin 10 RB12
+		// CAN Rx					Pin 11 RB13		Pin 21 RB0
+	
+		TRISBbits.TRISB14 = 0;				// Debug trigger output.
+	
+		hw_OutputPort( hw_CAN_EN );
+		hw_OutputPort( hw_CAN_RATE );
+	
+		hw_WritePort( hw_CAN_EN, 0 );		// Chip Enable = 0, go off bus.
+		hw_WritePort( hw_CAN_RATE, 0 );		// RS = 0 -> Not in sleep mode.
+	
+		// Peripheral mappings
+	
+		switch( hw_Type ) {
+	
+			case hw_LEDLAMP: {
+	
+				hw_OutputPort( hw_LED_RED );
+				hw_OutputPort( hw_LED_WHITE );
+	
+				PPSUnLock;
+				PPSOutput( PPS_OC1, PPS_RP20 ); 	// Red PWM to RP20.
+				PPSOutput( PPS_OC2, PPS_RP21 ); 	// White PWM to RP21.
+				RPOR6bits.RP12R = 0x10;			// CAN Transmit to RP12.
+				RPINR26bits.C1RXR = 13;				// CAN Receive from pin RP13.
+				PPSLock;
+				break;
+			}
+	
+			case hw_SWITCH: {
+	
+				hw_OutputPort( hw_LED_RED );
+				hw_OutputPort( hw_LED1 );
+				hw_OutputPort( hw_LED2 );
+				hw_OutputPort( hw_LED3 );
+	
+				hw_WritePort( hw_LED1, 0 );
+				hw_WritePort( hw_LED2, 0 );
+				hw_WritePort( hw_LED3, 0 );
+	
+				PPSUnLock;
+				PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to RP5.
+				hw_PWMInverted = 1;
+				RPOR6bits.RP12R = 0x10;				// CAN Transmit to RP12.
+				RPINR26bits.C1RXR = 0;				// CAN Receive from pin RP0.
+	
+				if( hw_Actuators_Installed ) {
+					PPSOutput( PPS_OC3, PPS_RP16 );
+					PPSOutput( PPS_OC4, PPS_RP18 );
+				}
+	
+				PPSLock;
+				break;
+			}
+		}
+	
+		hw_HeartbeatCounter = 0;
+		return;
+	}	
+
+	// Lastly if we don't we have a valid device Id, stop and flash something.
 	// Device ID = 0xFF is not allowed. It indicates that the device was programmed
 	// with default 0xFFFFFFFF in the Unit ID form of MPLAB.
 
-	if( hw_DeviceID == 0xFF ) {
-		unsigned short i;
-		_TRISB5 = 0;
-		_TRISB11 = 0;
-		while(1) {
-			_RB5 = _RB11 = 0;
-			for( i=0; i<50000; i++) __delay32(11);
-			_RB5 = _RB11 = 0;
-			for( i=0; i<10000; i++) __delay32(11);
-		}
+	unsigned long i;
+	_TRISB5 = 0;
+	_TRISB11 = 0;
+	while(1) {
+		_RB5 = 0;
+		_RB11 = 0;
+		for( i=0; i<100000; i++) __delay32(11);
+		_RB5 = 1;
+		_RB11 = 1;
+		for( i=0; i<30000; i++) __delay32(11);
 	}
 }
 

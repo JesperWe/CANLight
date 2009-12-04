@@ -11,6 +11,33 @@
 #include "menu.h"
 #include "engine.h"
 
+/* Configuration bit settings in the IDE:
+ *
+ * Oscillator Mode: Fast Internal RC with PLL
+ * Alternate I2C: Disabled.
+ * ICS Comm Channel: PGD1 for Light, PGD2 for Switch
+ * JTAG Port Disabled.
+ *
+ * ID Memory
+ *
+ * Byte 3: Unused
+ *
+ * Byte 2: Circuit Board Type.
+ * 			= 0: Dual High Frequency Switched LED Driver.
+ * 			= 1: IO Module. 4 Digital Outputs @ 25A, 3 Pushbuttons.
+ * 			= 0xFF: Unknown or not programmed.
+ *
+ * Byte 1: Bit flags for various hardware features installed:
+ *         7 - Linear Actuators
+ *         6 - Joystick
+ *         5 - Photo Detector
+ *         4 - I2C Display
+ *         3-0 - Unused
+ *
+ * Byte 0: NMEA-2000 Device Address (0-240)
+ *
+ */
+
 void goodnight( void );
 
 int main (void)

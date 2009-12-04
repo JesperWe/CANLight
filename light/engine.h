@@ -52,4 +52,6 @@ void engine_RequestThrottle( unsigned char level );
 void engine_SetThrottle( unsigned char level );
 void engine_SetGear( char direction );
 
+void engine_InterruptService();
+
 #endif /* ENGINE_H_ */

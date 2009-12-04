@@ -230,3 +230,42 @@ void engine_SetGear( char direction ) {
 	engine_CurrentGear = direction;
 	engine_GearSwitchTime = hw_HeartbeatCounter;
 }
+
+
+//--------------------------------------------------------------------------------------------
+// Things to do in the 1ms Interrupt Service Routine.
+// Fade approximated engine RPM towards current throttle setting.
+// If a gear change has been requested, do it when the target RPM has been  reached.
+
+void engine_InterruptService()
+{
+	if( engine_TargetRPM > engine_CurrentRPM ) engine_CurrentRPM++;
+	if( engine_TargetRPM < engine_CurrentRPM ) engine_CurrentRPM--;
+
+	// Any gear change pending?
+
+	if( engine_CurrentGear != engine_TargetGear ) {
+		if( engine_CurrentRPM == engine_TargetRPM ) {
+
+			// Require at least 1 seconds between gear changes.
+
+			short interval;
+			interval = hw_HeartbeatCounter - engine_GearSwitchTime;
+			if( interval < 0 ) interval += hw_SLOW_HEARTBEAT_MS;
+			if( interval > 1000 ) {
+
+				// Go to neutral between forward and reverse.
+
+				if( engine_TargetGear != 0 && engine_CurrentGear != 0 ) {
+					engine_SetGear( 0 );
+				}
+
+				else {
+					engine_SetGear( engine_TargetGear );
+					engine_SetThrottle( engine_TargetThrottle );
+				}
+			}
+		}
+	}
+}
+
