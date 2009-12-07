@@ -11,7 +11,7 @@
 
 cfg_Event_t *cfg_MyEvents;
 unsigned char cfg_MyDeviceId = 0;
-unsigned char cfg_Valid = 0;
+unsigned char config_Valid = 0;
 
 #include "config_groups.h"
 
@@ -20,12 +20,21 @@ static const unsigned char cfg_Default[] = cfg_DEFAULT_CONFIG_FILE;
 //-------------------------------------------------------------------------------
 // System Configuration.
 
-void cfg_Initialize() {
+void config_Initialize() {
 	unsigned char cfgByte;
 	unsigned char *cfgPtr;
 	unsigned short i; 
 	unsigned char group;
 	unsigned char func;
+
+	// First check if we don't we have a valid device Id.
+	// Device ID = 0xFF is not allowed. It indicates that the device was programmed
+	// with default 0xFFFFFFFF in the Unit ID form of MPLAB.
+
+	if( hw_DeviceID == 0xFF ) {
+		config_Valid = 0;
+		return;
+	}
 
 	// Allocate first empty element for my controllers list.
 
@@ -43,7 +52,7 @@ void cfg_Initialize() {
 			cfgByte = cfg_Default[++i];
 		}
 		hw_Config.cfgFile[i] = cfgByte;
-		if( i > 0 ) cfg_Valid = 1;
+		if( i > 0 ) config_Valid = 1;
 	}
 
 	// Now filter system config to find out what groups we belong to, and

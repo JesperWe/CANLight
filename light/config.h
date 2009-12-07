@@ -26,7 +26,7 @@ typedef struct cfg_Event_s {
 } cfg_Event_t;
 
 extern cfg_Event_t *cfg_MyEvents;
-extern unsigned char cfg_Valid;
+extern unsigned char config_Valid;
 
 void cfg_AddControlEvents( 
 	unsigned char group, 
@@ -42,6 +42,6 @@ void cfg_AddControlEvent(
 	unsigned char function
 );
 
-void cfg_Initialize();
+void config_Initialize();
 
 #endif /* CONFIG_H_ */

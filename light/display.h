@@ -56,6 +56,7 @@ void display_SetContrast( unsigned char value );
 void display_HorizontalBar( unsigned char col, unsigned char row, unsigned char value );
 
 unsigned char display_ReadKeypad();
+void display_Task( void* pvParam );
 
 extern unsigned char display_PendingKeypress;
 extern unsigned char display_IsOn;

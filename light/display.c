@@ -185,3 +185,29 @@ void display_HorizontalBar( unsigned char col, unsigned char row, unsigned char 
 	if( value > 100 ) value = 100;
 	display_Sendbytes( 6, DISPLAY_CMD, DISPLAY_PLACE_HBAR, col, row, 0, value );
 }
+
+void display_Task( void* pvParam ) {
+	while(1) {
+
+		// We can either poll the keypad or read a pressed key in one time slot.
+		// The display is too slow to poll and process in the same cycle, it will protest.
+
+		if( display_PendingKeypress == 0 ) {
+
+			display_PendingKeypress = display_ReadKeypad();
+			if( display_PendingKeypress != 0x00 ) {
+
+				// If MSB is set there was a negative status which means the display
+				// did not ACK. It is probably busy. So we try again next time slot.
+
+				if( (display_PendingKeypress & 0x80) != 0 ) display_PendingKeypress = 0;
+			}
+		}
+
+		else {
+			menu_ProcessKey( display_PendingKeypress );
+			display_PendingKeypress = 0;
+		}
+	}
+}
+

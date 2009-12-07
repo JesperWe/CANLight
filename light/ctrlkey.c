@@ -61,16 +61,6 @@ void ctrlkey_Initialize( void ) {
 		default:			ctrlkey_NoKeys = 0; return;
 	}
 
-	// Timer 1 will be our debounce and press&hold timer.
-
-	T1CONbits.TSIDL = 1;
-	T1CONbits.TCKPS = 0;		// Prescaler = 1
-	T1CONbits.TCS = 0;			// CLock Select = Fcy.
-	PR1 = 0x1B7D;				// Timer cycle.
-	_T1IF = 0;
-	IEC0bits.T1IE = 1;
-	T1CONbits.TON = 1;			// Start Timer.
-
 	if( ctrlkey_NoKeys != 0 )
 		ctrlkey_States[2] = ctrlkey_States[1] = ctrlkey_States[0] = ctrlkey_ReadKeys();
 }
@@ -92,140 +82,138 @@ unsigned short ctrlkey_ReadKeys( void ) {
 
 
 //---------------------------------------------------------------------------------------------
-// Timer 1 Interrupt. Keep track of all key changes, accept them as debounced if they
+// Control Key Task
+// Keep track of all key changes, accept them as debounced if they
 // are stable over two periods. Then track key pressed times, and generate key clicked,
 // key held or key released events accordingly.
 //
-// Timer 1 should run with an Interrupt Interval of about 1ms.
-// It is also used for various other tasks that require asynchronous execution.
 
-void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
+void ctrlkey_task( void *pvParameters ) {
 	static unsigned short holdingSamples[ctrlkey_MAX_NO_KEYS];
 	unsigned short diffKeys, currentState;
 	short keyNo;
 
-	_RB14 = !_RB14;
+	while(1) {
+		ctrlkey_Samples++;
 
-	_T1IF = 0;
-	ctrlkey_Samples++;
+		// If we have pending clicks waiting for a double/triple sequence check
+		// and time has run out, ship it!
 
-	// If we have pending clicks waiting for a double/triple sequence check
-	// and time has run out, ship it!
+		ctrlkey_ClickPending++;
 
-	ctrlkey_ClickPending++;
+		if( ctrlkey_ClickCount != 0 && ctrlkey_ClickPending > ctrlkey_DOUBLECLICK_THRESHOLD ) {
+			unsigned char clickEvent = e_KEY_CLICKED;
+			if( ctrlkey_ClickCount == 2 ) clickEvent = e_KEY_DOUBLECLICKED;
+			if( ctrlkey_ClickCount > 2 ) clickEvent = e_KEY_TRIPLECLICKED;
 
-	if( ctrlkey_ClickCount != 0 && ctrlkey_ClickPending > ctrlkey_DOUBLECLICK_THRESHOLD ) {
-		unsigned char clickEvent = e_KEY_CLICKED;
-		if( ctrlkey_ClickCount == 2 ) clickEvent = e_KEY_DOUBLECLICKED;
-		if( ctrlkey_ClickCount > 2 ) clickEvent = e_KEY_TRIPLECLICKED;
+			events_Push( clickEvent, 0,
+					hw_DeviceID,
+					ctrlkey_Key2Function[ctrlkey_ClickPendingKeyNo],
+					clickEvent, ctrlkey_ClickPendingKeyNo,
+					ctrlkey_Samples );
 
-		events_Push( clickEvent, 0,
-				hw_DeviceID,
-				ctrlkey_Key2Function[ctrlkey_ClickPendingKeyNo],
-				clickEvent, ctrlkey_ClickPendingKeyNo,
-				ctrlkey_Samples );
+			ctrlkey_ClickPending = 0;
+			ctrlkey_ClickCount = 0;
+		}
 
-		ctrlkey_ClickPending = 0;
-		ctrlkey_ClickCount = 0;
-	}
+		// We also use this timer for the heartbeat timers. (Slow = 3s / Fast = 0.3s)
+		// In addition, if we are in the middle of a PWM LED fade, heartbeats will
+		// step the fade level.
 
-	// We also use this timer for the heartbeat timers. (Slow = 3s / Fast = 0.3s)
-	// In addition, if we are in the middle of a PWM LED fade, heartbeats will
-	// step the fade level.
-
-	hw_HeartbeatCounter = ++hw_HeartbeatCounter % hw_SLOW_HEARTBEAT_MS;
-	if( (hw_HeartbeatCounter % hw_FAST_HEARTBEAT_MS) == 0 && ctrlkey_Holding ) {
-		events_Push( e_FAST_HEARTBEAT, 0, hw_DeviceID, 0, e_FAST_HEARTBEAT, 0, hw_HeartbeatCounter );
-	}
-	if( hw_HeartbeatCounter == 0 ) {
-		events_Push( e_SLOW_HEARTBEAT, 0, hw_DeviceID, 0, e_SLOW_HEARTBEAT, 0, hw_HeartbeatCounter );
-	}
+		/*hw_HeartbeatCounter = ++hw_HeartbeatCounter % hw_SLOW_HEARTBEAT_MS;
+		if( (hw_HeartbeatCounter % hw_FAST_HEARTBEAT_MS) == 0 && ctrlkey_Holding ) {
+			events_Push( e_FAST_HEARTBEAT, 0, hw_DeviceID, 0, e_FAST_HEARTBEAT, 0, hw_HeartbeatCounter );
+		}
+		if( hw_HeartbeatCounter == 0 ) {
+			events_Push( e_SLOW_HEARTBEAT, 0, hw_DeviceID, 0, e_SLOW_HEARTBEAT, 0, hw_HeartbeatCounter );
+		}
 
 
 
-	if( hw_Actuators_Installed ) engine_InterruptService();
+		if( hw_Actuators_Installed ) engine_InterruptService();*/
 
 
-	// Now see if we have a key depressed long enough to generate a holding event.
+		// Now see if we have a key depressed long enough to generate a holding event.
 
-	if( ctrlkey_KeyHolding ) {
-		for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
-			if( holdingSamples[keyNo] ) {
-				holdingSamples[keyNo]++;
-				if( holdingSamples[keyNo] == ctrlkey_HOLDING_THRESHOLD ) {
-					events_Push( e_KEY_HOLDING, 0, 
-						hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_HOLDING,
-						keyNo, ctrlkey_Samples );
+		if( ctrlkey_KeyHolding ) {
+			for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
+				if( holdingSamples[keyNo] ) {
+					holdingSamples[keyNo]++;
+					if( holdingSamples[keyNo] == ctrlkey_HOLDING_THRESHOLD ) {
+						events_Push( e_KEY_HOLDING, 0,
+							hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_HOLDING,
+							keyNo, ctrlkey_Samples );
+					}
 				}
 			}
 		}
-	}
 
-	if( ctrlkey_EventPending ) {
+		if( ctrlkey_EventPending ) {
 
-		currentState = ctrlkey_ReadKeys();
-		ctrlkey_States[1] = ctrlkey_States[0];
-		ctrlkey_States[0] = currentState;
+			currentState = ctrlkey_ReadKeys();
+			ctrlkey_States[1] = ctrlkey_States[0];
+			ctrlkey_States[0] = currentState;
 
-		// Stable = Same value for two periods.
-		if(ctrlkey_States[1] == ctrlkey_States[0]) {
+			// Stable = Same value for two periods.
+			if(ctrlkey_States[1] == ctrlkey_States[0]) {
 
-			// Any change from currently reported key states?
-			if(ctrlkey_States[1] != ctrlkey_States[2]) {
-				diffKeys = ctrlkey_States[1] ^ ctrlkey_States[2];
+				// Any change from currently reported key states?
+				if(ctrlkey_States[1] != ctrlkey_States[2]) {
+					diffKeys = ctrlkey_States[1] ^ ctrlkey_States[2];
 
-				ctrlkey_KeyHolding = 0;
+					ctrlkey_KeyHolding = 0;
 
-				for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
+					for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 
-					// Did this key change?
-					if( diffKeys & 0x0001 ) {
+						// Did this key change?
+						if( diffKeys & 0x0001 ) {
 
-						// Is this a new key press?
-						if( (holdingSamples[keyNo] == 0) && ((currentState&0x0001) == 0) ) {
-							holdingSamples[keyNo]++;
-							ctrlkey_KeyHolding = 1;
-						}
-
-						// Is it a release?
-						else if( (currentState&0x0001) == 1 ) {
-
-							if( holdingSamples[keyNo] > ctrlkey_HOLDING_THRESHOLD ) {
-
-								events_Push( e_KEY_RELEASED, 0,
-										hw_DeviceID,
-										ctrlkey_Key2Function[keyNo],
-										e_KEY_RELEASED, keyNo,
-										ctrlkey_Samples );
+							// Is this a new key press?
+							if( (holdingSamples[keyNo] == 0) && ((currentState&0x0001) == 0) ) {
+								holdingSamples[keyNo]++;
+								ctrlkey_KeyHolding = 1;
 							}
 
-							else {
+							// Is it a release?
+							else if( (currentState&0x0001) == 1 ) {
 
-								// The key was released before being considered held, so it is a click.
-								// Don't send it until we have determined if it is a double/triple click.
+								if( holdingSamples[keyNo] > ctrlkey_HOLDING_THRESHOLD ) {
 
-								ctrlkey_ClickCount++;
-								ctrlkey_ClickPending = 0;
-								ctrlkey_ClickPendingKeyNo = keyNo;
+									events_Push( e_KEY_RELEASED, 0,
+											hw_DeviceID,
+											ctrlkey_Key2Function[keyNo],
+											e_KEY_RELEASED, keyNo,
+											ctrlkey_Samples );
+								}
+
+								else {
+
+									// The key was released before being considered held, so it is a click.
+									// Don't send it until we have determined if it is a double/triple click.
+
+									ctrlkey_ClickCount++;
+									ctrlkey_ClickPending = 0;
+									ctrlkey_ClickPendingKeyNo = keyNo;
+								}
+
+								holdingSamples[keyNo] = 0;
 							}
-
-							holdingSamples[keyNo] = 0;
 						}
+
+						// If the key didn't change, check if it is being held.
+						else {
+							if( holdingSamples[keyNo] ) ctrlkey_KeyHolding = 1;
+						}
+
+						diffKeys = diffKeys >> 1;
+						currentState = currentState >> 1;
 					}
 
-					// If the key didn't change, check if it is being held.
-					else {
-						if( holdingSamples[keyNo] ) ctrlkey_KeyHolding = 1;
-					}
-
-					diffKeys = diffKeys >> 1;
-					currentState = currentState >> 1;
+					// OK new state has been processed. Save it as current.
+					ctrlkey_States[2] = ctrlkey_States[1];
 				}
-
-				// OK new state has been processed. Save it as current.
-				ctrlkey_States[2] = ctrlkey_States[1];
+				ctrlkey_EventPending = 0;
 			}
-			ctrlkey_EventPending = 0;
 		}
 	}
 }

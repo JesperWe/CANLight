@@ -58,10 +58,10 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_NoPortNames] =
 	{ &PORTA, &TRISA, 9 },	// LED1
 	{ &PORTC, &TRISC, 4 },	// LED2
 	{ &PORTC, &TRISC, 6 },	// LED3
-	{ &PORTB, &TRISB, 0 },	// SWITCH1
-	{ &PORTB, &TRISB, 0 },	// SWITCH2
-	{ &PORTB, &TRISB, 0 },	// SWITCH3
-	{ &PORTB, &TRISB, 0 },	// SWITCH4
+	{ &PORTA, &TRISA, 2 },	// SWITCH1
+	{ &PORTA, &TRISA, 8 },	// SWITCH2
+	{ &PORTB, &TRISB, 3 },	// SWITCH3
+	{ &PORTC, &TRISC, 1 },	// SWITCH4
 	{ &PORTC, &TRISC, 3 },	// KEY1
 	{ &PORTC, &TRISC, 5 },	// KEY2
 	{ &PORTC, &TRISC, 7 }	// KEY3
@@ -113,11 +113,15 @@ void hw_Initialize( void ) {
 
 	AD1PCFGL = 0x1FFF;				// ANx eats ECAN1 SNAFU!
 
-	// Set up clock oscillator.
+	// Set up clock oscillator. Nominal f=7.37MHz
+	// This is too low for the ECAN unit to work well at 250kBit.
+	// So we use PLL to increase it to 14MHz.
 
-	_PLLPRE = 2;	// Prescale = PLLPRE+2=4
-	_PLLDIV = 59;	// Multiply = PLLDIV+2=61
-	_PLLPOST = 3;	// Postscale = 8
+	_PLLPRE = 2;	// Prescale = PLLPRE+2=4 > fRef = 7.37/4=1.84MHz
+	_PLLDIV = 59;	// Multiply = PLLDIV+2=61 > fVCO = 1.84x61 = 112.4MHz
+	_PLLPOST = 3;	// Postscale = 8 > fOSC = 112.4/8 = 14.05MHz
+
+	// Resulting fOSC = 7024531 Hz nominal
 
 	while(OSCCONbits.LOCK!=1); 	// Wait for PLL to lock
 
@@ -136,35 +140,33 @@ void hw_Initialize( void ) {
 
 	hw_DeviceID = fidc_data.byte.LB;
 
-	// Find out additional individual config parameters from Unit ID byte 1.
-
-	fidc.Val = 0xf80014;
-	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
-
-	hw_ConfigByte = fidc_data.byte.LB;
-
-	hw_I2C_Installed =       ((hw_ConfigByte & 0x10) != 0);
-	hw_Detector_Installed =  ((hw_ConfigByte & 0x20) != 0); // XXX Fix bug where unit hangs in ADC if disabled!
-	hw_Throttle_Installed =  ((hw_ConfigByte & 0x40) != 0);
-	hw_Actuators_Installed = ((hw_ConfigByte & 0x80) != 0);
-
-	// Byte 2 is the type of circuit board we are on.
-
-	fidc.Val = 0xf80012;
-	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
-
-	hw_Type = fidc_data.byte.LB;
-
-	fidc.Val = 0xf80010;
-	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
-
-	// Only proceed if we seem to have the Device ID Memory set.
-
 	if( hw_DeviceID != 0xFF ) {
-
+		// Find out additional individual config parameters from Unit ID byte 1.
+	
+		fidc.Val = 0xf80014;
+		fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+		fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+	
+		hw_ConfigByte = fidc_data.byte.LB;
+	
+		hw_I2C_Installed =       ((hw_ConfigByte & 0x10) != 0);
+		hw_Detector_Installed =  ((hw_ConfigByte & 0x20) != 0); // XXX Fix bug where unit hangs in ADC if disabled!
+		hw_Throttle_Installed =  ((hw_ConfigByte & 0x40) != 0);
+		hw_Actuators_Installed = ((hw_ConfigByte & 0x80) != 0);
+	
+		// Byte 2 is the type of circuit board we are on.
+	
+		fidc.Val = 0xf80012;
+		fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+		fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+	
+		hw_Type = fidc_data.byte.LB;
+	
+		fidc.Val = 0xf80010;
+		fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+		fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+	
+	
 		// Check configuration area, erase it if it is non-zero but seems corrupted.
 		// This can happen if the code has been recompiled and the compiler
 		// has moved the hw_ConfigData area to a new address.
@@ -247,40 +249,28 @@ void hw_Initialize( void ) {
 				hw_WritePort( hw_LED3, 0 );
 	
 				PPSUnLock;
-				PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to RP5.
+				PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to pin 41.
 				hw_PWMInverted = 1;
-				RPOR6bits.RP12R = 0x10;				// CAN Transmit to RP12.
-				RPINR26bits.C1RXR = 0;				// CAN Receive from pin RP0.
+				RPOR6bits.RP12R = 0x10;				// CAN Transmit to pin 10.
+				RPINR26bits.C1RXR = 0;				// CAN Receive from pin 21.
 	
 				if( hw_Actuators_Installed ) {
-					PPSOutput( PPS_OC3, PPS_RP16 );
-					PPSOutput( PPS_OC4, PPS_RP18 );
+					PPSOutput( PPS_OC3, PPS_RP2 );	// Ch1: Throttle to pin 23.
+					PPSOutput( PPS_OC4, PPS_RP16 );	// Ch1: Gear box to pin 25.
+					hw_OutputPort( hw_SWITCH1 );
+					hw_WritePort( hw_SWITCH1, 0 );
+					hw_OutputPort( hw_SWITCH2 );
+					hw_WritePort( hw_SWITCH2, 0 );
 				}
 	
 				PPSLock;
 				break;
 			}
 		}
-	
-		hw_HeartbeatCounter = 0;
-		return;
-	}	
-
-	// Lastly if we don't we have a valid device Id, stop and flash something.
-	// Device ID = 0xFF is not allowed. It indicates that the device was programmed
-	// with default 0xFFFFFFFF in the Unit ID form of MPLAB.
-
-	unsigned long i;
-	_TRISB5 = 0;
-	_TRISB11 = 0;
-	while(1) {
-		_RB5 = 0;
-		_RB11 = 0;
-		for( i=0; i<100000; i++) __delay32(11);
-		_RB5 = 1;
-		_RB11 = 1;
-		for( i=0; i<30000; i++) __delay32(11);
 	}
+
+	hw_HeartbeatCounter = 0;
+	return;
 }
 
 

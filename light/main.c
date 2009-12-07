@@ -11,11 +11,12 @@
 #include "menu.h"
 #include "engine.h"
 
+
 /* Configuration bit settings in the IDE:
  *
  * Oscillator Mode: Fast Internal RC with PLL
  * Alternate I2C: Disabled.
- * ICS Comm Channel: PGD1 for Light, PGD2 for Switch
+ * ICS Communication Channel: PGD1 for Light, PGD2 for Switch
  * JTAG Port Disabled.
  *
  * ID Memory
@@ -36,15 +37,17 @@
  *
  * Byte 0: NMEA-2000 Device Address (0-240)
  *
+ * (PreRTOS PGM35% DATA19%)
+ * (NooptRTOS PGM49% DATA21%)
  */
 
+void config_Task( void *pvParameters );
+void event_Task( void *pvParameters );
+void menu_Task( void *pvParameters );
 void goodnight( void );
 
 int main (void)
 {
-	float newLevel;
-	cfg_Event_t *listenEvent;
-
 	hw_Initialize();
 
 	if( hw_I2C_Installed ) {
@@ -60,55 +63,76 @@ int main (void)
 		engine_Initialize();
 	}
 
-	switch( hw_Type ) {
-
-		case hw_LEDLAMP: {
-			led_Initialize();
-			led_PresetLevel[ led_RED ] = 1.0;
-			led_PresetLevel[ led_WHITE ] = 0.5;
-			led_FadeToLevel( led_RED, 0.0, 2.0 );
-			led_FadeToLevel( led_WHITE, 0.0, 2.0 );
-			break;
-		}
-
-		case hw_SWITCH: {
-			led_Initialize();
-			led_PresetLevel[ led_RED ] = 1.0;
-			led_CurrentLevel[ led_RED ] = led_GetPWMLevel( led_RED );
-			led_FadeToLevel( led_RED, 0.0, 2.0 );
-			break;
-		}
-	}
-
 	ctrlkey_Initialize();
-	cfg_Initialize();
+	config_Initialize();
 	events_Initialize();
 	nmea_Initialize();
+	led_Initialize();
 
+	// Now start RTOS Scheduler.
+
+	xTaskCreate( config_Task, (signed char*) "Cfg", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+
+	//xTaskCreate( event_Task, (signed char*) "Evt", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+	xTaskCreate( led_CrossfadeTask, (signed char*) "xFd", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+
+	if( hw_I2C_Installed ) {
+		xTaskCreate( display_Task, (signed char*) "I2C", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+		xTaskCreate( menu_Task, (signed char*) "Mnu", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+	}
+
+	vTaskStartScheduler();
+
+	return 0;
+}
+
+
+void config_Task( void *pvParameters ) {
 	// No point in running if we have no valid system configuration,
 	// so stay here waiting for one to arrive and flash something to show
 	// we are waiting.
 
-	while( ! cfg_Valid ) {
-		unsigned long interval;
-		for( interval=0; interval < 200000; interval++ ) __delay32(11);
-		led_SetLevel( led_RED, 0.3 );
-		for( interval=0; interval < 30000; interval++ ) __delay32(11);
-		led_SetLevel( led_RED, 0.0 );
-	}
+	static portTickType xLastFlashTime;
 
-	// Main event loop. Send NMEA events on the bus if keys clicked,
+	while(1) {
+		if ( ! config_Valid ) {
+
+			_TRISB5 = 0;
+			_TRISB11 = 0;
+
+			xLastFlashTime = xTaskGetTickCount();
+
+			vTaskDelayUntil( &xLastFlashTime, (portTickType) 1000 );
+			_RB5 = 1;
+			_RB11 = 1;
+
+			vTaskDelayUntil( &xLastFlashTime, (portTickType) 1000 );
+			_RB5 = 0;
+			_RB11 = 0;
+		}
+
+		else {
+			xTaskCreate( led_PowerOnTest, (signed char*) "POS", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+			vTaskSuspend( NULL );
+		}
+	}
+}
+
+
+void event_Task( void *pvParameters ) {
+	// Send NMEA events on the bus if keys clicked,
 	// and respond to incoming commands.
 	// The MAINTAIN_POWER PGN should be sent before any command, to ensure
 	// all sleeping units wake up before the real data arrives.
 
+	float newLevel;
+	cfg_Event_t *listenEvent;
+
+	//_RB14 = 0;
+	//if( led_SleepTimer > 250 ) goodnight();
+
 	while(1) {
-
-		//_RB14 = 0;
-		//if( led_SleepTimer > 250 ) goodnight();
-
-		eventPtr = events_Pop();
-		if( eventPtr ) {
+		if( xQueueReceive( event_Queue, &eventPtr, 0) ) {
 
 			switch( eventPtr->type ) {
 
@@ -242,6 +266,21 @@ int main (void)
 }
 
 
+void menu_Task( void *pvParameters ) {
+
+	while(1) {
+
+	// Check if we have an active event handler function from the
+	// menu state machine. This function should then be run twice per second.
+
+		if( menu_ActiveHandler != 0 ) {
+			menu_ActiveHandler();
+			vTaskDelay(500);
+		}
+	}
+}
+
+
 void goodnight( void ) {
 
 	_RB14 = 1;
@@ -259,4 +298,13 @@ void goodnight( void ) {
 	led_SleepTimer = 0;
 
 	nmea_ControllerMode( hw_ECAN_MODE_NORMAL );
+}
+
+void vApplicationIdleHook( void )
+{
+}
+
+void vApplicationMallocFailedHook( void ) {
+	int i;
+	for( i=0; i<=100; i++ ) vApplicationIdleHook();
 }

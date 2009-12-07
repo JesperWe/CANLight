@@ -64,18 +64,10 @@ void led_Initialize( void ) {
 	PR2 = led_PWM_PERIOD;
 	T2CONbits.TON = 1;  		// Start Timer.
 
-	OC1RS = led_PWM_PERIOD + 1; 	// Value higher than led_PWM_PERIOD means 100% Duty Cycle, LED is OFF.
-	OC2RS = led_PWM_PERIOD + 1;
 	led_CanSleep = 1;
 	led_SleepTimer = 0;
-
-	// We use Timer3 for fades, set it up for level changes every 40 ms.
-
-	T3CONbits.TCS = 0;  		// Internal Clock.
-	T3CONbits.TSIDL = 1;  		// Stop in idle.
-	T3CONbits.TCKPS = 3;  		// Divide by 256 Prescaler.
-	PR3 = 1094;					// For 25Hz.
-	T3CONbits.TON = 1;  		// Start Timer.
+	led_SetLevel( 0, 0.0 );
+	led_SetLevel( 1, 0.0 );
 
 	for( i=0; i<led_NoChannels; i++ ) {
 		led_CurrentLevel[i] = led_FadeFromLevel[i] = led_GetPWMLevel( i );
@@ -212,11 +204,6 @@ void led_FadeToLevel( unsigned char color, float level, float fadeSeconds ) {
 	led_FadeInProgress[ color ] = ENABLE;
 	led_FadeSteps[ color ] = fadeSeconds * (float) led_FADE_FREQ;
 	led_FadeStep[ color ] = 0;
-
-	if( _T3IE == DISABLE ) {
-		_T3IF = CLEAR;
-		_T3IE = ENABLE;
-	}
 }
 
 
@@ -255,76 +242,87 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 }
 
 
-//---------------------------------------------------------------------------------------------
-// Timer3 Interrupt service is responsible for smooth lighting transitions.
-// We also use this interrupt for polling the I2C keypad if there is one attached.
-//
-// Timer 3 should run with an Interrupt Interval of 40ms.
+//-------------------------------------------------------------------------------
+// Some limited LED test sequences. Mainly used to verify the hardware of newly
+// manufactured devices. This routine is run as a task that only executes once.
 
-void __attribute__((interrupt, no_auto_psv)) _T3Interrupt( void ) {
+void led_PowerOnTest( void* pvParameters ) {
+	portTickType xLastFlashTime;
+
+	switch( hw_Type ) {
+
+		case hw_LEDLAMP: {
+			led_PresetLevel[ led_RED ] = 1.0;
+			led_PresetLevel[ led_WHITE ] = 0.5;
+			led_FadeToLevel( led_RED, 0.0, 2.0 );
+			led_FadeToLevel( led_WHITE, 0.0, 2.0 );
+			break;
+		}
+
+		case hw_SWITCH: {
+			xLastFlashTime = xTaskGetTickCount();
+			hw_WritePort( hw_LED1, 1 );
+			vTaskDelayUntil( &xLastFlashTime, (portTickType) 500 );
+			hw_WritePort( hw_LED1, 0 );
+			hw_WritePort( hw_LED2, 1 );
+			vTaskDelayUntil( &xLastFlashTime, (portTickType) 500 );
+			hw_WritePort( hw_LED2, 0 );
+			hw_WritePort( hw_LED3, 1 );
+			vTaskDelayUntil( &xLastFlashTime, (portTickType) 500 );
+			hw_WritePort( hw_LED3, 0 );
+
+			led_PresetLevel[ led_RED ] = 1.0;
+			led_SetLevel( led_RED, 1.0);
+			led_FadeToLevel( led_RED, 0.0, 2.0 );
+			break;
+		}
+	}
+
+	vTaskSuspend( NULL );
+}
+
+
+//---------------------------------------------------------------------------------------------
+// Smooth lighting transitions.
+//
+// Should run with an Interrupt Interval of 40ms.
+
+void led_CrossfadeTask( void* pvParameters ) {
 	unsigned short i, curStep;
 	float fadePos, multiplier, value;
+	static portTickType xLastWakeTime;
 
-	_T3IE = DISABLE;
-	_T3IF = CLEAR;
+	xLastWakeTime = xTaskGetTickCount();
 
-	led_CanSleep = 1;
-	led_SleepTimer++;
+	while(1) {
+		led_CanSleep = 1;
+		led_SleepTimer++;
 
-	for( i=0; i<led_NoChannels; i++ ) {
+		for( i=0; i<led_NoChannels; i++ ) {
 
-		if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
-			led_CanSleep = 0;
+			if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
+				led_CanSleep = 0;
 
-		if( led_FadeInProgress[i] ) {
+			if( led_FadeInProgress[i] ) {
 
-			curStep = ++led_FadeStep[i];
-			fadePos = (float)curStep / (float)led_FadeSteps[i];
-			multiplier = led_SmoothStep( fadePos );
-			value = led_FadeFromLevel[i] + multiplier * (led_FadeTargetLevel[i] - led_FadeFromLevel[i]);
-			led_SetLevel( i, value );
+				curStep = ++led_FadeStep[i];
+				fadePos = (float)curStep / (float)led_FadeSteps[i];
+				multiplier = led_SmoothStep( fadePos );
+				value = led_FadeFromLevel[i] + multiplier * (led_FadeTargetLevel[i] - led_FadeFromLevel[i]);
+				led_SetLevel( i, value );
 
-			if( curStep >= led_FadeSteps[i] ) {
-				led_FadeInProgress[i] = DISABLE;
-			}
-		}
-	}
-
-	if( hw_Throttle_Installed ) {
-		engine_ReadJoystickLevel();
-	}
-
-	if( hw_I2C_Installed ) {
-
-		// We can either poll the keypad or process a pressed key in one interrupt cycle.
-		// The display is too slow to poll and process in the same cycle, it will protest.
-
-		if( display_PendingKeypress == 0 ) {
-
-			display_PendingKeypress = display_ReadKeypad();
-			if( display_PendingKeypress != 0x00 ) {
-
-				// If MSB is set there was a negative status which means the display
-				// did not ACK. It is probably busy. So we try again next interrupt cycle.
-
-				if( (display_PendingKeypress & 0x80) != 0 ) display_PendingKeypress = 0;
+				if( curStep >= led_FadeSteps[i] ) {
+					led_FadeInProgress[i] = DISABLE;
+				}
 			}
 		}
 
-		else {
-			menu_ProcessKey( display_PendingKeypress );
-			display_PendingKeypress = 0;
+		// XXX Move to independent task.
+
+		if( hw_Throttle_Installed ) {
+			engine_ReadJoystickLevel();
 		}
 
-		// Now check if we have an active event handler function from the
-		// menu state machine. This function should then be run twice per second.
-
-		if( menu_ActiveHandler != 0 ) {
-			if( (led_SleepTimer % 12) == 0 ) {
-				menu_ActiveHandler();
-			}
-		}
+		vTaskDelayUntil( &xLastWakeTime, (portTickType) 40 );
 	}
-
-	_T3IE = ENABLE;
 }

@@ -12,20 +12,14 @@
 //---------------------------------------------------------------------------------------------
 // Globals.
 
-event_t events_Queue[ events_QUEUESIZE ];
 event_t *eventPtr;
-
-unsigned char events_QueueHead;
-unsigned char events_QueueTail;
-unsigned char events_QueueFull;
+xQueueHandle event_Queue;
 unsigned char loopbackEnabled = 1;
 
 //---------------------------------------------------------------------------------------------
 
 void events_Initialize( void ) {
-	events_QueueTail = 0;
-	events_QueueHead = 0;
-	events_QueueFull = 0;
+	event_Queue = xQueueCreate( events_QUEUESIZE, sizeof(event_t));
 }
 
 //---------------------------------------------------------------------------------------------
@@ -50,14 +44,6 @@ void events_Push(
 	//	display_Write( line );
 	//}
 
-	// We really can't handle a full queue in any meaningful way.
-	// This is an embedded system after all...
-	// Ignoring pushes to make sure we don't corrupt.
-
-	if( events_QueueFull ) {
-		return;
-	}
-
 	newEvent.type = type;
 	newEvent.ctrlDev = ctrlDev;
 	newEvent.ctrlFunc = ctrlFunc;
@@ -66,30 +52,14 @@ void events_Push(
 	newEvent.data = data;
 	newEvent.atTimer = atTimer;
 
-	events_Queue[events_QueueTail] = newEvent;
-	events_QueueTail++;
-	events_QueueTail = events_QueueTail % events_QUEUESIZE;
+	if( event_Queue != 0 ) {
 
-	if( events_QueueTail == events_QueueHead ) {
-		events_QueueFull = 1;
+		if( xQueueSend( event_Queue, ( void * ) &newEvent, ( portTickType ) 100 ) != pdPASS ) {
+
+			// We really can't handle a full queue in any meaningful way.
+			// This is an embedded system after all...
+		}
 	}
-	
-}
-
-event_t* events_Pop( void ) {
-
-	event_t *eventPtr = 0;
-
-	// Anything to do?
-	if( ! events_QueueFull && (events_QueueHead==events_QueueTail)) return eventPtr;
-
-	eventPtr = &(events_Queue[events_QueueHead]);
-	events_QueueHead++;
-	events_QueueHead = events_QueueHead % events_QUEUESIZE;
-	
-	events_QueueFull = 0;
-
-	return eventPtr;
 }
 
 

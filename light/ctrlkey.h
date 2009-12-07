@@ -38,5 +38,6 @@ extern unsigned char ctrlkey_Holding;
 
 void ctrlkey_Initialize( void );
 unsigned short ctrlkey_ReadKeys( void );
+void ctrlkey_task( void *pvParameters );
 
 #endif /* CTRLKEY_H_ */

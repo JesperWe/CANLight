@@ -48,10 +48,8 @@ typedef struct {
 } event_t;
 
 
-extern event_t events_Queue[];
-extern unsigned char events_QueueHead;
-extern unsigned char events_QueueTail;
-extern unsigned char events_QueueFull;
+extern xQueueHandle event_Queue;
+
 extern event_t *eventPtr;
 
 void events_Initialize( void );

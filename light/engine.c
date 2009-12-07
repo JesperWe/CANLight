@@ -233,11 +233,11 @@ void engine_SetGear( char direction ) {
 
 
 //--------------------------------------------------------------------------------------------
-// Things to do in the 1ms Interrupt Service Routine.
+// Engine Task:
 // Fade approximated engine RPM towards current throttle setting.
 // If a gear change has been requested, do it when the target RPM has been  reached.
 
-void engine_InterruptService()
+void engine_Task( void *pvParameters )
 {
 	if( engine_TargetRPM > engine_CurrentRPM ) engine_CurrentRPM++;
 	if( engine_TargetRPM < engine_CurrentRPM ) engine_CurrentRPM--;
