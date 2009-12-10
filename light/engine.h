@@ -43,7 +43,8 @@ extern char	engine_CurrentGear;
 extern char	engine_TargetGear;
 
 void engine_Initialize();
-void engine_ReadJoystickLevel();
+void engine_ThrottleInitialize();
+unsigned char engine_ReadThrottleLevel();
 void engine_UpdateActuators();
 
 void engine_RequestGear( char direction );
@@ -53,5 +54,8 @@ void engine_SetThrottle( unsigned char level );
 void engine_SetGear( char direction );
 
 void engine_InterruptService();
+
+void engine_ActuatorTask();
+void engine_ThrottleTask();
 
 #endif /* ENGINE_H_ */

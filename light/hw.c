@@ -121,7 +121,7 @@ void hw_Initialize( void ) {
 	_PLLDIV = 59;	// Multiply = PLLDIV+2=61 > fVCO = 1.84x61 = 112.4MHz
 	_PLLPOST = 3;	// Postscale = 8 > fOSC = 112.4/8 = 14.05MHz
 
-	// Resulting fOSC = 7024531 Hz nominal
+	// Resulting fCY = 7024531 Hz nominal
 
 	while(OSCCONbits.LOCK!=1); 	// Wait for PLL to lock
 

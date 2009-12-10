@@ -10,6 +10,7 @@
 #include "display.h"
 #include "menu.h"
 #include "engine.h"
+#include "schedule.h"
 
 
 /* Configuration bit settings in the IDE:
@@ -37,14 +38,13 @@
  *
  * Byte 0: NMEA-2000 Device Address (0-240)
  *
- * (PreRTOS PGM35% DATA19%)
- * (NooptRTOS PGM49% DATA21%)
+ *
  */
 
-void config_Task( void *pvParameters );
-void event_Task( void *pvParameters );
-void menu_Task( void *pvParameters );
-void goodnight( void );
+void config_Task();
+void event_Task();
+void menu_Task();
+void goodnight();
 
 int main (void)
 {
@@ -55,12 +55,17 @@ int main (void)
 		menu_Initialize();
 	}
 
-	if( hw_Detector_Installed || hw_Throttle_Installed ) {
+	if( hw_Detector_Installed ) {
 		ADC_Initialize();
 	}
 
 	if( hw_Actuators_Installed ) {
 		engine_Initialize();
+	}
+
+	if( hw_Throttle_Installed ) {
+		ADC_Initialize();
+		engine_ThrottleInitialize();
 	}
 
 	ctrlkey_Initialize();
@@ -69,72 +74,50 @@ int main (void)
 	nmea_Initialize();
 	led_Initialize();
 
-	// Now start RTOS Scheduler.
+	// Now setup tasks and start RTOS Scheduler.
 
-	xTaskCreate( config_Task, (signed char*) "Cfg", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+	schedule_AddTask( config_Task, 1 );
 
-	//xTaskCreate( event_Task, (signed char*) "Evt", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
-	xTaskCreate( led_CrossfadeTask, (signed char*) "xFd", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+	schedule_AddTask( event_Task, 1 );
+
+	schedule_AddTask( led_CrossfadeTask, 40 );
 
 	if( hw_I2C_Installed ) {
-		xTaskCreate( display_Task, (signed char*) "I2C", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
-		xTaskCreate( menu_Task, (signed char*) "Mnu", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+		schedule_AddTask( display_Task, 300 );
+		schedule_AddTask( menu_Task, 10 );
 	}
 
-	vTaskStartScheduler();
+	if( hw_Actuators_Installed ) {
+		schedule_AddTask( engine_ActuatorTask, 1 );
+	}
+
+	if( hw_Throttle_Installed ) {
+		schedule_AddTask( engine_ThrottleTask, 100 );
+	}
+
+	schedule_Run();
 
 	return 0;
 }
 
 
-void config_Task( void *pvParameters ) {
-	// No point in running if we have no valid system configuration,
-	// so stay here waiting for one to arrive and flash something to show
-	// we are waiting.
-
-	static portTickType xLastFlashTime;
-
-	while(1) {
-		if ( ! config_Valid ) {
-
-			_TRISB5 = 0;
-			_TRISB11 = 0;
-
-			xLastFlashTime = xTaskGetTickCount();
-
-			vTaskDelayUntil( &xLastFlashTime, (portTickType) 1000 );
-			_RB5 = 1;
-			_RB11 = 1;
-
-			vTaskDelayUntil( &xLastFlashTime, (portTickType) 1000 );
-			_RB5 = 0;
-			_RB11 = 0;
-		}
-
-		else {
-			xTaskCreate( led_PowerOnTest, (signed char*) "POS", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
-			vTaskSuspend( NULL );
-		}
-	}
-}
-
-
-void event_Task( void *pvParameters ) {
+void event_Task() {
 	// Send NMEA events on the bus if keys clicked,
 	// and respond to incoming commands.
 	// The MAINTAIN_POWER PGN should be sent before any command, to ensure
 	// all sleeping units wake up before the real data arrives.
 
-	float newLevel;
-	cfg_Event_t *listenEvent;
+	config_Event_t *listenEvent;
+	event_t *event;
 
 	//_RB14 = 0;
 	//if( led_SleepTimer > 250 ) goodnight();
 
 	while(1) {
-		if( xQueueReceive( event_Queue, &eventPtr, 0) ) {
 
-			switch( eventPtr->type ) {
+		if( queue_Receive( events_Queue, &event ) ) {
+
+			switch( event->type ) {
 
 				// Events that originates from this device's hardware usually
 				// generate NMEA messages. We always start with a MAINTAIN_POWER message
@@ -143,82 +126,28 @@ void event_Task( void *pvParameters ) {
 				case e_KEY_CLICKED: {
 					led_SleepTimer = 0;
 					nmea_Wakeup();
-					nmea_SendEvent( eventPtr );
+					nmea_SendEvent( event );
 					break;
 				}
 
 				case e_KEY_DOUBLECLICKED: {
 					led_SleepTimer = 0;
 					nmea_Wakeup();
-					nmea_SendEvent( eventPtr );
+					nmea_SendEvent( event );
 					break;
 				}
 
 				case e_KEY_HOLDING: {
 					led_SleepTimer = 0;
 					nmea_Wakeup();
-					nmea_SendEvent( eventPtr );
+					nmea_SendEvent( event );
 					break;
 				}
 
 				case e_KEY_RELEASED: {
 					led_SleepTimer = 0;
 					nmea_Wakeup();
-					nmea_SendEvent( eventPtr );
-					break;
-				}
-
-				// Step intensity levels for channels that are being faded up or down.
-				// XXX Watchdog reset too.
-
-				case e_FAST_HEARTBEAT: {
-					if( ctrlkey_Holding ) {
-						newLevel = led_CurrentLevel[led_CurrentColor];
-						newLevel += led_CurFadeStep;
-						if( newLevel > 1.0 ) { led_CurFadeStep = - led_CurFadeStep; newLevel = 1.0; }
-						if( newLevel < 0.0 ) { led_CurFadeStep = - led_CurFadeStep; newLevel = 0.0; }
-						led_SetLevel( led_CurrentColor, newLevel );
-					}
-					break;
-				}
-
-				case e_SLOW_HEARTBEAT: {
-					{
-						if( hw_Detector_Installed ) {
-							unsigned short pvVoltage;
-							//char line1[20];
-							event_t	ambientEvent;
-
-							pvVoltage = ADC_Read(11);
-
-							// Set system backlight level based on ambient light.
-
-							pvVoltage = pvVoltage >> 2;
-							if( hw_AmbientLevel != pvVoltage ) {
-
-							}
-								hw_AmbientLevel = pvVoltage;
-
-								ambientEvent.PGN = 0;
-								ambientEvent.atTimer = 0;
-								ambientEvent.ctrlDev = hw_DeviceID;
-								ambientEvent.ctrlFunc = hw_BACKLIGHT;
-								ambientEvent.ctrlEvent = e_AMBIENT_LIGHT_LEVEL;
-								ambientEvent.data = hw_AmbientLevel;
-
-								nmea_SendEvent( &ambientEvent );
-
-								if( hw_I2C_Installed ) {
-									unsigned short blLevel;
-									blLevel = (2*hw_AmbientLevel) + 10;
-									if( blLevel > 0xFF ) blLevel = 0xFF;
-									//display_Home();
-									//sprintf( line1, "v = %04d, bl = %03d", hw_AmbientLevel, blLevel );
-									//display_Write( line1 );
-									display_SetBrightness( blLevel );
-							}
-						}
-					}
+					nmea_SendEvent( event );
 					break;
 				}
 
@@ -230,52 +159,37 @@ void event_Task( void *pvParameters ) {
 
 					// Engine events are slightly special.
 
-					if( (eventPtr->ctrlEvent == e_SET_THROTTLE) && hw_Actuators_Installed ) {
-						engine_RequestGear( eventPtr->ctrlFunc );
-						engine_RequestThrottle( eventPtr->data );
+					if( (event->ctrlEvent == e_SET_THROTTLE) && hw_Actuators_Installed ) {
+						engine_RequestGear( event->ctrlFunc );
+						engine_RequestThrottle( event->data );
 						break;
 					}
 
 					// Only process event this device is listening for.
 
-					listenEvent = event_FindNextListener( cfg_MyEvents, eventPtr );
+					listenEvent = event_FindNextListener( config_MyEvents, event );
 					if( listenEvent == 0 ) break;
 
 					led_SleepTimer = 0;
 
-					if( eventPtr->PGN != nmea_LIGHTING_COMMAND ) break; // Some other NMEA device?
+					if( event->PGN != nmea_LIGHTING_COMMAND ) break; // Some other NMEA device?
 
 					do {
 
 						if( hw_IsPWM( listenEvent->function ) )
 
-							{ led_ProcessEvent( eventPtr, listenEvent->function ); }
+							{ led_ProcessEvent( event, listenEvent->function ); }
 
 						else
-							{ switch_ProcessEvent( eventPtr, listenEvent->function ); }
+							{ switch_ProcessEvent( event, listenEvent->function ); }
 
-						listenEvent = event_FindNextListener( listenEvent->next, eventPtr );
+						listenEvent = event_FindNextListener( listenEvent->next, event );
 					}
 					while ( listenEvent != 0 );
 
 					break;
 				}
 			}
-		}
-	}
-}
-
-
-void menu_Task( void *pvParameters ) {
-
-	while(1) {
-
-	// Check if we have an active event handler function from the
-	// menu state machine. This function should then be run twice per second.
-
-		if( menu_ActiveHandler != 0 ) {
-			menu_ActiveHandler();
-			vTaskDelay(500);
 		}
 	}
 }
@@ -298,13 +212,4 @@ void goodnight( void ) {
 	led_SleepTimer = 0;
 
 	nmea_ControllerMode( hw_ECAN_MODE_NORMAL );
-}
-
-void vApplicationIdleHook( void )
-{
-}
-
-void vApplicationMallocFailedHook( void ) {
-	int i;
-	for( i=0; i<=100; i++ ) vApplicationIdleHook();
 }

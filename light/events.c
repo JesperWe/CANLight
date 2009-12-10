@@ -12,19 +12,19 @@
 //---------------------------------------------------------------------------------------------
 // Globals.
 
+queue_t* events_Queue;
 event_t *eventPtr;
-xQueueHandle event_Queue;
+
 unsigned char loopbackEnabled = 1;
 
 //---------------------------------------------------------------------------------------------
 
 void events_Initialize( void ) {
-	event_Queue = xQueueCreate( events_QUEUESIZE, sizeof(event_t));
+	events_Queue = queue_Create( events_QUEUESIZE, sizeof(event_t) );
 }
 
 //---------------------------------------------------------------------------------------------
 // Add event to the queue.
-// events_QueueTail points to one behind last, events_QueueHead points to first.
 
 void events_Push( 
 		unsigned char type,
@@ -52,14 +52,7 @@ void events_Push(
 	newEvent.data = data;
 	newEvent.atTimer = atTimer;
 
-	if( event_Queue != 0 ) {
-
-		if( xQueueSend( event_Queue, ( void * ) &newEvent, ( portTickType ) 100 ) != pdPASS ) {
-
-			// We really can't handle a full queue in any meaningful way.
-			// This is an embedded system after all...
-		}
-	}
+    queue_Send( events_Queue, &newEvent );
 }
 
 
@@ -70,13 +63,13 @@ void events_Push(
 // The fromAccept argument allows scanning to start anywhere in the
 // configuration, so multiple listeners can be processed one by one.
 
-cfg_Event_t* event_FindNextListener( cfg_Event_t *fromAccept, event_t* event ) {
-	cfg_Event_t *accept;
+config_Event_t* event_FindNextListener( config_Event_t *fromAccept, event_t* event ) {
+	config_Event_t *accept;
 
 	// The WDT Reset event does not have a corresponding cfg_Event, but
 	// we need to return some none zero value here.
 
-	if( event->type == e_FAST_HEARTBEAT ) return (cfg_Event_t*)1;
+	if( event->type == e_FAST_HEARTBEAT ) return (config_Event_t*)1;
 
 	accept = fromAccept;
 
@@ -101,7 +94,7 @@ cfg_Event_t* event_FindNextListener( cfg_Event_t *fromAccept, event_t* event ) {
 	next: accept = accept->next;
 	};
 
-	return (cfg_Event_t*)0;
+	return (config_Event_t*)0;
 }
 
 

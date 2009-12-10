@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include "hw.h"
+#include "schedule.h"
 #include "display.h"
 #include "menu.h"
 #include "engine.h"
@@ -17,6 +18,7 @@ _psv(M_OK)			= "OK";
 _psv(M_CANCEL)		= "Cancel";
 _psv(M_YES)			= "Yes";
 _psv(M_NO)			= "No";
+_psv(M_NA)			= "N/A";
 _psv(M_SPACE)		= " ";
 _psv(M_SEPARATOR)	= " | ";
 _psv(M_Settings)	= "Settings";
@@ -26,6 +28,9 @@ _psv(M_ThrottleMin)	= "Throttle Idle";
 _psv(M_GearNeutral)	= "Gear Neutral";
 _psv(M_GearForward)	= "Gear Forward";
 _psv(M_GearReverse)	= "Gear Reverse";
+_psv(M_JoystickMin)	= "Joystick Min";
+_psv(M_JoystickMid)	= "Joystick Center";
+_psv(M_JoystickMax)	= "Joystick Max";
 _psv(M_Lighting)	= "Lighting";
 _psv(M_Navigation)	= "Navigation";
 _psv(M_Config)		= "Config";
@@ -38,66 +43,63 @@ _psv(M_)			= "";
 
 menu_State_t menu_States[] = {
 
-	{ S_HOMESCREEN, 0, M_TITLE, 0, {
+	{ S_HOMESCREEN, 0, M_TITLE, 3, 0, {
 			{ M_Lighting, S_LIGHTING },
 			{ M_Engine, S_ENGINE },
-			{ M_Settings, S_SETTINGS },
-			{ 0, 0 }
+			{ M_Settings, S_SETTINGS }
 	} },
 
-	{ S_SETTINGS, S_HOMESCREEN, M_Settings, 0, {
-			{ 0, 0 }
+	{ S_SETTINGS, S_HOMESCREEN, M_Settings, 0, 0, {
+			{ 0,0 }
 	} },
 
-	{ S_LIGHTING, S_HOMESCREEN, M_Lighting, 0, {
+	{ S_LIGHTING, S_HOMESCREEN, M_Lighting, 2, 0, {
 			{ M_Config, S_LIGHTCONFIG },
-			{ M_Backlight, S_BACKLIGHT },
-			{ 0, 0 }
+			{ M_Backlight, S_BACKLIGHT }
 	} },
 
-	{ S_LIGHTCONFIG, S_LIGHTING, M_Lighting, 0, {
+	{ S_LIGHTCONFIG, S_LIGHTING, M_Lighting, 0, 0, {
 			{ 0,0 }
 	} },
 
-	{ S_BACKLIGHT, S_LIGHTING, M_Backlight, 0, {
+	{ S_BACKLIGHT, S_LIGHTING, M_Backlight, 0, 0, {
 			{ 0,0 }
 	} },
 
-	{ S_ENGINE, S_HOMESCREEN, M_Engine, 0, {
+	{ S_ENGINE, S_HOMESCREEN, M_Engine, 2, 0, {
 			{ M_Monitor, S_ENGINE_MONITOR },
-			{ M_Calibration, S_ENGINE_CALIBRATION },
-			{ 0, 0 }
+			{ M_Calibration, S_ENGINE_CALIBRATION }
 	} },
 
-	{ S_ENGINE_MONITOR, S_ENGINE, M_Monitor, menu_MonitorEngine, {
+	{ S_ENGINE_MONITOR, S_ENGINE, M_Monitor, 0, menu_MonitorEngine, {
 			{ 0,0 }
 	} },
 
-	{ S_ENGINE_CALIBRATION, S_ENGINE_SAVE_CALIBRATION, M_Calibration, menu_EngineCalibrate, {
+	{ S_ENGINE_CALIBRATION, S_ENGINE_SAVE_CALIBRATION, M_Calibration, 0, menu_EngineCalibrate, {
 			{ 0,0 }
 	} },
 
-	{ S_ENGINE_SAVE_CALIBRATION, S_ENGINE, M_Ask_Save, 0, {
+	{ S_ENGINE_SAVE_CALIBRATION, S_ENGINE, M_Ask_Save, 2, 0, {
 			{ M_YES, S_ENGINE_DO_SAVE },
-			{ M_NO, S_ENGINE },
-			{ 0,0 }
+			{ M_NO, S_ENGINE }
 	} },
 
-	{ S_ENGINE_DO_SAVE, S_ENGINE, M_Saved, menu_EngineSaveCalibration, {
-			{ M_OK, S_ENGINE },
-			{ 0,0 }
+	{ S_ENGINE_DO_SAVE, S_ENGINE, M_Saved, 1, menu_EngineSaveCalibration, {
+			{ M_OK, S_ENGINE }
 	} },
 
-	{ S_TERMINATE, 0, 0, 0, {
+	{ S_TERMINATE, 0, 0, 0, 0, {
 			{ 0,0 }
 	} }
 };
 
 
 
-unsigned short menu_CurStateId, menu_NextStateId, menu_ParentStateId;
-unsigned char menu_NextIndex;
+unsigned short menu_CurStateId, menu_NextStateId, menu_ParentStateId, menu_HandlerStateId;
+unsigned char menu_NextIndex, menu_NoNext;
 unsigned char menu_Parameter = 0;
+unsigned char menu_Keypress = 0;
+unsigned char menu_HandlerInControl;
 
 menu_State_t* menu_CurState;
 int (*menu_ActiveHandler)(void);
@@ -112,15 +114,18 @@ int menu_MonitorEngine() {
 	display_SetPosition(1,3);
 	display_Write("Gearbox:");
 
-	menu_ActiveHandler = menu_Engine_Status;
-
-	return menu_NO_DISPLAY_UPDATE;
+	schedule_AddTask( menu_Engine_Status, 500 );
+	return 0;
 }
 
-
-int menu_Engine_Status() {
+void menu_Engine_Status() {
 	unsigned char gear;
 	float throttle;
+
+	if( menu_CurStateId != menu_HandlerStateId ) {
+		schedule_Finished();
+		return;
+	}
 
 	throttle = engine_ThrottlePW - engine_Calibration[ p_ThrottleMin ];
 	throttle = throttle / (float)(engine_Calibration[ p_ThrottleMax ] - engine_Calibration[ p_ThrottleMin ]);
@@ -132,19 +137,21 @@ int menu_Engine_Status() {
 	if( engine_GearPW == engine_Calibration[ p_GearReverse ] ) gear = 1;
 
 	display_HorizontalBar( 10, 3, gear );
-	return 0;
+	return;
 }
 
 int menu_EngineCalibrate() {
 	char* prompt;
 	static short delta, step;
-	char line1[20];
+	char line1[5];
+
+	menu_ActiveHandler = menu_EngineCalibrate;
 
 	delta = 0;
 
-	// State machine lets key press through if it is not menu related.
+	// State machine lets key press through if it is not menu related, so we take care of it here.
 
-	switch( display_PendingKeypress ) {
+	switch( menu_Keypress ) {
 
 		case DISPLAY_KEY_UP: {
 			step = 10;
@@ -193,6 +200,10 @@ int menu_EngineCalibrate() {
 		case 3: { prompt = M_GearNeutral; break; }
 		case 4: { prompt = M_GearForward; break; }
 		case 5: { prompt = M_GearReverse; break; }
+		case 6: { prompt = M_JoystickMin; break; }
+		case 7: { prompt = M_JoystickMid; break; }
+		case 8: { prompt = M_JoystickMax; break; }
+		default: { prompt = M_NA; break; }
 	}
 
 	// No delta means new parameter. Update display!
@@ -220,12 +231,11 @@ int menu_EngineCalibrate() {
 	}
 
 	display_SetPosition(10,3);
-	sprintf( line1, "%03d", engine_Calibration[menu_Parameter] );
+	display_NumberFormat( line1, 4, engine_Calibration[menu_Parameter] );
 	display_Write( line1 );
 
 	return menu_NO_DISPLAY_UPDATE;
 }
-
 
 int menu_EngineSaveCalibration() {
 	int i;
@@ -233,6 +243,9 @@ int menu_EngineSaveCalibration() {
 		hw_Config.engine_Calibration[i] = engine_Calibration[i];
 	}
 	hw_WriteConfigFlash();
+
+	menu_ActiveHandler = NULL;
+
 	return 0;
 }
 
@@ -249,25 +262,30 @@ void menu_Initialize() {
 
 
 void menu_SetState( unsigned char state ) {
-	int result, nNext;
+	int result;
+	short i;
 
 	// Find the right index in the states vector.
 
-	menu_CurStateId = 0;
-	while( menu_States[menu_CurStateId].id != S_TERMINATE ) {
-		if( menu_States[menu_CurStateId].id == state ) break;
-		menu_CurStateId++;
+	i = 0;
+	while( menu_States[i].id != S_TERMINATE ) {
+		if( menu_States[i].id == state ) break;
+		i++;
 	}
 
-	menu_CurState = &(menu_States[ menu_CurStateId ]);
+	menu_CurState = &(menu_States[ i ]);
+	menu_CurStateId = menu_CurState->id;
 
 	// Execute our handler if there is one.
 
 	if( menu_CurState->handler != NULL ) {
+		menu_HandlerStateId = menu_CurStateId;
 		result = menu_CurState->handler();
 		if( result < 0 )
 			menu_CurStateId = S_TERMINATE;
 	}
+
+	menu_NoNext = menu_CurState->noEvents;
 
 	// Any text to display for this state?
 
@@ -277,14 +295,10 @@ void menu_SetState( unsigned char state ) {
 		display_Write( menu_CurState->descr );
 	}
 
-	// Count number of possible next states.
-
-	nNext = 0;
-	while( menu_CurState->events[nNext].id ) nNext++;
-
-	// Display menu text if we have submenu items.
-
-	menu_NextIndex = 0;
+	// Display menu text if we have sub-menu items.
+	// menu_NextIndex controls the display of available items.
+	// Since there is only room for two item on the display the "Play" key
+	// allows the user to step through a larger number of available commands.
 
 	if( menu_CurState->events[menu_NextIndex].id ) {
 		display_SetPosition( 1, display_ROWS_HIGH );
@@ -299,38 +313,54 @@ void menu_SetState( unsigned char state ) {
 		display_SetPosition( display_COLS_WIDE-textLength+1, display_ROWS_HIGH );
 		display_Write( menu_CurState->events[ menu_NextIndex+1 ].descr );
 	}
+
 }
 
 
-void menu_ProcessKey( unsigned char keypress ) {
+//---------------------------------------------------------------------------------------------
+
+char menu_ProcessKey( unsigned char keypress ) {
+
+	// Pressing the STOP button always stops the current active handler,
+	// even if it has taken over the display control.
+
+	if( keypress == DISPLAY_KEY_STOP ) menu_HandlerInControl = FALSE;
+	if( menu_HandlerInControl ) return 0;
+
+	menu_NextStateId = menu_CurStateId;
 
 	switch( keypress ) {
 
 		case DISPLAY_KEY_STOP: {
 				menu_ActiveHandler = 0;
 				menu_Parameter = 0;
-				if( menu_CurState->id == S_HOMESCREEN ) return;
+				if( menu_CurState->id == S_HOMESCREEN ) return 1;
 				menu_NextStateId = menu_CurState->parent;
+				menu_NextIndex = 0;
 				break;;
 			}
 
-		case DISPLAY_KEY_PLAY: {
-				menu_NextIndex += 2;
+		case DISPLAY_KEY_PLAY: { // Show more available commands if there are any.
+				if( menu_NextIndex+2 < menu_NoNext )
+					{ menu_NextIndex += 2;	}
+				else
+					{ menu_NextIndex = 0; }
 				break;
 			}
 
 		case DISPLAY_KEY_LEFT: {
-				if( ! menu_CurState->events[menu_NextIndex].id ) return;
+				if( ! menu_CurState->events[menu_NextIndex].id ) return 1;
 				menu_ParentStateId = menu_CurStateId;
 				menu_NextStateId = menu_CurState->events[menu_NextIndex].id;
-				menu_SetState( menu_NextStateId );
+				menu_NextIndex = 0;
 				break;
 			}
 
 		case DISPLAY_KEY_RIGHT: {
-				if( ! menu_CurState->events[menu_NextIndex+1].id ) return;
+				if( ! menu_CurState->events[menu_NextIndex+1].id ) return 1;
 				menu_ParentStateId = menu_CurStateId;
 				menu_NextStateId = menu_CurState->events[menu_NextIndex+1].id;
+				menu_NextIndex = 0;
 				break;
 			}
 
@@ -344,10 +374,39 @@ void menu_ProcessKey( unsigned char keypress ) {
 					display_On();
 					display_IsOn = 1;
 				}
-				return;
+				return 1;
 			}
+
+		default: return 0; // Means we don't know what to do with this key.
 	}
 
 	menu_SetState( menu_NextStateId );
-	return;
+	return 1;
 }
+
+//---------------------------------------------------------------------------------------------
+// Process key-presses from the I2C Display Task.
+// Check if we have an active event handler function from the
+// menu state machine. This function should then be run every time
+// a key is pressed, or if no keys are pressed twice per second.
+
+void menu_Task() {
+	char key;
+
+	// Any keys pressed?
+
+	if( queue_Receive( display_Queue, &key ) ) {
+		if( menu_ProcessKey( key ) ) {
+			return;
+		}
+
+		// We have a key that was not processed by the menu handler.
+
+		if( menu_ActiveHandler != 0 ) {
+			menu_Keypress = key;
+			menu_ActiveHandler();
+			return;
+		}
+	}
+}
+

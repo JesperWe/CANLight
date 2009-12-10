@@ -38,8 +38,8 @@ float led_GetPWMLevel( unsigned char color );
 
 void led_ProcessEvent( event_t *event, unsigned char function );
 
-void led_PowerOnTest( void* pvParameters );
+void led_PowerOnTest();
 
-void led_CrossfadeTask( void* pvParameters );
+void led_CrossfadeTask();
 
 #endif

@@ -23,18 +23,18 @@ typedef struct cfg_Event_s {
 	unsigned char ctrlEvent;
 	unsigned char function;
 	struct cfg_Event_s *next;
-} cfg_Event_t;
+} config_Event_t;
 
-extern cfg_Event_t *cfg_MyEvents;
+extern config_Event_t *config_MyEvents;
 extern unsigned char config_Valid;
 
-void cfg_AddControlEvents( 
+void config_AddControlEvents( 
 	unsigned char group, 
 	unsigned char *fromCfgPtr, 
 	unsigned char func
 );
 
-void cfg_AddControlEvent( 
+void config_AddControlEvent( 
 	unsigned char group, 
 	unsigned char ctrlDev, 
 	unsigned char ctrlFunc, 
@@ -43,5 +43,6 @@ void cfg_AddControlEvent(
 );
 
 void config_Initialize();
+void config_Task();
 
 #endif /* CONFIG_H_ */

@@ -8,7 +8,7 @@
 #ifndef MENU_H_
 #define MENU_H_
 
-#define menu_MAX_EVENTS		6
+#define menu_MAX_EVENTS		3
 #define menu_NO_DISPLAY_UPDATE	17	// Tells state machine that this event handler wants to manage it's own display.
 
 #define _psv(name)	char name[] __attribute__((space(auto_psv)))
@@ -42,27 +42,28 @@ typedef struct menu_State_s {
 	int	id;										// ID of this state.
 	int	parent;									// ID of this states parent state.
 	char* descr;								// Text to show in top line of front panel display.
+	char noEvents;								// How many sub-menu events we have.
 	int (*handler)(void);						// Optional function to call. NULL means no code called.
 	menu_EventData_t events[menu_MAX_EVENTS];	// Possible next events.
 } menu_State_t;
 
 void menu_Initialize();
 void menu_SetState( unsigned char state );
-void menu_ProcessKey( unsigned char keypress );
+char menu_ProcessKey( unsigned char keypress );
+void menu_Task();
 
 // Event Handler Prototypes
 
 int menu_MonitorEngine();
 int menu_EngineCalibrate();
-int menu_Engine_Status();
 int menu_EngineSaveCalibration();
 
+void menu_Engine_Status();
 
 // When menu_ActiveHandler is non-zero, it should point to an active event handler that
 // requires constant updates. Updating is handled by the T3 Interrupt Event Handler
 // in led.c.
 
 extern int (*menu_ActiveHandler)(void);
-
 
 #endif /* MENU_H_ */

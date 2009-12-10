@@ -54,11 +54,12 @@ void display_SetPosition( unsigned char column, unsigned char row );
 void display_SetBrightness( unsigned char value );
 void display_SetContrast( unsigned char value );
 void display_HorizontalBar( unsigned char col, unsigned char row, unsigned char value );
+void display_NumberFormat( char outString[], short digits, short number );
 
 unsigned char display_ReadKeypad();
-void display_Task( void* pvParam );
+void display_Task();
 
-extern unsigned char display_PendingKeypress;
 extern unsigned char display_IsOn;
+extern queue_t* display_Queue;
 
 #endif

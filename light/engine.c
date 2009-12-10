@@ -18,10 +18,12 @@ short	engine_CurThrottlePW;
 short	engine_CurGearPW;
 
 unsigned char	engine_CurMasterDevice;
-short	engine_LastJoystickLevel;
-short 	engine_GearSwitchTime;
-short 	engine_CurrentRPM;
-short 	engine_TargetRPM;
+short			engine_LastJoystickLevel;
+unsigned char	engine_Throttle;
+short			engine_Gear;
+short 			engine_GearSwitchTime;
+short 			engine_CurrentRPM;
+short 			engine_TargetRPM;
 
 unsigned char	engine_TargetThrottle;
 
@@ -34,7 +36,6 @@ char	engine_TargetGear;
 // 0-100% is represented by pulse length 1ms to 2ms, and 50% is 1.5ms.
 
 void engine_Initialize() {
-	int i;
 
 	OC3CONbits.OCSIDL = 1; 		// Stop in idle mode.
 	OC3CONbits.OCM = 6; 		// PWM mode.
@@ -45,7 +46,13 @@ void engine_Initialize() {
 	TRISCbits.TRISC2 = 0;
 	TRISCbits.TRISC0 = 0;
 
-	// Restore actuator calibrations from Flash memory.
+}
+
+//---------------------------------------------------------------------------------------------
+// Restore Joystick calibrations from Flash memory.
+
+void engine_ThrottleInitialize() {
+	int i;
 
 	for( i=0; i<p_NO_CALIBRATION_PARAMS; i++ ) {
 		engine_Calibration[i] = hw_Config.engine_Calibration[i];
@@ -59,12 +66,12 @@ void engine_Initialize() {
 }
 
 
-void engine_ReadJoystickLevel() {
+//---------------------------------------------------------------------------------------------
+// Read throttle settings and return True if there was any activity.
 
-	short level, diff, gear;
-	unsigned char throttle;
-	static unsigned char lastThrottle = 0;
-	event_t event;
+unsigned char engine_ReadThrottleLevel() {
+
+	short level, diff;
 	float floatlevel;
 
 	level = ADC_Read( 4 ); // XXX Make configurable.
@@ -73,32 +80,16 @@ void engine_ReadJoystickLevel() {
 
 	if( engine_LastJoystickLevel == engine_UNKNOWN_JOYSTICK ) {
 		engine_LastJoystickLevel = level;
-		return;
+		return 0;
 	}
 
 	// Require a significant movement before taking action.
 
 	diff = level - engine_LastJoystickLevel;
-	if( diff<3 && diff>-3 ) return;
+	if( diff<3 && diff>-3 ) return 0;
 	engine_LastJoystickLevel = level;
 
-	if( engine_CurMasterDevice != hw_DeviceID ) {
-
-		// Need to become Master Controller before update!
-
-		event.PGN = 0;
-		event.atTimer = 0;
-		event.ctrlDev = hw_DeviceID;
-		event.ctrlFunc = 0;
-		event.ctrlEvent = e_THROTTLE_MASTER;
-		event.data = 0;
-
-		nmea_SendEvent( &event );
-
-		engine_CurMasterDevice = hw_DeviceID;
-	}
-
-	// Scale A/D Concerted level down to 1 0-99 integer, calibrated to the
+	// Scale A/D Converted level down to 1 0-99 integer, calibrated to the
 	// individual joystick.
 
 	unsigned short range = engine_Calibration[ p_JoystickMax ] - engine_Calibration[ p_JoystickMin ];
@@ -112,35 +103,22 @@ void engine_ReadJoystickLevel() {
 
 	// Gear forward/reverse.
 
-	gear = 1;
+	engine_Gear = 1;
 	if( floatlevel < 0.0 ) {
-		gear = -1;
+		engine_Gear = -1;
 		floatlevel = -floatlevel;
 	}
 
 	if( floatlevel < 0.08 ) { // XXX Idling dead-band. Make configurable.
-		gear = 0;
+		engine_Gear = 0;
 		floatlevel = 0;
 	}
 
 	// Decrease sensitivity near center.
 
 	floatlevel = floatlevel * (1.0 + floatlevel) / 2.0;
-	throttle = (unsigned char)(floatlevel * 100.0);
-
-	if( throttle == lastThrottle ) return;
-	lastThrottle = throttle;
-
-	// Send Throttle and Gear settings on bus.
-
-	event.PGN = 0;
-	event.atTimer = 0;
-	event.ctrlDev = hw_DeviceID;
-	event.ctrlFunc = gear;
-	event.ctrlEvent = e_SET_THROTTLE;
-	event.data = throttle;
-	event.atTimer = hw_HeartbeatCounter;
-	nmea_SendEvent( &event );
+	engine_Throttle = (unsigned char)(floatlevel * 100.0);
+	return 1;
 }
 
 
@@ -237,35 +215,81 @@ void engine_SetGear( char direction ) {
 // Fade approximated engine RPM towards current throttle setting.
 // If a gear change has been requested, do it when the target RPM has been  reached.
 
-void engine_Task( void *pvParameters )
-{
-	if( engine_TargetRPM > engine_CurrentRPM ) engine_CurrentRPM++;
-	if( engine_TargetRPM < engine_CurrentRPM ) engine_CurrentRPM--;
+void engine_ActuatorTask() {
 
-	// Any gear change pending?
+	while(1) {
+		// Here we assume that the scheduler is running at an approximate tick interval of 1ms
+		// and there is by coincidence a good match between typical engine revving down times
+		// and a cycle of 1 rpm/ms.
 
-	if( engine_CurrentGear != engine_TargetGear ) {
-		if( engine_CurrentRPM == engine_TargetRPM ) {
+		if( engine_TargetRPM > engine_CurrentRPM ) engine_CurrentRPM++;
+		if( engine_TargetRPM < engine_CurrentRPM ) engine_CurrentRPM--;
 
-			// Require at least 1 seconds between gear changes.
+		// Any gear change pending?
 
-			short interval;
-			interval = hw_HeartbeatCounter - engine_GearSwitchTime;
-			if( interval < 0 ) interval += hw_SLOW_HEARTBEAT_MS;
-			if( interval > 1000 ) {
+		if( engine_CurrentGear != engine_TargetGear ) {
+			if( engine_CurrentRPM == engine_TargetRPM ) {
 
-				// Go to neutral between forward and reverse.
+				// Require at least 1 seconds between gear changes.
 
-				if( engine_TargetGear != 0 && engine_CurrentGear != 0 ) {
-					engine_SetGear( 0 );
-				}
+				short interval;
+				interval = hw_HeartbeatCounter - engine_GearSwitchTime;
+				if( interval < 0 ) interval += hw_SLOW_HEARTBEAT_MS;
+				if( interval > 1000 ) {
 
-				else {
-					engine_SetGear( engine_TargetGear );
-					engine_SetThrottle( engine_TargetThrottle );
+					// Go to neutral between forward and reverse.
+
+					if( engine_TargetGear != 0 && engine_CurrentGear != 0 ) {
+						engine_SetGear( 0 );
+					}
+
+					else {
+						engine_SetGear( engine_TargetGear );
+						engine_SetThrottle( engine_TargetThrottle );
+					}
 				}
 			}
 		}
 	}
 }
 
+
+
+//--------------------------------------------------------------------------------------------
+// This task reads the throttle level.
+
+void engine_ThrottleTask() {
+	event_t event;
+
+	while(1) {
+		if( engine_ReadThrottleLevel() ) {
+
+			if( engine_CurMasterDevice != hw_DeviceID ) {
+
+				// Need to become Master Controller before update!
+
+				event.PGN = 0;
+				event.atTimer = 0;
+				event.ctrlDev = hw_DeviceID;
+				event.ctrlFunc = 0;
+				event.ctrlEvent = e_THROTTLE_MASTER;
+				event.data = 0;
+
+				nmea_SendEvent( &event );
+
+				engine_CurMasterDevice = hw_DeviceID;
+			}
+
+			// Send Throttle and Gear settings on bus.
+
+			event.PGN = 0;
+			event.atTimer = 0;
+			event.ctrlDev = hw_DeviceID;
+			event.ctrlFunc = engine_Gear;
+			event.ctrlEvent = e_SET_THROTTLE;
+			event.data = engine_Throttle;
+			event.atTimer = hw_HeartbeatCounter;
+			nmea_SendEvent( &event );
+		}
+	}
+}

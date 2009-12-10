@@ -48,8 +48,10 @@ typedef struct {
 } event_t;
 
 
-extern xQueueHandle event_Queue;
-
+extern queue_t* events_Queue;
+extern unsigned char events_QueueHead;
+extern unsigned char events_QueueTail;
+extern unsigned char events_QueueFull;
 extern event_t *eventPtr;
 
 void events_Initialize( void );
@@ -72,6 +74,6 @@ event_t* events_Pop( void );
 extern unsigned char loopbackEnabled;
 
 unsigned char event_Discard( event_t* event );
-cfg_Event_t* event_FindNextListener( cfg_Event_t *fromAccept, event_t* event );
+config_Event_t* event_FindNextListener( config_Event_t *fromAccept, event_t* event );
 
 #endif /* EVENTS_H_ */

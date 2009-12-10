@@ -2,6 +2,8 @@
 #include <libpic30.h>
 
 #include "hw.h"
+#include "led.h"
+#include "schedule.h"
 #include "events.h"
 #include "config.h"
 #include "config_groups.h"
@@ -9,7 +11,7 @@
 //-------------------------------------------------------------------------------
 // Globals
 
-cfg_Event_t *cfg_MyEvents;
+config_Event_t *config_MyEvents;
 unsigned char cfg_MyDeviceId = 0;
 unsigned char config_Valid = 0;
 
@@ -38,9 +40,9 @@ void config_Initialize() {
 
 	// Allocate first empty element for my controllers list.
 
-	cfg_MyEvents = malloc( sizeof( cfg_Event_t ) ); 
-	cfg_MyEvents->group = gEnd; // Indicates empty entry.
-	cfg_MyEvents->next = 0;
+	config_MyEvents = malloc( sizeof( config_Event_t ) ); 
+	config_MyEvents->group = gEnd; // Indicates empty entry.
+	config_MyEvents->next = 0;
 
 	// Copy default config to RAM config if there is no config in Flash.
 
@@ -68,7 +70,7 @@ void config_Initialize() {
 			if( *cfgPtr == hw_DeviceID ) {
 				cfgPtr++;
 				func = *cfgPtr;
-				cfg_AddControlEvents( group, cfgPtr, func );
+				config_AddControlEvents( group, cfgPtr, func );
 			}
 			cfgPtr++;
 		}
@@ -81,7 +83,7 @@ void config_Initialize() {
 }
 
 
-void cfg_AddControlEvents( unsigned char group, unsigned char *fromCfgPtr, unsigned char func ) {
+void config_AddControlEvents( unsigned char group, unsigned char *fromCfgPtr, unsigned char func ) {
 	unsigned short i;
 
 	while(1) {
@@ -94,7 +96,7 @@ void cfg_AddControlEvents( unsigned char group, unsigned char *fromCfgPtr, unsig
 		
 		i=2;
 		while( *(fromCfgPtr+i) != gEnd ) {
-			cfg_AddControlEvent( group, *fromCfgPtr, *(fromCfgPtr+1), *(fromCfgPtr+i), func );
+			config_AddControlEvent( group, *fromCfgPtr, *(fromCfgPtr+1), *(fromCfgPtr+i), func );
 			i++;
 		}
 	}
@@ -102,23 +104,23 @@ void cfg_AddControlEvents( unsigned char group, unsigned char *fromCfgPtr, unsig
 }
 
 
-void cfg_AddControlEvent( unsigned char group, 
+void config_AddControlEvent( unsigned char group, 
 		unsigned char ctrlDev, 
 		unsigned char ctrlFunc, 
 		unsigned char ctrlEvent, 
 		unsigned char function )
 {
 
-	cfg_Event_t *curEvent = cfg_MyEvents;
+	config_Event_t *curEvent = config_MyEvents;
 
-	cfg_Event_t *newEvent;
+	config_Event_t *newEvent;
 
 	while( curEvent->next != 0 ) curEvent = curEvent->next;
 
 	newEvent = curEvent;
 
 	if( newEvent->group != gEnd ) {
-		newEvent = malloc( sizeof( cfg_Event_t ) );
+		newEvent = malloc( sizeof( config_Event_t ) );
 		newEvent->next = 0;
 		curEvent->next = newEvent;
 	}
@@ -129,3 +131,38 @@ void cfg_AddControlEvent( unsigned char group,
 	newEvent->ctrlEvent = ctrlEvent;
 	newEvent->function = function;
 }
+
+
+void config_Task() {
+	// No point in running if we have no valid system configuration,
+	// so stay here waiting for one to arrive and flash something to show
+	// we are waiting.
+
+	while(1) {
+		if ( ! config_Valid ) {
+
+			_TRISB5 = 0;
+			_TRISB11 = 0;
+
+			schedule_Sleep(1000);
+
+			_RB5 = 1;
+			_RB11 = 1;
+
+			schedule_Sleep(400);
+
+			_RB5 = 0;
+			_RB11 = 0;
+		}
+
+		else {
+			short status;
+			schedule_AddTask( led_PowerOnTest, 500 );
+			if( status != 0 ) {
+				status = 0;
+			}
+			schedule_Suspend();
+		}
+	}
+}
+

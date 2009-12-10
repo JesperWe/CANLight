@@ -6,19 +6,11 @@
 
 #include "display.h"
 
-
-unsigned char display_PendingKeypress = 0;
 unsigned char display_IsOn = 1;
 unsigned char display_CurrentAdjust = 0;
 short display_Brightness = 0xFF;
 short display_Contrast = 0x80;
-
-// Short wait if display is to slow to keep up....
-void _display_delay() {
-	int i;
-	for( i=0; i<1000; i++ ) __delay32(11);
-}
-
+queue_t* display_Queue;
 
 void display_Initialize() {
 	unsigned int config2, config1;
@@ -44,6 +36,8 @@ void display_Initialize() {
 	display_SetBrightness( display_Brightness );
 
 	display_SetContrast( display_Contrast );
+
+	display_Queue = queue_Create( 5, 1 );
 
 /* Code below only needed when initializing a factory reset display.
    Maybe we should set up a RS232 connection to do this is the future?
@@ -122,20 +116,12 @@ void display_Home() {
 
 void display_On() {
 	unsigned char status = 0;
-	do {
-		if( status != 0 ) _display_delay();
-		status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_ON, 0 );
-	}
-	while( status != 0 );
+	status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_ON, 0 );
 }
 
 void display_Off() {
 	unsigned char status = 0;
-	do {
-		if( status != 0 ) _display_delay();
-		status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_OFF );
-	}
-	while( status != 0 );
+	status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_OFF );
 }
 
 void display_SetPosition( unsigned char column, unsigned char row ) {
@@ -145,29 +131,17 @@ void display_SetPosition( unsigned char column, unsigned char row ) {
 	if( row < 1 ) row = 1;
 	if( row > 4 ) row = 4;
 
-	do {
-		if( status != 0 ) _display_delay();
-		status = display_Sendbytes( 4, DISPLAY_CMD, DISPLAY_SETPOS, column, row );
-	}
-	while( status != 0 );
+	status = display_Sendbytes( 4, DISPLAY_CMD, DISPLAY_SETPOS, column, row );
 }
 
 void display_SetBrightness( unsigned char value ) {
 	unsigned char status = 0;
-	do {
-		if( status != 0 ) _display_delay();
-		status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_BRIGHTNESS, value );
-	}
-	while( status != 0 );
+	status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_BRIGHTNESS, value );
 }
 
 void display_SetContrast( unsigned char value ) {
 	unsigned char status = 0;
-	do {
-		if( status != 0 ) _display_delay();
-		status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_CONTRAST, value );
-	}
-	while( status != 0 );
+	status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_CONTRAST, value );
 }
 
 unsigned char display_ReadKeypad() {
@@ -186,27 +160,42 @@ void display_HorizontalBar( unsigned char col, unsigned char row, unsigned char 
 	display_Sendbytes( 6, DISPLAY_CMD, DISPLAY_PLACE_HBAR, col, row, 0, value );
 }
 
-void display_Task( void* pvParam ) {
+
+//---------------------------------------------------------------------------------------------
+// Home-grown über-simplified formatting function since STDC sprintf() takes about 5k Bytes of code...
+
+void display_NumberFormat( char outString[], short digits, short number ) {
+	outString[ digits ] = 0;
+	do {
+		outString[digits-1] = '0' + (number % 10);
+		number = number / 10;
+		digits--;
+	} while( digits > 0 );
+}
+
+//---------------------------------------------------------------------------------------------
+// We can either poll the keypad or read a pressed key in one time slot.
+// The display is too slow to poll and process in the same cycle, it will protest.
+// So we put read keystrokes in a queue, and process them in another task.
+
+void display_Task() {
+	char key;
 	while(1) {
 
-		// We can either poll the keypad or read a pressed key in one time slot.
-		// The display is too slow to poll and process in the same cycle, it will protest.
+		key = display_ReadKeypad();
 
-		if( display_PendingKeypress == 0 ) {
+		if( key != 0x00 ) {
 
-			display_PendingKeypress = display_ReadKeypad();
-			if( display_PendingKeypress != 0x00 ) {
+			// If MSB is set there was a negative status which means the display
+			// did not ACK. It is probably busy. So we try again next time slot.
 
-				// If MSB is set there was a negative status which means the display
-				// did not ACK. It is probably busy. So we try again next time slot.
-
-				if( (display_PendingKeypress & 0x80) != 0 ) display_PendingKeypress = 0;
+			if( (key & 0x80) != 0 ) {
+				key = 0;
 			}
-		}
+			else {
+				queue_Send( display_Queue, &key );
+			}
 
-		else {
-			menu_ProcessKey( display_PendingKeypress );
-			display_PendingKeypress = 0;
 		}
 	}
 }

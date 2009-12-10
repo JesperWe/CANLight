@@ -1,10 +1,13 @@
 #include <limits.h>
+#include "hw.h"
 #include "led.h"
+#include "schedule.h"
 #include "events.h"
 #include "display.h"
 #include "nmea.h"
 #include "menu.h"
 #include "engine.h"
+
 
 #define ENABLE 		1
 #define DISABLE 		0
@@ -246,8 +249,7 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 // Some limited LED test sequences. Mainly used to verify the hardware of newly
 // manufactured devices. This routine is run as a task that only executes once.
 
-void led_PowerOnTest( void* pvParameters ) {
-	portTickType xLastFlashTime;
+void led_PowerOnTest() {
 
 	switch( hw_Type ) {
 
@@ -260,15 +262,14 @@ void led_PowerOnTest( void* pvParameters ) {
 		}
 
 		case hw_SWITCH: {
-			xLastFlashTime = xTaskGetTickCount();
 			hw_WritePort( hw_LED1, 1 );
-			vTaskDelayUntil( &xLastFlashTime, (portTickType) 500 );
+			schedule_Sleep(500);
 			hw_WritePort( hw_LED1, 0 );
 			hw_WritePort( hw_LED2, 1 );
-			vTaskDelayUntil( &xLastFlashTime, (portTickType) 500 );
+			schedule_Sleep(500);
 			hw_WritePort( hw_LED2, 0 );
 			hw_WritePort( hw_LED3, 1 );
-			vTaskDelayUntil( &xLastFlashTime, (portTickType) 500 );
+			schedule_Sleep(500);
 			hw_WritePort( hw_LED3, 0 );
 
 			led_PresetLevel[ led_RED ] = 1.0;
@@ -278,7 +279,7 @@ void led_PowerOnTest( void* pvParameters ) {
 		}
 	}
 
-	vTaskSuspend( NULL );
+	schedule_Suspend();
 }
 
 
@@ -287,12 +288,9 @@ void led_PowerOnTest( void* pvParameters ) {
 //
 // Should run with an Interrupt Interval of 40ms.
 
-void led_CrossfadeTask( void* pvParameters ) {
+void led_CrossfadeTask() {
 	unsigned short i, curStep;
 	float fadePos, multiplier, value;
-	static portTickType xLastWakeTime;
-
-	xLastWakeTime = xTaskGetTickCount();
 
 	while(1) {
 		led_CanSleep = 1;
@@ -316,13 +314,5 @@ void led_CrossfadeTask( void* pvParameters ) {
 				}
 			}
 		}
-
-		// XXX Move to independent task.
-
-		if( hw_Throttle_Installed ) {
-			engine_ReadJoystickLevel();
-		}
-
-		vTaskDelayUntil( &xLastWakeTime, (portTickType) 40 );
 	}
 }

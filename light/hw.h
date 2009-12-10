@@ -12,11 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-
 #include "engine.h"
+#include "queue.h"
 
 #ifndef HW_H_
 #define HW_H_
