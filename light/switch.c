@@ -5,7 +5,11 @@
  *      Author: Jesper W
  */
 
+#include "hw.h"
+#include "config.h"
+#include "events.h"
 #include "switch.h"
+#include "led.h"
 
 void switch_ProcessEvent( event_t *event, unsigned char function ) {
 	unsigned char setting;

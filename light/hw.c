@@ -6,6 +6,8 @@
  */
 
 #include "hw.h"
+#include "config.h"
+#include "events.h"
 #include "nmea.h"
 
 unsigned short __attribute__((space(prog),aligned(_FLASH_PAGE*2)))
@@ -107,7 +109,6 @@ void hw_WritePort(enum hw_PortNames port, int value) {
 
 void hw_Initialize( void ) {
 	DWORD_VAL fidc, fidc_data;
-	//short fidc_ics;
 
 	CLKDIVbits.DOZE = 0;			// To make Fcy = Fosc/2
 
@@ -210,9 +211,12 @@ void hw_Initialize( void ) {
 		// Driver Enable			Pin  9 RB11		Pin 22 RB1
 		// CAN Tx					Pin 10 RB12		Pin 10 RB12
 		// CAN Rx					Pin 11 RB13		Pin 21 RB0
-	
-		TRISBbits.TRISB14 = 0;				// Debug trigger output.
-	
+
+#ifdef DEBUG
+		TRISAbits.TRISA2 = 0;				// Debug output port.
+		TRISBbits.TRISB14 = 0;				// Debug output port.
+#endif
+
 		hw_OutputPort( hw_CAN_EN );
 		hw_OutputPort( hw_CAN_RATE );
 	

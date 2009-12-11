@@ -1,13 +1,15 @@
 #include <limits.h>
+
 #include "hw.h"
-#include "led.h"
-#include "schedule.h"
+#include "config.h"
 #include "events.h"
+#include "schedule.h"
 #include "display.h"
 #include "nmea.h"
 #include "menu.h"
 #include "engine.h"
-
+#include "ctrlkey.h"
+#include "led.h"
 
 #define ENABLE 		1
 #define DISABLE 		0
@@ -111,6 +113,8 @@ void led_SetLevel( unsigned char color, float level ) {
 		case led_RED: { OC1RS = dutycycle; break;	}
 		case led_WHITE: { OC2RS = dutycycle; break; }
 	}
+
+	if( schedule_Running == FALSE ) return;
 
 	// Response message back to controller.
 	// Going to or from level=0 (off) from/to any other level triggers a response.
@@ -292,26 +296,24 @@ void led_CrossfadeTask() {
 	unsigned short i, curStep;
 	float fadePos, multiplier, value;
 
-	while(1) {
-		led_CanSleep = 1;
-		led_SleepTimer++;
+	led_CanSleep = 1;
+	led_SleepTimer++;
 
-		for( i=0; i<led_NoChannels; i++ ) {
+	for( i=0; i<led_NoChannels; i++ ) {
 
-			if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
-				led_CanSleep = 0;
+		if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
+			led_CanSleep = 0;
 
-			if( led_FadeInProgress[i] ) {
+		if( led_FadeInProgress[i] ) {
 
-				curStep = ++led_FadeStep[i];
-				fadePos = (float)curStep / (float)led_FadeSteps[i];
-				multiplier = led_SmoothStep( fadePos );
-				value = led_FadeFromLevel[i] + multiplier * (led_FadeTargetLevel[i] - led_FadeFromLevel[i]);
-				led_SetLevel( i, value );
+			curStep = ++led_FadeStep[i];
+			fadePos = (float)curStep / (float)led_FadeSteps[i];
+			multiplier = led_SmoothStep( fadePos );
+			value = led_FadeFromLevel[i] + multiplier * (led_FadeTargetLevel[i] - led_FadeFromLevel[i]);
+			led_SetLevel( i, value );
 
-				if( curStep >= led_FadeSteps[i] ) {
-					led_FadeInProgress[i] = DISABLE;
-				}
+			if( curStep >= led_FadeSteps[i] ) {
+				led_FadeInProgress[i] = DISABLE;
 			}
 		}
 	}

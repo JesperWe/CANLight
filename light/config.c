@@ -2,11 +2,11 @@
 #include <libpic30.h>
 
 #include "hw.h"
-#include "led.h"
 #include "schedule.h"
-#include "events.h"
 #include "config.h"
 #include "config_groups.h"
+#include "events.h"
+#include "led.h"
 
 //-------------------------------------------------------------------------------
 // Globals
@@ -138,31 +138,29 @@ void config_Task() {
 	// so stay here waiting for one to arrive and flash something to show
 	// we are waiting.
 
-	while(1) {
-		if ( ! config_Valid ) {
+	if ( ! config_Valid ) {
 
-			_TRISB5 = 0;
-			_TRISB11 = 0;
+		_TRISB5 = 0;
+		_TRISB11 = 0;
 
-			schedule_Sleep(1000);
+		schedule_Sleep(1000);
 
-			_RB5 = 1;
-			_RB11 = 1;
+		_RB5 = 1;
+		_RB11 = 1;
 
-			schedule_Sleep(400);
+		schedule_Sleep(400);
 
-			_RB5 = 0;
-			_RB11 = 0;
+		_RB5 = 0;
+		_RB11 = 0;
+	}
+
+	else {
+		short status;
+		schedule_AddTask( led_PowerOnTest, 100 );
+		if( status != 0 ) {
+			status = 0;
 		}
-
-		else {
-			short status;
-			schedule_AddTask( led_PowerOnTest, 500 );
-			if( status != 0 ) {
-				status = 0;
-			}
-			schedule_Suspend();
-		}
+		schedule_Finished();
 	}
 }
 

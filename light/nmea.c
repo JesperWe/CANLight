@@ -6,6 +6,8 @@
  */
 
 #include "hw.h"
+#include "config.h"
+#include "events.h"
 #include "led.h"
 #include "nmea.h"
 #include "events.h"

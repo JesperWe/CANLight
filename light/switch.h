@@ -8,10 +8,6 @@
 #ifndef SWITCH_H_
 #define SWITCH_H_
 
-#include "hw.h"
-#include "led.h"
-#include "events.h"
-
 void switch_ProcessEvent( event_t *event, unsigned char function );
 
 #endif /* SWITCH_H_ */

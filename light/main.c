@@ -1,16 +1,17 @@
 #include <stdio.h>
 
 #include "hw.h"
+#include "config.h"
+#include "schedule.h"
+#include "queue.h"
+#include "events.h"
 #include "led.h"
 #include "nmea.h"
 #include "switch.h"
-#include "events.h"
-#include "config.h"
 #include "ctrlkey.h"
 #include "display.h"
 #include "menu.h"
 #include "engine.h"
-#include "schedule.h"
 
 
 /* Configuration bit settings in the IDE:
@@ -76,6 +77,8 @@ int main (void)
 
 	// Now setup tasks and start RTOS Scheduler.
 
+	schedule_Initialize();
+
 	schedule_AddTask( config_Task, 1 );
 
 	schedule_AddTask( event_Task, 1 );
@@ -110,85 +113,81 @@ void event_Task() {
 	config_Event_t *listenEvent;
 	event_t *event;
 
-	//_RB14 = 0;
 	//if( led_SleepTimer > 250 ) goodnight();
 
-	while(1) {
+	if( queue_Receive( events_Queue, &event ) ) {
 
-		if( queue_Receive( events_Queue, &event ) ) {
+		switch( event->type ) {
 
-			switch( event->type ) {
+			// Events that originates from this device's hardware usually
+			// generate NMEA messages. We always start with a MAINTAIN_POWER message
+			// to allow devices which are sleeping to have a CAN Bus interrupt.
 
-				// Events that originates from this device's hardware usually
-				// generate NMEA messages. We always start with a MAINTAIN_POWER message
-				// to allow devices which are sleeping to have a CAN Bus interrupt.
+			case e_KEY_CLICKED: {
+				led_SleepTimer = 0;
+				nmea_Wakeup();
+				nmea_SendEvent( event );
+				break;
+			}
 
-				case e_KEY_CLICKED: {
-					led_SleepTimer = 0;
-					nmea_Wakeup();
-					nmea_SendEvent( event );
+			case e_KEY_DOUBLECLICKED: {
+				led_SleepTimer = 0;
+				nmea_Wakeup();
+				nmea_SendEvent( event );
+				break;
+			}
+
+			case e_KEY_HOLDING: {
+				led_SleepTimer = 0;
+				nmea_Wakeup();
+				nmea_SendEvent( event );
+				break;
+			}
+
+			case e_KEY_RELEASED: {
+				led_SleepTimer = 0;
+				nmea_Wakeup();
+				nmea_SendEvent( event );
+				break;
+			}
+
+
+			// When we get a NMEA message (that we are listening to!) we find
+			// out what function it controls, and take the appropriate action.
+
+			case e_NMEA_MESSAGE: {
+
+				// Engine events are slightly special.
+
+				if( (event->ctrlEvent == e_SET_THROTTLE) && hw_Actuators_Installed ) {
+					engine_RequestGear( event->ctrlFunc );
+					engine_RequestThrottle( event->data );
 					break;
 				}
 
-				case e_KEY_DOUBLECLICKED: {
-					led_SleepTimer = 0;
-					nmea_Wakeup();
-					nmea_SendEvent( event );
-					break;
+				// Only process event this device is listening for.
+
+				listenEvent = event_FindNextListener( config_MyEvents, event );
+				if( listenEvent == 0 ) break;
+
+				led_SleepTimer = 0;
+
+				if( event->PGN != nmea_LIGHTING_COMMAND ) break; // Some other NMEA device?
+
+				do {
+
+					if( hw_IsPWM( listenEvent->function ) )
+
+						{ led_ProcessEvent( event, listenEvent->function ); }
+
+					else
+						{ switch_ProcessEvent( event, listenEvent->function ); }
+
+					listenEvent = event_FindNextListener( listenEvent->next, event );
 				}
+				while ( listenEvent != 0 );
 
-				case e_KEY_HOLDING: {
-					led_SleepTimer = 0;
-					nmea_Wakeup();
-					nmea_SendEvent( event );
-					break;
-				}
-
-				case e_KEY_RELEASED: {
-					led_SleepTimer = 0;
-					nmea_Wakeup();
-					nmea_SendEvent( event );
-					break;
-				}
-
-
-				// When we get a NMEA message (that we are listening to!) we find
-				// out what function it controls, and take the appropriate action.
-
-				case e_NMEA_MESSAGE: {
-
-					// Engine events are slightly special.
-
-					if( (event->ctrlEvent == e_SET_THROTTLE) && hw_Actuators_Installed ) {
-						engine_RequestGear( event->ctrlFunc );
-						engine_RequestThrottle( event->data );
-						break;
-					}
-
-					// Only process event this device is listening for.
-
-					listenEvent = event_FindNextListener( config_MyEvents, event );
-					if( listenEvent == 0 ) break;
-
-					led_SleepTimer = 0;
-
-					if( event->PGN != nmea_LIGHTING_COMMAND ) break; // Some other NMEA device?
-
-					do {
-
-						if( hw_IsPWM( listenEvent->function ) )
-
-							{ led_ProcessEvent( event, listenEvent->function ); }
-
-						else
-							{ switch_ProcessEvent( event, listenEvent->function ); }
-
-						listenEvent = event_FindNextListener( listenEvent->next, event );
-					}
-					while ( listenEvent != 0 );
-
-					break;
-				}
+				break;
 			}
 		}
 	}

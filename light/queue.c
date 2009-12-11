@@ -34,8 +34,8 @@ queue_t* queue_Create( short maxEntries, short objectSize ) {
 }
 
 char queue_Send( queue_t* queue, void* object ) {
-
 	char curSize;
+	void** objectPointers;
 
     // We really can't handle a full queue in any meaningful way.
     // This is an embedded system after all...
@@ -43,7 +43,9 @@ char queue_Send( queue_t* queue, void* object ) {
 
 	if( queue->status == 0xFF ) return FALSE;
 
-    memcpy( (*queue->objects)[queue->last], object, queue->objectSize );
+	objectPointers = (void**)queue->objects;
+
+    memcpy( objectPointers[queue->last], object, queue->objectSize );
     queue->last++;
     queue->last = queue->last % queue->capacity;
 
@@ -64,11 +66,13 @@ char queue_Send( queue_t* queue, void* object ) {
 }
 
 char queue_Receive( queue_t* queue, void* object ) {
+	void** objectPointers;
 
 	// Empty?
 	if( queue->first == queue->last && queue->status != 0xFF ) return FALSE;
 
-	memcpy( object, (*queue->objects)[ queue->first ], queue->objectSize );
+	objectPointers = (void**)queue->objects;
+	memcpy( object, objectPointers[ queue->first ], queue->objectSize );
     queue->first++;
     queue->first = queue->first % queue->capacity;
 

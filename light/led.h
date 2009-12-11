@@ -1,10 +1,6 @@
 #ifndef __LED_H
 #define __LED_H
 
-#include "events.h"
-#include "hw.h"
-#include "ctrlkey.h"
-
 #define led_MAX_NO_CHANNELS	2
 #define led_RED				0
 #define led_WHITE				1

@@ -180,22 +180,19 @@ void display_NumberFormat( char outString[], short digits, short number ) {
 
 void display_Task() {
 	char key;
-	while(1) {
 
-		key = display_ReadKeypad();
+	key = display_ReadKeypad();
 
-		if( key != 0x00 ) {
+	if( key != 0x00 ) {
 
-			// If MSB is set there was a negative status which means the display
-			// did not ACK. It is probably busy. So we try again next time slot.
+		// If MSB is set there was a negative status which means the display
+		// did not ACK. It is probably busy. So we try again next time slot.
 
-			if( (key & 0x80) != 0 ) {
-				key = 0;
-			}
-			else {
-				queue_Send( display_Queue, &key );
-			}
-
+		if( (key & 0x80) != 0 ) {
+			key = 0;
+		}
+		else {
+			queue_Send( display_Queue, &key );
 		}
 	}
 }

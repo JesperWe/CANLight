@@ -26,4 +26,6 @@ void schedule_Sleep( short forTicks );
 void schedule_Suspend();
 void schedule_Finished();
 
+extern unsigned char schedule_Running;
+
 #endif /* SCHEDULE_H_ */

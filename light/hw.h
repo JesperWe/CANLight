@@ -26,6 +26,8 @@
 
 #define NOP __builtin_nop()
 
+//#define DEBUG 1
+
 #define hw_ECAN_MODE_NORMAL	0x0
 #define hw_ECAN_MODE_DISABLE	0x1
 

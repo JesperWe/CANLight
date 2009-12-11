@@ -1,6 +1,3 @@
-#include "hw.h"
-#include "events.h"
-
 #ifndef CONFIG_GROUPS_H_
 #define CONFIG_GROUPS_H_
 

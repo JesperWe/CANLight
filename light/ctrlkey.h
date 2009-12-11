@@ -8,11 +8,6 @@
 #ifndef CTRLKEY_H_
 #define CTRLKEY_H_
 
-#include "hw.h"
-#include "events.h"
-#include "config.h"
-#include "config_groups.h"
-
 #define ctrlkey_MAX_NO_KEYS 3
 
 #define ctrlkey_HOLDING_THRESHOLD 300

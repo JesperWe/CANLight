@@ -13,9 +13,12 @@
 #include "hw.h"
 #include "schedule.h"
 
+
 short schedule_NoTasks;
 schedule_Task_t schedule_Tasks[schedule_MAX_NO_TASKS];
 short schedule_ActiveTask;
+unsigned char schedule_Running = FALSE;
+
 
 void schedule_Initialize() {
 	schedule_NoTasks = 0;
@@ -43,13 +46,30 @@ short schedule_AddTask( void (*taskFunction)(void), short tickInterval ) {
 // This is the main event loop for the scheduler.
 
 void schedule_Run() {
-	schedule_ActiveTask = 0;
 	schedule_Task_t *curTask;
+
+	schedule_ActiveTask = 0;
+	schedule_Running = TRUE;
+
+#ifdef DEBUG
+	_TRISA2 = 0;
+#endif
 
 	while(1) {
 
 		schedule_ActiveTask = (schedule_ActiveTask + 1) % schedule_NoTasks;
 
+#ifdef DEBUG
+		{
+			int i;
+			for( i=0; i<=schedule_ActiveTask; i++ ) {
+				_RA2 = 1;
+				NOP;
+				_RA2 = 0;
+				NOP;
+			}
+		}
+#endif
 		curTask = &schedule_Tasks[ schedule_ActiveTask ];
 
 		if( curTask->suspended ) continue;
@@ -60,20 +80,33 @@ void schedule_Run() {
 
 		if( curTask->intervalTicks > curTask->waitedTicks ) continue;
 
+		// If we are waking up from a sleep we return to execute the sleeping task
+		// at the point where it went to sleep.
+
+		if( curTask->sleepForTicks ) {
+			NOP; // Breakpoint
+			NOP; // Breakpoint
+			break;
+		}
+
 		// No rest for the wicked...
 
 		curTask->sleepForTicks = 0;
 		curTask->waitedTicks = 0;
 
-		// If we are waking up from a sleep we return to execute the sleeping task
-		// at the point where it went to sleep.
-
-		if( curTask->sleepForTicks ) {
-			return;
+#ifdef DEBUG
+		{
+			int i;
+			for( i=0; i<=20; i++ ) { 
+				_RA2 = 1;
+				NOP;
+			}
+			_RA2 = 0;
+			NOP;
 		}
+#endif
 
 		curTask->function();
-
 	}
 }
 
@@ -89,6 +122,8 @@ void schedule_Sleep( short forTicks ) {
 	curTask->sleepForTicks = forTicks;
 
 	schedule_Run();
+
+	curTask->sleepForTicks = 0;
 }
 
 
@@ -108,20 +143,17 @@ void schedule_Suspend() {
 void schedule_Finished() {
 	short iTask;
 
-	schedule_Task_t *curTask;
-	curTask = &schedule_Tasks[ schedule_ActiveTask ];
-
 	schedule_NoTasks--;
 
 	// Are we the last task? If so, killing ourself is simple...
 
-	if( schedule_ActiveTask == schedule_NoTasks) { return; }
+	if( schedule_ActiveTask == (schedule_NoTasks - 1)) { return; }
 
 	// No, other tasks have been added after ours.
 	// We need to compact the tasks vector before dying.
 
-	for( iTask = schedule_NoTasks; iTask>schedule_ActiveTask; iTask-- ) {
-		schedule_Tasks[ iTask-1 ] = schedule_Tasks[ iTask ];
+	for( iTask = schedule_ActiveTask; iTask<schedule_NoTasks; iTask++ ) {
+		schedule_Tasks[ iTask ] = schedule_Tasks[ iTask+1 ];
 	}
 }
 
@@ -133,6 +165,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	_T1IE = 0;
 	short i;
 	for( i=0; i<schedule_NoTasks; i++) {
+		if( schedule_Tasks[i].suspended ) continue;
 		schedule_Tasks[i].waitedTicks++;
 	}
     _T1IF = 0;

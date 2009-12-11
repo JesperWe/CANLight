@@ -5,6 +5,10 @@
  *      Author: Jesper We
  */
 
+#include "hw.h"
+#include "config.h"
+#include "config_groups.h"
+#include "events.h"
 #include "ctrlkey.h"
 #include "engine.h"
 

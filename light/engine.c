@@ -6,6 +6,7 @@
  */
 
 #include "hw.h"
+#include "config.h"
 #include "events.h"
 #include "nmea.h"
 #include "engine.h"
@@ -261,35 +262,33 @@ void engine_ActuatorTask() {
 void engine_ThrottleTask() {
 	event_t event;
 
-	while(1) {
-		if( engine_ReadThrottleLevel() ) {
+	if( engine_ReadThrottleLevel() ) {
 
-			if( engine_CurMasterDevice != hw_DeviceID ) {
+		if( engine_CurMasterDevice != hw_DeviceID ) {
 
-				// Need to become Master Controller before update!
-
-				event.PGN = 0;
-				event.atTimer = 0;
-				event.ctrlDev = hw_DeviceID;
-				event.ctrlFunc = 0;
-				event.ctrlEvent = e_THROTTLE_MASTER;
-				event.data = 0;
-
-				nmea_SendEvent( &event );
-
-				engine_CurMasterDevice = hw_DeviceID;
-			}
-
-			// Send Throttle and Gear settings on bus.
+			// Need to become Master Controller before update!
 
 			event.PGN = 0;
 			event.atTimer = 0;
 			event.ctrlDev = hw_DeviceID;
-			event.ctrlFunc = engine_Gear;
-			event.ctrlEvent = e_SET_THROTTLE;
-			event.data = engine_Throttle;
-			event.atTimer = hw_HeartbeatCounter;
+			event.ctrlFunc = 0;
+			event.ctrlEvent = e_THROTTLE_MASTER;
+			event.data = 0;
+
 			nmea_SendEvent( &event );
+
+			engine_CurMasterDevice = hw_DeviceID;
 		}
+
+		// Send Throttle and Gear settings on bus.
+
+		event.PGN = 0;
+		event.atTimer = 0;
+		event.ctrlDev = hw_DeviceID;
+		event.ctrlFunc = engine_Gear;
+		event.ctrlEvent = e_SET_THROTTLE;
+		event.data = engine_Throttle;
+		event.atTimer = hw_HeartbeatCounter;
+		nmea_SendEvent( &event );
 	}
 }

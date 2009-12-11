@@ -5,8 +5,6 @@
  *      Author: Jesper W
  */
 
-#include "events.h"
-
 #ifndef NMEA_H_
 #define NMEA_H_
 

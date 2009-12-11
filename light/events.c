@@ -5,9 +5,14 @@
  *      Author: Jesper W
  */
 
+#include <stdio.h>
+
+#include "hw.h"
+#include "config.h"
+#include "config_groups.h"
+#include "queue.h"
 #include "events.h"
 #include "display.h"
-#include <stdio.h>
 
 //---------------------------------------------------------------------------------------------
 // Globals.

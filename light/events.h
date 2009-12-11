@@ -8,10 +8,6 @@
 #ifndef EVENTS_H_
 #define EVENTS_H_
 
-#include "hw.h"
-#include "config_groups.h"
-#include "config.h"
-
 #define events_QUEUESIZE	10
 
 enum event_Events {
