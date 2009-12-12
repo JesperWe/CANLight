@@ -16,7 +16,6 @@
 #include "hw.h"
 
 queue_t* queue_Create( short maxEntries, short objectSize ) {
-
 	queue_t *newQueue = malloc( sizeof( queue_t ));
 	if( ! newQueue ) queue_OUTOFMEMORY;
 
@@ -33,50 +32,51 @@ queue_t* queue_Create( short maxEntries, short objectSize ) {
 	return newQueue;
 }
 
-char queue_Send( queue_t* queue, void* object ) {
+char queue_Send( queue_t* toQueue, void* object ) {
 	char curSize;
-	void** objectPointers;
+	void** objectPtr;
 
     // We really can't handle a full queue in any meaningful way.
     // This is an embedded system after all...
     // Ignoring pushes to make sure we don't corrupt.
 
-	if( queue->status == 0xFF ) return FALSE;
+	if( toQueue->status == 0xFF ) return FALSE;
 
-	objectPointers = (void**)queue->objects;
+	objectPtr = toQueue->objects + ( toQueue->objectSize * toQueue->last);
 
-    memcpy( objectPointers[queue->last], object, queue->objectSize );
-    queue->last++;
-    queue->last = queue->last % queue->capacity;
+    memcpy( objectPtr, object, toQueue->objectSize );
+    toQueue->last++;
+    toQueue->last = toQueue->last % toQueue->capacity;
 
     // Calculate high water mark.
     // This is used for optimizing allocated memory from running system data.
 
-    curSize = queue->last > queue->first
-    		? queue->last - queue->first
-    		: queue->last - queue->first + queue->capacity;
+    curSize = toQueue->last > toQueue->first
+    		? toQueue->last - toQueue->first
+    		: toQueue->last - toQueue->first + toQueue->capacity;
 
-	if( curSize > queue->highwater ) queue->highwater = curSize;
+	if( curSize > toQueue->highwater ) toQueue->highwater = curSize;
 
-    if( queue->last == queue->first ) {
-    	queue->status = 0xFF;
-        queue->highwater = queue->capacity;
+    if( toQueue->last == toQueue->first ) {
+    	toQueue->status = 0xFF;
+        toQueue->highwater = toQueue->capacity;
     }
 	return TRUE;
 }
 
-char queue_Receive( queue_t* queue, void* object ) {
-	void** objectPointers;
+char queue_Receive( queue_t* fromQueue, void* object ) {
+	void** objectPtr;
 
 	// Empty?
-	if( queue->first == queue->last && queue->status != 0xFF ) return FALSE;
+	if( fromQueue->first == fromQueue->last && fromQueue->status != 0xFF ) return FALSE;
 
-	objectPointers = (void**)queue->objects;
-	memcpy( object, objectPointers[ queue->first ], queue->objectSize );
-    queue->first++;
-    queue->first = queue->first % queue->capacity;
+	objectPtr = fromQueue->objects + ( fromQueue->objectSize * fromQueue->first);
 
-	queue->status = 0; // If we were full, we are not anymore.
+	memcpy( object, objectPtr, fromQueue->objectSize );
+    fromQueue->first++;
+    fromQueue->first = fromQueue->first % fromQueue->capacity;
+
+	fromQueue->status = 0; // If we were full, we are not anymore.
 
 	return TRUE;
 }

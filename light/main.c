@@ -111,13 +111,13 @@ void event_Task() {
 	// all sleeping units wake up before the real data arrives.
 
 	config_Event_t *listenEvent;
-	event_t *event;
+	static event_t event;
 
 	//if( led_SleepTimer > 250 ) goodnight();
 
 	if( queue_Receive( events_Queue, &event ) ) {
 
-		switch( event->type ) {
+		switch( event.type ) {
 
 			// Events that originates from this device's hardware usually
 			// generate NMEA messages. We always start with a MAINTAIN_POWER message
@@ -126,28 +126,28 @@ void event_Task() {
 			case e_KEY_CLICKED: {
 				led_SleepTimer = 0;
 				nmea_Wakeup();
-				nmea_SendEvent( event );
+				nmea_SendEvent( &event );
 				break;
 			}
 
 			case e_KEY_DOUBLECLICKED: {
 				led_SleepTimer = 0;
 				nmea_Wakeup();
-				nmea_SendEvent( event );
+				nmea_SendEvent( &event );
 				break;
 			}
 
 			case e_KEY_HOLDING: {
 				led_SleepTimer = 0;
 				nmea_Wakeup();
-				nmea_SendEvent( event );
+				nmea_SendEvent( &event );
 				break;
 			}
 
 			case e_KEY_RELEASED: {
 				led_SleepTimer = 0;
 				nmea_Wakeup();
-				nmea_SendEvent( event );
+				nmea_SendEvent( &event );
 				break;
 			}
 
@@ -159,31 +159,31 @@ void event_Task() {
 
 				// Engine events are slightly special.
 
-				if( (event->ctrlEvent == e_SET_THROTTLE) && hw_Actuators_Installed ) {
-					engine_RequestGear( event->ctrlFunc );
-					engine_RequestThrottle( event->data );
+				if( (event.ctrlEvent == e_SET_THROTTLE) && hw_Actuators_Installed ) {
+					engine_RequestGear( event.ctrlFunc );
+					engine_RequestThrottle( event.data );
 					break;
 				}
 
 				// Only process event this device is listening for.
 
-				listenEvent = event_FindNextListener( config_MyEvents, event );
+				listenEvent = event_FindNextListener( config_MyEvents, &event );
 				if( listenEvent == 0 ) break;
 
 				led_SleepTimer = 0;
 
-				if( event->PGN != nmea_LIGHTING_COMMAND ) break; // Some other NMEA device?
+				if( event.PGN != nmea_LIGHTING_COMMAND ) break; // Some other NMEA device?
 
 				do {
 
 					if( hw_IsPWM( listenEvent->function ) )
 
-						{ led_ProcessEvent( event, listenEvent->function ); }
+						{ led_ProcessEvent( &event, listenEvent->function ); }
 
 					else
-						{ switch_ProcessEvent( event, listenEvent->function ); }
+						{ switch_ProcessEvent( &event, listenEvent->function ); }
 
-					listenEvent = event_FindNextListener( listenEvent->next, event );
+					listenEvent = event_FindNextListener( listenEvent->next, &event );
 				}
 				while ( listenEvent != 0 );
 

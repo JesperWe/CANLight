@@ -17,13 +17,13 @@ typedef struct queue_s {
 	unsigned char highwater;
 	unsigned char objectSize;
 	unsigned char status;
-	void* (*objects)[];
+	void** objects;
 } queue_t;
 
 queue_t* queue_Create( short maxEntries, short objectSize );
 
-char queue_Send( queue_t* queue, void* object );
+char queue_Send( queue_t* toQueue, void* object );
 
-char queue_Receive( queue_t* queue, void* object );
+char queue_Receive( queue_t* fromQueue, void* object );
 
 #endif /* QUEUE_H_ */
