@@ -134,8 +134,6 @@ void event_LoopbackMapper( event_t *event, unsigned char setting ) {
 //
 // Send NMEA events on the bus if keys clicked,
 // and respond to incoming commands.
-// The MAINTAIN_POWER PGN should be sent before any command, to ensure
-// all sleeping units wake up before the real data arrives.
 
 void event_Task() {
 

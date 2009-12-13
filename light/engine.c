@@ -97,12 +97,16 @@ unsigned char engine_ReadThrottleLevel() {
 	// Scale A/D Converted level down to 0-99 integer, calibrated to the
 	// individual joystick.
 
-	range = engine_Calibration[ p_JoystickMax ] - engine_Calibration[ p_JoystickMin ];
-
 	fLevel = (float)engine_Joystick_Level;
 	fLevel -= engine_Calibration[ p_JoystickMid ];
 
-	fLevel = 2*fLevel / (float)range;
+	if( fLevel < 0 ) {
+		range = engine_Calibration[ p_JoystickMid ] - engine_Calibration[ p_JoystickMin ];
+	} else {
+		range = engine_Calibration[ p_JoystickMax ] - engine_Calibration[ p_JoystickMid ];
+	}
+
+	fLevel = fLevel / (float)range;
 	if( fLevel < -1.0 ) fLevel = -1.0;
 	if( fLevel > 1.0 ) fLevel = 1.0;
 

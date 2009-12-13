@@ -292,7 +292,11 @@ char menu_ProcessKey( unsigned char keypress ) {
 	// Pressing the STOP button always stops the current active handler,
 	// even if it has taken over the display control.
 
-	if( keypress == DISPLAY_KEY_STOP ) menu_HandlerInControl = FALSE;
+	if( keypress == DISPLAY_KEY_STOP ) {
+		menu_ActiveHandler = 0;
+		menu_HandlerInControl = FALSE;
+	}
+
 	if( menu_HandlerInControl ) return 0;
 
 	menu_NextStateId = menu_CurStateId;
@@ -348,6 +352,7 @@ char menu_ProcessKey( unsigned char keypress ) {
 		default: return 0; // Means we don't know what to do with this key.
 	}
 
+	menu_Keypress = keypress;
 	menu_SetState( menu_NextStateId );
 	return 1;
 }
