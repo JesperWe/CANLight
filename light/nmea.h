@@ -154,6 +154,8 @@ void nmea_MakePGN(
 
 unsigned char nmea_SendEvent( event_t *event );
 
+unsigned char nmea_SendKeyEvent( event_t *event );
+
 unsigned char nmea_SendMessage();
 
 void nmea_ControllerMode( unsigned char mode );

@@ -102,6 +102,8 @@ extern unsigned char 		hw_DeviceID;
 extern unsigned short		hw_PWMInverted;
 extern const unsigned short hw_NoKeys[hw_NoVariants];
 extern unsigned char 		hw_AmbientLevel;
+extern unsigned char 		hw_CanSleep;
+extern unsigned short		hw_SleepTimer;
 
 unsigned int hw_ReadPort(enum hw_PortNames port);
 void hw_InputPort(enum hw_PortNames port);
@@ -110,6 +112,7 @@ void hw_WritePort(enum hw_PortNames, int value);
 void hw_Initialize( void );
 void hw_WriteConfigFlash( void );
 unsigned char hw_IsPWM( unsigned short hw_Port );
+void hw_Sleep( void );
 
 void ADC_Initialize(void);
 unsigned int ADC_Read( unsigned char channel );

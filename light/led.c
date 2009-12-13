@@ -38,9 +38,6 @@ float led_FadeFromLevel[led_MAX_NO_CHANNELS];
 float led_CurrentLevel[led_MAX_NO_CHANNELS];
 float led_LastLevel, led_CurFadeStep;
 
-unsigned char led_CanSleep;				// If all leds are fully on or off we can sleep.
-unsigned short led_SleepTimer;			// Actually this sleep timer is used for all modules, but it needs to be declared somewhere...
-
 //---------------------------------------------------------------------------------------------
 // Set up PWM timers and fade LEDs to off.
 
@@ -69,8 +66,8 @@ void led_Initialize( void ) {
 	PR2 = led_PWM_PERIOD;
 	T2CONbits.TON = 1;  		// Start Timer.
 
-	led_CanSleep = 1;
-	led_SleepTimer = 0;
+	hw_CanSleep = 1;
+	hw_SleepTimer = 0;
 	led_SetLevel( 0, 0.0 );
 	led_SetLevel( 1, 0.0 );
 
@@ -296,13 +293,13 @@ void led_CrossfadeTask() {
 	unsigned short i, curStep;
 	float fadePos, multiplier, value;
 
-	led_CanSleep = 1;
-	led_SleepTimer++;
+	hw_CanSleep = 1;
+	hw_SleepTimer++;
 
 	for( i=0; i<led_NoChannels; i++ ) {
 
 		if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
-			led_CanSleep = 0;
+			hw_CanSleep = 0;
 
 		if( led_FadeInProgress[i] ) {
 

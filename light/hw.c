@@ -15,24 +15,27 @@ unsigned short __attribute__((space(prog),aligned(_FLASH_PAGE*2)))
 
 hw_Config_t hw_Config;
 
-_prog_addressT			hw_ConfigPtr;
-unsigned short 		hw_HeartbeatCounter = 0;
-unsigned short			hw_PWMInverted = 0;
+_prog_addressT		hw_ConfigPtr;
+unsigned short 	hw_HeartbeatCounter = 0;
+unsigned short		hw_PWMInverted = 0;
 
-unsigned short			hw_Type;
-unsigned char			hw_I2C_Installed = 0;
-unsigned char			hw_Detector_Installed = 0;
-unsigned char			hw_Throttle_Installed = 0;
-unsigned char			hw_Actuators_Installed = 0;
-unsigned char			hw_ConfigByte = 0;
+unsigned short		hw_Type;
+unsigned char		hw_I2C_Installed = 0;
+unsigned char		hw_Detector_Installed = 0;
+unsigned char		hw_Throttle_Installed = 0;
+unsigned char		hw_Actuators_Installed = 0;
+unsigned char		hw_ConfigByte = 0;
 
-unsigned char			hw_DeviceID;
+unsigned char		hw_DeviceID;
 
-unsigned char			hw_AmbientLevel;
+unsigned char		hw_AmbientLevel;
+
+unsigned char 		hw_CanSleep;	// If all PWM outputs are fully on or off we can sleep.
+unsigned short		hw_SleepTimer;	// Count ticks before we can go to sleep.
 
 
 //-------------------------------------------------------------------------------
-// Structures for hardware dependent I/O pin maniulation
+// Structures for hardware dependent I/O pin manipulation
 
 static const hw_Port_t hw_Port[hw_NoVariants][hw_NoPortNames] =
 {{
@@ -285,6 +288,7 @@ void hw_WriteConfigFlash() {
 	_write_flash16(hw_ConfigPtr, hw_Config.data);
 }
 
+
 //-------------------------------------------------------------------------------
 
 unsigned char hw_IsPWM( unsigned short hw_Port ) {
@@ -295,6 +299,28 @@ unsigned char hw_IsPWM( unsigned short hw_Port ) {
 	) return 1;
 
 	return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+
+void hw_Sleep( void ) {
+
+	_RB14 = 1;
+
+	nmea_ControllerMode( hw_ECAN_MODE_DISABLE );
+
+	if( hw_CanSleep ) {
+		asm volatile ("PWRSAV #0");
+	}
+	else { // Idle with PWM clocks still running.
+		asm volatile ("PWRSAV #1");
+	}
+
+	_RB14 = 0;
+	hw_SleepTimer = 0;
+
+	nmea_ControllerMode( hw_ECAN_MODE_NORMAL );
 }
 
 
@@ -321,6 +347,9 @@ void ADC_Initialize(void) {
 	IFS0bits.AD1IF = 0;
 
 }
+
+
+//-------------------------------------------------------------------------------
 
 unsigned int ADC_Read( unsigned char channel ) {
 

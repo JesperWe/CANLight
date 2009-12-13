@@ -71,5 +71,6 @@ extern unsigned char loopbackEnabled;
 
 unsigned char event_Discard( event_t* event );
 config_Event_t* event_FindNextListener( config_Event_t *fromAccept, event_t* event );
+void event_Task();
 
 #endif /* EVENTS_H_ */

@@ -205,6 +205,17 @@ unsigned char nmea_SendEvent( event_t *event )
 }
 
 //---------------------------------------------------------------------------------------------
+// Utility to send key click events.
+// Since they do not occur often we need to make sure the receiver
+// has time to wake from sleep by sending a dummy event first.
+
+unsigned char nmea_SendKeyEvent( event_t *event ) {
+	hw_SleepTimer = 0;
+	nmea_Wakeup();
+	return nmea_SendEvent( event );
+}
+
+//---------------------------------------------------------------------------------------------
 
 unsigned char nmea_SendMessage()
 {

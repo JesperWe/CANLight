@@ -8,8 +8,11 @@
 #ifndef ENGINE_H_
 #define ENGINE_H_
 
+
 #define engine_UNKNOWN_GEAR		17
 #define engine_UNKNOWN_JOYSTICK	4711
+#define engine_JOYSTICK_AD_CHANNEL	4
+
 
 enum engine_CalibrationParameters {
 	/* 00 */ p_None,
@@ -36,11 +39,14 @@ extern unsigned char	engine_CurMasterDevice;
 extern short 	engine_CurrentRPM;
 extern short 	engine_TargetRPM;
 extern short 	engine_GearSwitchTime;
-
 extern unsigned char	engine_TargetThrottle;
 
 extern char	engine_CurrentGear;
 extern char	engine_TargetGear;
+
+extern short	engine_Joystick_Level;
+extern short	engine_Gear;
+extern unsigned char	engine_Throttle;
 
 void engine_Initialize();
 void engine_ThrottleInitialize();
@@ -56,6 +62,9 @@ void engine_SetGear( char direction );
 void engine_InterruptService();
 
 void engine_ActuatorTask();
-void engine_ThrottleTask();
+void engine_JoystickTask();
+
+int engine_ThrottleMonitor();
+void engine_ThrottleMonitorUpdater();
 
 #endif /* ENGINE_H_ */

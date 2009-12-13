@@ -13,6 +13,10 @@
 #include "queue.h"
 #include "events.h"
 #include "display.h"
+#include "nmea.h"
+#include "led.h"
+#include "switch.h"
+#include "engine.h"
 
 //---------------------------------------------------------------------------------------------
 // Globals.
@@ -120,6 +124,88 @@ void event_LoopbackMapper( event_t *event, unsigned char setting ) {
 			if( event->ctrlFunc == hw_KEY3 ) event->ctrlFunc = hw_LED3;
 
 			break;
+		}
+	}
+}
+
+
+//---------------------------------------------------------------------------------------------
+// The Event Task is the main bus event manager. It processes both local and NMEA bus events.
+//
+// Send NMEA events on the bus if keys clicked,
+// and respond to incoming commands.
+// The MAINTAIN_POWER PGN should be sent before any command, to ensure
+// all sleeping units wake up before the real data arrives.
+
+void event_Task() {
+
+	config_Event_t *listenEvent;
+	static event_t event;
+
+	//if( led_SleepTimer > 250 ) hw_Sleep();
+
+	if( queue_Receive( events_Queue, &event ) ) {
+
+		switch( event.type ) {
+
+			case e_KEY_CLICKED: 		{ nmea_SendKeyEvent( &event ); break; }
+
+			case e_KEY_DOUBLECLICKED: 	{ nmea_SendKeyEvent( &event ); break; }
+
+			case e_KEY_HOLDING: 		{ nmea_SendKeyEvent( &event ); break; }
+
+			case e_KEY_RELEASED: 		{ nmea_SendKeyEvent( &event ); break; }
+
+
+			// When we get a NMEA message (that we are listening to!) we find
+			// out what function it controls, and take the appropriate action.
+
+			case e_NMEA_MESSAGE: {
+
+				// Engine events are slightly special.
+
+				if( event.ctrlEvent == e_SET_THROTTLE ) {
+
+					// First save transmitted values for monitoring.
+
+					engine_Throttle = event.data;
+					engine_Gear = event.ctrlFunc;
+					engine_LastJoystickLevel = event.atTimer;
+
+					// If we are a unit actually running an engine, do it!
+
+					if( hw_Actuators_Installed ) {
+						engine_RequestGear( event.ctrlFunc );
+						engine_RequestThrottle( event.data );
+					}
+
+					break;
+				}
+
+				// Only process event this device is listening for.
+
+				listenEvent = event_FindNextListener( config_MyEvents, &event );
+				if( listenEvent == 0 ) break;
+
+				hw_SleepTimer = 0;
+
+				if( event.PGN != nmea_LIGHTING_COMMAND ) break; // Some other NMEA device?
+
+				do {
+
+					if( hw_IsPWM( listenEvent->function ) )
+
+						{ led_ProcessEvent( &event, listenEvent->function ); }
+
+					else
+						{ switch_ProcessEvent( &event, listenEvent->function ); }
+
+					listenEvent = event_FindNextListener( listenEvent->next, &event );
+				}
+				while ( listenEvent != 0 );
+
+				break;
+			}
 		}
 	}
 }

@@ -47,6 +47,8 @@ typedef struct menu_State_s {
 	menu_EventData_t events[menu_MAX_EVENTS];	// Possible next events.
 } menu_State_t;
 
+extern unsigned short menu_CurStateId, menu_NextStateId, menu_ParentStateId, menu_HandlerStateId;
+
 void menu_Initialize();
 void menu_SetState( unsigned char state );
 char menu_ProcessKey( unsigned char keypress );
@@ -54,11 +56,11 @@ void menu_Task();
 
 // Event Handler Prototypes
 
-int menu_MonitorEngine();
+int engine_ThrottleMonitor();
 int menu_EngineCalibrate();
 int menu_EngineSaveCalibration();
 
-void menu_Engine_Status();
+void engine_ThrottleMonitorUpdater();
 
 // When menu_ActiveHandler is non-zero, it should point to an active event handler that
 // requires constant updates. Updating is handled by the T3 Interrupt Event Handler

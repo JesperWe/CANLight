@@ -71,7 +71,7 @@ menu_State_t menu_States[] = {
 			{ M_Calibration, S_ENGINE_CALIBRATION }
 	} },
 
-	{ S_ENGINE_MONITOR, S_ENGINE, M_Monitor, 0, menu_MonitorEngine, {
+	{ S_ENGINE_MONITOR, S_ENGINE, M_Monitor, 0, engine_ThrottleMonitor, {
 			{ 0,0 }
 	} },
 
@@ -107,38 +107,6 @@ int (*menu_ActiveHandler)(void);
 
 //---------------------------------------------------------------------------------------------
 // Event handlers for menu items that have custom code.
-
-int menu_MonitorEngine() {
-	display_SetPosition(1,2);
-	display_Write("Throttle:");
-	display_SetPosition(1,3);
-	display_Write("Gearbox:");
-
-	schedule_AddTask( menu_Engine_Status, 500 );
-	return 0;
-}
-
-void menu_Engine_Status() {
-	unsigned char gear;
-	float throttle;
-
-	if( menu_CurStateId != menu_HandlerStateId ) {
-		schedule_Finished();
-		return;
-	}
-
-	throttle = engine_ThrottlePW - engine_Calibration[ p_ThrottleMin ];
-	throttle = throttle / (float)(engine_Calibration[ p_ThrottleMax ] - engine_Calibration[ p_ThrottleMin ]);
-
-	display_HorizontalBar( 10, 2, (unsigned char)(throttle*50) );
-
-	gear = 25;
-	if( engine_GearPW == engine_Calibration[ p_GearForward ] ) gear = 49;
-	if( engine_GearPW == engine_Calibration[ p_GearReverse ] ) gear = 1;
-
-	display_HorizontalBar( 10, 3, gear );
-	return;
-}
 
 int menu_EngineCalibrate() {
 	char* prompt;
