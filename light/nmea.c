@@ -16,11 +16,20 @@
 //---------------------------------------------------------------------------------------------
 // Globals
 
+unsigned char __attribute__((space(dma))) nmea_LargeBuffer[nmea_MAX_TP_PACKETS*nmea_TP_PACKET_BYTES];
+
 nmea_MsgBuffer_t	nmea_MsgBuf[nmea_NO_MSG_BUFFERS] __attribute__((space(dma),aligned(nmea_NO_MSG_BUFFERS*nmea_MSG_BUFFER_WORDS*2)));
 nmea_MsgBuffer_t	nmea_TxQueue[nmea_NO_MSG_BUFFERS];
 unsigned char		nmea_TxQueueHead;
 unsigned char		nmea_TxQueueTail;
 unsigned char		nmea_TxQueueFull;
+
+unsigned char		nmea_TPMessage_Complete;
+unsigned char		nmea_TPMessage_LastPackage;
+unsigned char		nmea_TPMessage_Error;
+short 				nmea_TPMessage_Size;
+long				nmea_TPMessage_PGN;
+short 				nmea_TPMessage_Bytes;
 
 unsigned char 		CommandedAddress;
 
@@ -182,8 +191,8 @@ unsigned char nmea_SendEvent( event_t *event )
 	nmea_MakePGN( 0, nmea_LIGHTING_COMMAND, 8 );
 	outPGN.data[0] = event->type;
 	outPGN.data[1] = event->data;
-	outPGN.data[2] = (event->atTimer&0xFF00) >> 8;
-	outPGN.data[3] = event->atTimer&0x00FF;
+	outPGN.data[2] = (event->info&0xFF00) >> 8;
+	outPGN.data[3] = event->info&0x00FF;
 	outPGN.data[4] = event->ctrlDev;
 	outPGN.data[5] = event->ctrlFunc;
 	outPGN.data[6] = event->ctrlEvent;
@@ -197,7 +206,7 @@ unsigned char nmea_SendEvent( event_t *event )
 			event->ctrlFunc,
 			event->ctrlEvent,
 			event->data,
-			event->atTimer
+			event->info
 		);
 	}
 
@@ -310,6 +319,58 @@ void nmea_GetReceivedPGN( nmea_PGN_t *pgn ) {
 
 
 //---------------------------------------------------------------------------------------------
+// Transmit a multi-package message.
+// It is the callers duty to keep message length less than the maximum allowed 7*255 = 1785 bytes.
+
+void nmea_SendMultipacket( unsigned char *msgBuffer, unsigned short msgLength, long containedPGN ) {
+	unsigned short noPackets;
+	unsigned short byteOffset;
+	unsigned char packetCount;
+	unsigned char bytesLeft;
+	unsigned char status;
+	unsigned char i;
+
+	noPackets = msgLength / 7;
+	if( msgLength % 7 ) noPackets++;
+
+	// First tell the bus we are about to transmit a multi-packet message.
+
+	nmea_MakePGN( 1, nmea_CM_BAM, 8 );
+
+	outPGN.data[0] = 0x20; // TP.CM_BAM
+	outPGN.data[1] = (msgLength & 0xFF00) >> 8;
+	outPGN.data[2] = msgLength & 0x00FF;
+	outPGN.data[3] = noPackets;
+	outPGN.data[4] = 0xFF; // Reserved
+	outPGN.data[5] = (containedPGN & 0xFF0000) >> 16;
+	outPGN.data[6] = (containedPGN & 0x00FF00) >> 8;
+	outPGN.data[7] =  containedPGN & 0x0000FF;
+
+	status = nmea_SendMessage();
+
+	// Now send data packages.
+
+	packetCount = 0;
+	byteOffset = 0;
+	nmea_MakePGN( 1, nmea_DATATRANSFER, 8 );
+
+	bytesLeft = 8;
+
+	while( byteOffset < msgLength ) {
+		for( i=1; i<bytesLeft; i++ ) {
+			outPGN.data[i] = msgBuffer[byteOffset++];
+		}
+
+		outPGN.data[0] = ++packetCount; // Sequence numbers should start at 1.
+
+		status = nmea_SendMessage();
+
+		if( packetCount == noPackets ) bytesLeft = msgLength - byteOffset;
+	}
+}
+
+
+//---------------------------------------------------------------------------------------------
 // CANBus event interrupt.
 
 void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
@@ -353,11 +414,54 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 		timer = inPGN.data[2];
 		timer = timer<<8 | inPGN.data[3];
 
-		if( inPGN.PGN == nmea_MAINTAIN_POWER ) return;
+		switch( inPGN.PGN ){
 
-		events_Push( e_NMEA_MESSAGE, inPGN.PGN, 
-			inPGN.data[4], inPGN.data[5], inPGN.data[6],
-			inPGN.data[1], timer );
+			case nmea_MAINTAIN_POWER: return;
+
+			case nmea_LIGHTING_COMMAND: {
+				events_Push( e_NMEA_MESSAGE, inPGN.PGN,
+					inPGN.data[4], inPGN.data[5], inPGN.data[6],
+					inPGN.data[1], timer );
+				break;
+			}
+
+			case nmea_CM_BAM: {
+				if( inPGN.data[0] != 0x20 ) break; // We only implement BAM at the moment, not the other TP.CM parts.
+				nmea_TPMessage_Complete = FALSE;
+				nmea_TPMessage_Error = FALSE;
+				nmea_TPMessage_Size = inPGN.data[1]<<8 | inPGN.data[2];
+				nmea_TPMessage_PGN = ((long)inPGN.data[5])<<16 | ((long)inPGN.data[6])<<8 | inPGN.data[2];
+				nmea_TPMessage_Bytes = 0;
+				nmea_TPMessage_LastPackage = 0;
+				break;
+			}
+
+			case nmea_DATATRANSFER: {
+				short i;
+
+				if( nmea_TPMessage_Error ) break;
+
+				nmea_TPMessage_LastPackage++;
+
+				if( inPGN.data[0] != nmea_TPMessage_LastPackage ) {
+					// Package was lost. Too bad...
+					nmea_TPMessage_Error = TRUE;
+					break;
+				}
+
+				for( i=1; i<8; i++ ) {
+					nmea_LargeBuffer[ nmea_TPMessage_Bytes++ ] = inPGN.data[i];
+				}
+
+				if( nmea_TPMessage_Bytes >= nmea_TPMessage_Size ) {
+					nmea_TPMessage_Complete = TRUE;
+					events_Push( e_NMEA_MESSAGE, nmea_TPMessage_PGN,
+						inPGN.SourceAddress, 0, e_CONFIG_FILE_UPDATE, 0, nmea_TPMessage_Size );
+				}
+
+				break;
+			}
+		}
 	}
 }
 

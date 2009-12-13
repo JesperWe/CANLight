@@ -80,7 +80,6 @@ typedef union hw_Config_u {
 		unsigned short nmeaFunctionInstance;
 		unsigned short nmeaManufacturerCode;
 		unsigned long  nmeaIdentityNumber;
-		unsigned short cfgSequenceNumber;
 		short engine_Calibration[p_NO_CALIBRATION_PARAMS];
 		unsigned char cfgFile[];
 	};

@@ -119,7 +119,7 @@ void led_SetLevel( unsigned char color, float level ) {
 
 	if( lastLevel == 0.0 || modLevel == 0.0 ) {
 		response.PGN = 0;
-		response.atTimer = 0;
+		response.info = 0;
 		response.ctrlDev = hw_DeviceID;
 		response.ctrlFunc = led_LastControlledFunction;
 		response.ctrlEvent = (level == 0.0) ? e_SWITCH_OFF : e_SWITCH_ON;

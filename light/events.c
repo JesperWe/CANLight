@@ -42,14 +42,14 @@ void events_Push(
 		unsigned char ctrlFunc, 
 		unsigned char ctrlEvent,
 		unsigned char data,
-		unsigned short atTimer )
+		unsigned short info )
 {
 	event_t newEvent;
 
 	// Debug Dump...
 	//if( type != e_SLOW_HEARTBEAT ){
 	//	char line[30];
-	//	sprintf( line, "%04d:%02d(%01d) %02x %02d %03d", atTimer, type, events_QueueFull, ctrlFunc, ctrlEvent, data );
+	//	sprintf( line, "%04d:%02d(%01d) %02x %02d %03d", info, type, events_QueueFull, ctrlFunc, ctrlEvent, data );
 	//	display_Write( line );
 	//}
 
@@ -59,7 +59,7 @@ void events_Push(
 	newEvent.ctrlEvent = ctrlEvent;
 	newEvent.PGN = nmeaPGN;
 	newEvent.data = data;
-	newEvent.atTimer = atTimer;
+	newEvent.info = info;
 
     queue_Send( events_Queue, &newEvent );
 }
@@ -168,7 +168,7 @@ void event_Task() {
 
 					engine_Throttle = event.data;
 					engine_Gear = event.ctrlFunc;
-					engine_LastJoystickLevel = event.atTimer;
+					engine_LastJoystickLevel = event.info;
 
 					// If we are a unit actually running an engine, do it!
 

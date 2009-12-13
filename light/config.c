@@ -17,7 +17,7 @@ unsigned char config_Valid = 0;
 
 #include "config_groups.h"
 
-static const unsigned char cfg_Default[] = cfg_DEFAULT_CONFIG_FILE;
+static const unsigned char cfg_FileROM[1785] = cfg_DEFAULT_CONFIG_FILE;
 
 //-------------------------------------------------------------------------------
 // System Configuration.
@@ -25,7 +25,8 @@ static const unsigned char cfg_Default[] = cfg_DEFAULT_CONFIG_FILE;
 void config_Initialize() {
 	unsigned char cfgByte;
 	unsigned char *cfgPtr;
-	unsigned short i; 
+	unsigned short i;
+	unsigned short cfgSequenceNumber;
 	unsigned char group;
 	unsigned char func;
 
@@ -44,23 +45,12 @@ void config_Initialize() {
 	config_MyEvents->group = gEnd; // Indicates empty entry.
 	config_MyEvents->next = 0;
 
-	// Copy default config to RAM config if there is no config in Flash.
-
-	if( hw_Config.cfgSequenceNumber == 0 ) {
-		i = 0;
-		cfgByte = cfg_Default[i];
-		while( cfgByte != 0xFF ) {
-			hw_Config.cfgFile[i] = cfgByte;
-			cfgByte = cfg_Default[++i];
-		}
-		hw_Config.cfgFile[i] = cfgByte;
-		if( i > 0 ) config_Valid = 1;
-	}
+	cfgSequenceNumber = ((short)cfg_FileROM[0])<<8 | cfg_FileROM[1];
 
 	// Now filter system config to find out what groups we belong to, and
 	// which devices messages we should listen to.
 
-	cfgPtr = hw_Config.cfgFile;
+	cfgPtr = cfg_FileROM + 2;	// Skip sequence number.
 
 	while( *cfgPtr != endConfig ) {
 		group = *cfgPtr;

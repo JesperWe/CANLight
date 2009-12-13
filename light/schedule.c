@@ -28,7 +28,7 @@ void schedule_Initialize() {
     T1CONbits.TSIDL = 1;
     T1CONbits.TCKPS = 0;			// Prescaler = 1
     T1CONbits.TCS = 0;				// CLock Select = Fcy.
-    PR1 = 0x1B70;					// Timer cycle.
+    PR1 = 0x1B70;					// Timer cycle. Set to Fcy / 1000.
     _T1IF = 0;
     IEC0bits.T1IE = 1;
     T1CONbits.TON = 1;				// Start Timer.
@@ -83,11 +83,7 @@ void schedule_Run() {
 		// If we are waking up from a sleep we return to execute the sleeping task
 		// at the point where it went to sleep.
 
-		if( curTask->sleepForTicks ) {
-			NOP; // Breakpoint
-			NOP; // Breakpoint
-			break;
-		}
+		if( curTask->sleepForTicks ) { break; }
 
 		// No rest for the wicked...
 

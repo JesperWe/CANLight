@@ -30,6 +30,7 @@ enum event_Events {
 	/* 16 */ e_SLOW_HEARTBEAT,
 	/* 17 */ e_THROTTLE_MASTER,
 	/* 18 */ e_SET_THROTTLE,
+	/* 19 */ e_CONFIG_FILE_UPDATE,
 	/* 19 */ e_NO_EVENTS
 };
 
@@ -40,7 +41,7 @@ typedef struct {
 	unsigned char ctrlFunc;
 	unsigned char ctrlEvent;
 	unsigned char data;
-	unsigned short atTimer;
+	unsigned short info;
 } event_t;
 
 

@@ -113,11 +113,11 @@ void hw_WritePort(enum hw_PortNames port, int value) {
 void hw_Initialize( void ) {
 	DWORD_VAL fidc, fidc_data;
 
-	CLKDIVbits.DOZE = 0;			// To make Fcy = Fosc/2
+	CLKDIVbits.DOZE = 0;			// To make fCY = fOSC/2
 
 	AD1PCFGL = 0x1FFF;				// ANx eats ECAN1 SNAFU!
 
-	// Set up clock oscillator. Nominal f=7.37MHz
+	// Set up clock oscillator. Nominal fOSC=7.37MHz
 	// This is too low for the ECAN unit to work well at 250kBit.
 	// So we use PLL to increase it to 14MHz.
 
@@ -198,9 +198,9 @@ void hw_Initialize( void ) {
 			hw_Config.engine_Calibration[ p_GearReverse ] = 216;
 			hw_Config.engine_Calibration[ p_GearForward ] = 140;
 	
-			hw_Config.engine_Calibration[ p_JoystickMin ] = 60;
-			hw_Config.engine_Calibration[ p_JoystickMid ] = 500;
-			hw_Config.engine_Calibration[ p_JoystickMax ] = 1000;
+			hw_Config.engine_Calibration[ p_JoystickMin ] = 110;
+			hw_Config.engine_Calibration[ p_JoystickMid ] = 530;
+			hw_Config.engine_Calibration[ p_JoystickMax ] = 880;
 	
 			hw_WriteConfigFlash();
 		}

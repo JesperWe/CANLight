@@ -276,7 +276,7 @@ void engine_JoystickTask() {
 			// Need to become Master Controller before update!
 
 			event.PGN = 0;
-			event.atTimer = 0;
+			event.info = 0;
 			event.ctrlDev = hw_DeviceID;
 			event.ctrlFunc = 0;
 			event.ctrlEvent = e_THROTTLE_MASTER;
@@ -292,12 +292,11 @@ void engine_JoystickTask() {
 		// (This can then be used in calibrating the joystick.
 
 		event.PGN = 0;
-		event.atTimer = 0;
 		event.ctrlDev = hw_DeviceID;
 		event.ctrlFunc = engine_Gear;
 		event.ctrlEvent = e_SET_THROTTLE;
 		event.data = engine_Throttle;
-		event.atTimer = engine_Joystick_Level;
+		event.info = engine_Joystick_Level;
 		nmea_SendEvent( &event );
 	}
 }
