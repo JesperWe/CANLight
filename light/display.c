@@ -165,6 +165,14 @@ void display_HorizontalBar( unsigned char col, unsigned char row, unsigned char 
 // Home-grown über-simplified formatting function since STDC sprintf() takes about 5k Bytes of code...
 
 void display_NumberFormat( char outString[], short digits, short number ) {
+
+	if( digits == 0 ) {
+		digits = 4;
+		if( number < 1000 ) digits = 3;
+		if( number < 100 ) digits = 2;
+		if( number < 10 ) digits = 1;
+	}
+
 	outString[ digits ] = 0;
 	do {
 		outString[digits-1] = '0' + (number % 10);

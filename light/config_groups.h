@@ -15,6 +15,7 @@
 // A function must be part of a group to be able to listen for events.
 //
 // The config "file" byte sequence follows this pattern:
+//   <2 bytes sequence number>
 //   group device func [ device func ] FE
 //   device func event [ event ] FE
 //   device func event [ event ] FE
@@ -26,11 +27,6 @@
 //   ...
 //   FF
 //
-
-
-#define 	endConfig	0xFF
-#define 	gEnd		0xFE	// End of Group Entry
-
 
 // These def's are only so that we can write group 00 as grp00 rather than just 00.
 // ...makes it easier to visually separate group numbers from device numbers.
@@ -78,21 +74,23 @@
 
 
 #define cfg_DEFAULT_CONFIG_FILE \
-{ grp00, 07, hw_LED_RED, gEnd, \
-  07, hw_KEY1, e_KEY_CLICKED, e_KEY_HOLDING, e_KEY_RELEASED, gEnd, \
-  gEnd, \
+{ 00, 01, \
 \
-  grp01, 07, hw_LED3, gEnd, \
-  23, hw_LED_LIGHT, e_SWITCH_ON, e_SWITCH_OFF, gEnd, \
-  gEnd, \
+  grp00, 07, hw_LED_RED, config_GroupEnd, \
+  07, hw_KEY1, e_KEY_CLICKED, e_KEY_HOLDING, e_KEY_RELEASED, config_GroupEnd, \
+  config_GroupEnd, \
 \
-  grp02, 07, hw_LED2, gEnd, \
-  07, hw_KEY2, e_KEY_CLICKED, gEnd, \
-  gEnd, \
+  grp01, 07, hw_LED3, config_GroupEnd, \
+  23, hw_LED_LIGHT, e_SWITCH_ON, e_SWITCH_OFF, config_GroupEnd, \
+  config_GroupEnd, \
 \
-  grp03, 23, hw_LED_LIGHT, gEnd, \
-  07, hw_KEY3, e_KEY_CLICKED, e_KEY_DOUBLECLICKED, e_KEY_HOLDING, e_KEY_RELEASED, gEnd, \
-  gEnd, \
+  grp02, 07, hw_LED2, config_GroupEnd, \
+  07, hw_KEY2, e_KEY_CLICKED, config_GroupEnd, \
+  config_GroupEnd, \
+\
+  grp03, 23, hw_LED_LIGHT, config_GroupEnd, \
+  07, hw_KEY3, e_KEY_CLICKED, e_KEY_DOUBLECLICKED, e_KEY_HOLDING, e_KEY_RELEASED, config_GroupEnd, \
+  config_GroupEnd, \
 \
 endConfig }
 

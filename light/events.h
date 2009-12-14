@@ -31,7 +31,7 @@ enum event_Events {
 	/* 17 */ e_THROTTLE_MASTER,
 	/* 18 */ e_SET_THROTTLE,
 	/* 19 */ e_CONFIG_FILE_UPDATE,
-	/* 19 */ e_NO_EVENTS
+	/* 20 */ e_NO_EVENTS
 };
 
 typedef struct {

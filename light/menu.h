@@ -48,6 +48,7 @@ typedef struct menu_State_s {
 } menu_State_t;
 
 extern unsigned short menu_CurStateId, menu_NextStateId, menu_ParentStateId, menu_HandlerStateId;
+extern unsigned char menu_Keypress;
 
 void menu_Initialize();
 void menu_SetState( unsigned char state );

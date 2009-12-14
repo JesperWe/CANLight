@@ -82,7 +82,7 @@ config_Event_t* event_FindNextListener( config_Event_t *fromAccept, event_t* eve
 
 	accept = fromAccept;
 
-	if( accept->group == gEnd ) return 0; // Check for empty MyEvents list.
+	if( accept->group == config_GroupEnd ) return 0; // Check for empty MyEvents list.
 
 	while( accept != 0 ) {
 		if( accept->ctrlDev != event->ctrlDev ) goto next;

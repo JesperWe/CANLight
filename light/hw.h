@@ -56,6 +56,7 @@ enum hw_PortNames {
 	hw_NoPortNames
 };
 
+
 enum hw_Variants {
 	hw_LEDLAMP,
 	hw_SWITCH,

@@ -7,6 +7,8 @@
 #include "config_groups.h"
 #include "events.h"
 #include "led.h"
+#include "display.h"
+#include "menu.h"
 
 //-------------------------------------------------------------------------------
 // Globals
@@ -17,16 +19,72 @@ unsigned char config_Valid = 0;
 
 #include "config_groups.h"
 
-static const unsigned char cfg_FileROM[1785] = cfg_DEFAULT_CONFIG_FILE;
+// The Configuration File lives in program memory.
+// The size is dictated by the maximum length of a NMEA transmission,
+// which is 7*255 = 1785 bytes.
+
+static const unsigned char config_File[1785] = cfg_DEFAULT_CONFIG_FILE;
 
 //-------------------------------------------------------------------------------
-// System Configuration.
+// Utility functions to make navigation of the config_File easier to understand.
+
+unsigned char _findNextGroup( config_File_t* filePointer ) {
+	config_File_t tmpPointer = *filePointer;
+
+	while( (*tmpPointer != config_GroupEnd) || (*(tmpPointer+1) != config_GroupEnd) ) {
+		tmpPointer++;
+	}
+
+	tmpPointer += 2;
+	*filePointer = tmpPointer;
+
+	if( **filePointer == endConfig ) return FALSE;
+
+	return TRUE;
+}
+
+unsigned char _findNextTarget( config_File_t* filePointer ) {
+	(*filePointer) += 2;
+	if( **filePointer == config_GroupEnd ) return FALSE;
+	return TRUE;
+}
+
+unsigned char _findControllers( config_File_t* filePointer ) {
+	while( (**filePointer != config_GroupEnd) ) (*filePointer)++;
+	(*filePointer)++;
+	return TRUE;
+}
+
+config_File_t config_FileFindGroup( unsigned char groupId ) {
+	config_File_t configPtr;
+
+	configPtr = config_File + 2;	// Skip sequence number.
+
+	do {
+		if( *configPtr == groupId ) return configPtr;
+	} while (
+		_findNextGroup( &configPtr )
+	);
+
+	return configPtr;
+}
+
+short config_FileCountTargets( unsigned char groupId ) {
+	config_File_t configPtr;
+	unsigned char noTargets;
+
+	configPtr = config_File + 2;	// Skip sequence number.
+	return noTargets;
+}
+
+
+//-------------------------------------------------------------------------------
+// Initialize System Configuration.
+// The config_MyEvents dynamic list should contain all events that affect this device.
 
 void config_Initialize() {
-	unsigned char cfgByte;
-	unsigned char *cfgPtr;
-	unsigned short i;
-	unsigned short cfgSequenceNumber;
+	config_File_t configPtr, targetPtr;
+	unsigned short configSequenceNumber;
 	unsigned char group;
 	unsigned char func;
 
@@ -42,63 +100,57 @@ void config_Initialize() {
 	// Allocate first empty element for my controllers list.
 
 	config_MyEvents = malloc( sizeof( config_Event_t ) ); 
-	config_MyEvents->group = gEnd; // Indicates empty entry.
+	config_MyEvents->group = config_GroupEnd; // Indicates empty entry.
 	config_MyEvents->next = 0;
 
-	cfgSequenceNumber = ((short)cfg_FileROM[0])<<8 | cfg_FileROM[1];
+	configSequenceNumber = ((short)config_File[0])<<8 | config_File[1];
 
 	// Now filter system config to find out what groups we belong to, and
 	// which devices messages we should listen to.
 
-	cfgPtr = cfg_FileROM + 2;	// Skip sequence number.
+	configPtr = &(config_File[2]);	// Skip sequence number.
 
-	while( *cfgPtr != endConfig ) {
-		group = *cfgPtr;
-		cfgPtr++; // Go to first device of current group.
+	do {
+		group = *configPtr;
+		targetPtr = configPtr + 1;
 
-		while( *cfgPtr != gEnd ) {
-			if( *cfgPtr == hw_DeviceID ) {
-				cfgPtr++;
-				func = *cfgPtr;
-				config_AddControlEvents( group, cfgPtr, func );
+		do {
+			if( *(targetPtr) == hw_DeviceID ) { // Is this group for me?
+				func = *(targetPtr+1);
+				config_AddMyControlEvents( group, configPtr, func );
 			}
-			cfgPtr++;
-		}
-
-		// Now skip to start of next group.
-
-		while(*cfgPtr!=gEnd || *(cfgPtr-1)!=gEnd) { cfgPtr++; };
-		cfgPtr++;
+		} 
+		while( _findNextTarget( &targetPtr ));
 	}
+	while( _findNextGroup( &configPtr ) );
 }
 
 
-void config_AddControlEvents( unsigned char group, unsigned char *fromCfgPtr, unsigned char func ) {
-	unsigned short i;
+void config_AddMyControlEvents( unsigned char group, config_File_t fromCfgPtr, unsigned char targetFunction ) {
+	unsigned short cntrlDevice, cntrlFunction;
 
-	while(1) {
-		// First find the controllers start
+	_findControllers( &fromCfgPtr ); // Note that fromCfgPointer is call-by-value so this will not modify callers pointer!
+
+	do {
+		cntrlDevice = *fromCfgPtr++;
+		cntrlFunction = *fromCfgPtr++;
 		
-		while( *fromCfgPtr != gEnd ) fromCfgPtr++;
-		fromCfgPtr++;
-		if( *fromCfgPtr == gEnd ) break; // Two gEnd in a row is end of group.
-		if( *fromCfgPtr == endConfig ) break;
-		
-		i=2;
-		while( *(fromCfgPtr+i) != gEnd ) {
-			config_AddControlEvent( group, *fromCfgPtr, *(fromCfgPtr+1), *(fromCfgPtr+i), func );
-			i++;
+		while( *fromCfgPtr != config_GroupEnd ) {
+			config_AddControlEvent( group, cntrlDevice, cntrlFunction, *fromCfgPtr++, targetFunction );
 		}
-	}
+		*fromCfgPtr++;
+		
+	} while( *fromCfgPtr != config_GroupEnd );
+
 	return;
 }
 
 
 void config_AddControlEvent( unsigned char group, 
-		unsigned char ctrlDev, 
-		unsigned char ctrlFunc, 
-		unsigned char ctrlEvent, 
-		unsigned char function )
+		const unsigned char ctrlDev,
+		const unsigned char ctrlFunc,
+		const unsigned char ctrlEvent,
+		const unsigned char function )
 {
 
 	config_Event_t *curEvent = config_MyEvents;
@@ -109,11 +161,9 @@ void config_AddControlEvent( unsigned char group,
 
 	newEvent = curEvent;
 
-	if( newEvent->group != gEnd ) {
-		newEvent = malloc( sizeof( config_Event_t ) );
-		newEvent->next = 0;
-		curEvent->next = newEvent;
-	}
+	newEvent = malloc( sizeof( config_Event_t ) );
+	newEvent->next = 0;
+	curEvent->next = newEvent;
 
 	newEvent->group = group;
 	newEvent->ctrlDev = ctrlDev;
@@ -122,6 +172,8 @@ void config_AddControlEvent( unsigned char group,
 	newEvent->function = function;
 }
 
+
+//-------------------------------------------------------------------------------
 
 void config_Task() {
 	// No point in running if we have no valid system configuration,
