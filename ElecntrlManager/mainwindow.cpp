@@ -104,14 +104,17 @@ void MainWindow::updateScene() {
         gItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
         scene->addItem( gItem );
 
-        cGroupModel->calculateItemOffset(i);
-        gItem->setPos( 0, cGroupModel->numberedItemData[i].offset );
+        float offset = cGroupModel->accumulatedOffset(i);
+        float myHeight = cGroupModel->calculateHeight(i);
+        float midpoint = offset + 0.5*myHeight;
+
+        gItem->setPos( 0, midpoint );
 
         for( int j=0; j<cGroupModel->numberedItemData[i].events.count(); j++ ) {
-            float midpoint = cGroupModel->numberedItemData[i].offset + 0.5*(gItem->boundingRect().height());
 
             float eventOffset = (j%2==0) ? -1 : +1; // Alternate pos/neg offset
             eventOffset *= floor((j+1)/2) * 60;
+            qDebug() << "      eventOffset " << eventOffset;
 
             float xp = gItem->maxChildWidth + 120;
             ecsEvent* eItem = new ecsEvent(cGroupModel->numberedItemData[i].events[j]);

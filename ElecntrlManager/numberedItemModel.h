@@ -36,7 +36,9 @@ public:
     bool removeRows(int position, int rows, const QModelIndex &index = QModelIndex());
     void sort( int column, Qt::SortOrder order = Qt::AscendingOrder );
     QMimeData *mimeData(const QModelIndexList &indexes) const;
-    float calculateItemOffset( int itemIndex );
+    float accumulatedOffset( int itemIndex );
+    float calculateHeight( int itemIndex );
+
     void setItemOffset( int itemIndex, float newOffset );
     void updateComplete();
     NumberedItem* findItem( int id );

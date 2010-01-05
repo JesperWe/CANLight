@@ -179,7 +179,7 @@ QMimeData *NumberedItemModel::mimeData(const QModelIndexList &indexes) const
 
 //---------------------------------------------------------------------------
 
-float NumberedItemModel::calculateItemOffset( int itemIndex )
+float NumberedItemModel::accumulatedOffset( int itemIndex )
 {
     float myOffset = 0;
     if( itemIndex == 0 ) {
@@ -187,21 +187,30 @@ float NumberedItemModel::calculateItemOffset( int itemIndex )
         return 0;
     }
 
-    myOffset = 55 + numberedItemData[itemIndex-1].offset;
-    myOffset += numberedItemData[itemIndex-1].links.count()*16;
-
+    myOffset = numberedItemData[itemIndex-1].offset + calculateHeight(itemIndex-1);
     numberedItemData[itemIndex].offset = myOffset;
+    qDebug() << "   Offset of " << itemIndex << " is " << myOffset;
+    return myOffset;
+}
 
-    // Try offset based on number of events, use it if it is larger.
+//---------------------------------------------------------------------------
 
-    myOffset = 40 + numberedItemData[itemIndex-1].offset;
-    myOffset += (numberedItemData[itemIndex-1].events.count()-1)*60;
+float NumberedItemModel::calculateHeight( int itemIndex )
+{
+    float myHeight = 0;
 
-    if( myOffset > numberedItemData[itemIndex].offset ) {
-        numberedItemData[itemIndex].offset = myOffset;
+    myHeight = 55 + numberedItemData[itemIndex].links.count()*16;
+
+    // Try height based on number of events, use it if it is larger.
+
+    float myHeight2 = 40 + numberedItemData[itemIndex].events.count()*60;
+
+    if( myHeight2 > myHeight ) {
+        myHeight = myHeight2;
     }
 
-    return myOffset;
+    qDebug() << "   Height of " << itemIndex << " is " << myHeight;
+    return myHeight;
 }
 
 //---------------------------------------------------------------------------
