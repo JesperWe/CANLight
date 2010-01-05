@@ -1,0 +1,35 @@
+<RCC>
+    <qresource prefix="/">
+        <file>graphics/file-save-as.svg</file>
+        <file>graphics/open.svg</file>
+        <file>graphics/save.svg</file>
+        <file>graphics/zoom.svg</file>
+        <file>graphics/toolbar-gradient.svg</file>
+        <file>graphics/connections.svg</file>
+        <file>graphics/bulb.svg</file>
+        <file>graphics/man-walk.svg</file>
+        <file>graphics/outlet.svg</file>
+        <file>graphics/arrow8.svg</file>
+        <file>graphics/man-walking24.png</file>
+        <file>graphics/bulb24.png</file>
+        <file>graphics/crossover24.png</file>
+        <file>graphics/twocolor.svg</file>
+        <file>graphics/cogs.svg</file>
+        <file>graphics/joystick.svg</file>
+        <file>graphics/analog.svg</file>
+        <file>graphics/input.svg</file>
+        <file>kalle.svg</file>
+        <file>graphics/finger.svg</file>
+        <file>graphics/click-single.svg</file>
+        <file>graphics/click-double.svg</file>
+        <file>graphics/click-hold.svg</file>
+        <file>graphics/click-release.svg</file>
+        <file>graphics/signal.svg</file>
+        <file>graphics/connection.svg</file>
+        <file>graphics/onoff.svg</file>
+        <file>graphics/fade-stop.svg</file>
+        <file>graphics/fade-start.svg</file>
+        <file>graphics/levels.svg</file>
+        <file>graphics/logo-jm60.png</file>
+    </qresource>
+</RCC>
