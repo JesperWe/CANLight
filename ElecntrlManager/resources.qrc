@@ -31,5 +31,6 @@
         <file>graphics/fade-start.svg</file>
         <file>graphics/levels.svg</file>
         <file>graphics/logo-jm60.png</file>
+        <file>graphics/bulb-lit.svg</file>
     </qresource>
 </RCC>
