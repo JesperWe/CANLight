@@ -3,7 +3,6 @@
 
 #include <QString>
 #include <QGraphicsItem>
-#include "ecsEvent.h"
 
 class NumberedItem
 {
@@ -20,7 +19,10 @@ public:
     float           offset;
 
     QList<NumberedItem*> links;
+    QList<int> ctrlFunctions;
     QList<int> events;
+    QList<int> actions;
+    QList<int> targetGroupIndex;
 };
 
 #endif // NUMBEREDITEM_H

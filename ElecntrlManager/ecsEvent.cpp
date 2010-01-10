@@ -17,6 +17,15 @@ QPoint ecsEvent::anchorIn() {
 
 //------------------------------------------------------------------------------------
 
+QPoint ecsEvent::anchorOut() {
+    return QPoint(
+                this->pos().x()+iconDim*0.7,
+                this->pos().y()
+           );
+}
+
+//------------------------------------------------------------------------------------
+
 void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     QPixmap* icon;
 
@@ -31,6 +40,8 @@ void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     if( isSelected() ) {
         painter->setBrush( QColor( 0, 50, 255, 60 ) );
     }
+
+    painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
 
     painter->drawEllipse(-0.7*iconDim,-0.7*iconDim,iconDim*1.4,iconDim*1.4);
     painter->drawPixmap(-iconDim/2,-iconDim/2,iconDim,iconDim,*icon);

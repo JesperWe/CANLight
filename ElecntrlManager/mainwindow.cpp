@@ -9,6 +9,9 @@
 #include "ui_about.h"
 #include "systemdescription.h"
 #include "cGroupItem.h"
+#include "ecsEvent.h"
+#include "ecsAction.h"
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -117,7 +120,9 @@ void MainWindow::updateScene() {
             qDebug() << "      eventOffset " << eventOffset;
 
             float xp = gItem->maxChildWidth + 120;
-            ecsEvent* eItem = new ecsEvent(cGroupModel->numberedItemData[i].events[j]);
+            ecsEvent* eItem = new ecsEvent( gItem->itemIndex, cGroupModel->numberedItemData[i].events[j] );
+            eItem->eventIndex = j;
+
             eItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
             eItem->setPos( xp, midpoint + eventOffset );
             scene->addItem( eItem );
@@ -128,6 +133,21 @@ void MainWindow::updateScene() {
                             0, 0);
             line->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
             scene->addItem( line );
+
+            if( cGroupModel->numberedItemData[i].actions[j] != ecsAction::None ) {
+                xp += 100;
+                ecsAction* aItem = new ecsAction( gItem->itemIndex, cGroupModel->numberedItemData[i].actions[j] );
+                aItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
+                aItem->setPos( xp, midpoint + eventOffset );
+                scene->addItem( aItem );
+
+                line = new QGraphicsLineItem(
+                                eItem->anchorOut().x(), eItem->anchorOut().y(),
+                                aItem->anchorIn().x(), aItem->anchorIn().y(),
+                                0, 0);
+                line->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
+                scene->addItem( line );
+            }
         }
     }
 }
@@ -149,10 +169,6 @@ void MainWindow::on_action_something_triggered()
 
     key1->setFlag(QGraphicsItem::ItemIsMovable, true);
     key1->setFlag(QGraphicsItem::ItemIsSelectable, true);
-}
-
-void MainWindow::on_outlet()
-{
 }
 
 void MainWindow::on_actionAbout_Qt_triggered()
@@ -220,6 +236,7 @@ void MainWindow::on_actionNew_triggered()
     applianceModel->clear();
 }
 
+
 void MainWindow::on_actionToggle_On_Off_triggered()
 {
     QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
@@ -227,7 +244,69 @@ void MainWindow::on_actionToggle_On_Off_triggered()
     if( selection[0]->type() != ecsEvent::Type ) return;
     ecsEvent* evt = qgraphicsitem_cast<ecsEvent *>(selection[0]);
 
-    // XXX hook event back to cGroup. Where store data?
+    evt->eventAction = ecsAction::ToggleOnOff;
+    cGroupModel->numberedItemData[evt->cGroupIndex].actions[evt->eventIndex] = ecsAction::ToggleOnOff;
 
+    updateScene();
+}
+
+
+void MainWindow::on_actionSwitch_On_triggered()
+{
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != ecsEvent::Type ) return;
+    ecsEvent* evt = qgraphicsitem_cast<ecsEvent *>(selection[0]);
+
+    evt->eventAction = ecsAction::SwitchON;
+    cGroupModel->numberedItemData[evt->cGroupIndex].actions[evt->eventIndex] = ecsAction::SwitchON;
+    updateScene();
+}
+
+void MainWindow::on_actionSwitch_Off_triggered()
+{
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != ecsEvent::Type ) return;
+    ecsEvent* evt = qgraphicsitem_cast<ecsEvent *>(selection[0]);
+
+    evt->eventAction = ecsAction::SwitchOFF;
+    cGroupModel->numberedItemData[evt->cGroupIndex].actions[evt->eventIndex] = ecsAction::SwitchOFF;
+    updateScene();
+}
+
+void MainWindow::on_actionStart_Fade_triggered()
+{
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != ecsEvent::Type ) return;
+    ecsEvent* evt = qgraphicsitem_cast<ecsEvent *>(selection[0]);
+
+    evt->eventAction = ecsAction::FadeStart;
+    cGroupModel->numberedItemData[evt->cGroupIndex].actions[evt->eventIndex] = ecsAction::FadeStart;
+    updateScene();
+}
+
+void MainWindow::on_actionStop_Fade_triggered()
+{
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != ecsEvent::Type ) return;
+    ecsEvent* evt = qgraphicsitem_cast<ecsEvent *>(selection[0]);
+
+    evt->eventAction = ecsAction::FadeStop;
+    cGroupModel->numberedItemData[evt->cGroupIndex].actions[evt->eventIndex] = ecsAction::FadeStop;
+    updateScene();
+}
+
+void MainWindow::on_actionSwitch_Color_triggered()
+{
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != ecsEvent::Type ) return;
+    ecsEvent* evt = qgraphicsitem_cast<ecsEvent *>(selection[0]);
+
+    evt->eventAction = ecsAction::ChangeColor;
+    cGroupModel->numberedItemData[evt->cGroupIndex].actions[evt->eventIndex] = ecsAction::ChangeColor;
     updateScene();
 }

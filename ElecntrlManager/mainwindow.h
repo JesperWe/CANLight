@@ -26,6 +26,11 @@ private:
     QGraphicsScene *scene;
 
 private slots:
+    void on_actionSwitch_Color_triggered();
+    void on_actionStop_Fade_triggered();
+    void on_actionStart_Fade_triggered();
+    void on_actionSwitch_Off_triggered();
+    void on_actionSwitch_On_triggered();
     void on_actionToggle_On_Off_triggered();
     void on_actionNew_triggered();
     void on_actionRelease_triggered();
@@ -39,7 +44,6 @@ private slots:
     void on_actionExit_triggered();
     void on_actionOpen_triggered();
     void on_actionAbout_triggered();
-    void on_outlet();
 
 public slots:
     void on_modifiedData();

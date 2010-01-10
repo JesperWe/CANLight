@@ -2,6 +2,7 @@
 #define ECSEVENT_H
 
 #include <QtGui>
+#include "cGroupItem.h"
 
 #define iconDim 30
 
@@ -9,11 +10,12 @@ class ecsEvent : public QGraphicsItem {
 
 public:
     enum { Type = UserType + 2 };
-    int type() const { return Type; }
+    int type() const { return Type; };
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     QPoint anchorIn();
+    QPoint anchorOut();
 
     enum eventTypes_e {
         SingleClick,
@@ -23,13 +25,23 @@ public:
         noEventTypes
     };
 
+    enum eventSources_e {
+        Unknown,
+        Key0,
+        Key1,
+        Key2,
+        Analog,
+        noEventSources
+    };
+
     ecsEvent();
     ecsEvent( int t ) { eventType = t; };
+    ecsEvent( int itemIndex, int t ) { cGroupIndex = itemIndex; eventType = t; };
 
     int eventType;
-
-private:
-    QRectF rect;
+    int eventAction;
+    int cGroupIndex;
+    int eventIndex;
 
 };
 

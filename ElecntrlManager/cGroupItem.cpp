@@ -1,5 +1,6 @@
 #include "cGroupItem.h"
 #include "mainwindow.h"
+#include "ecsEvent.h"
 
 cGroupItem::cGroupItem( NumberedItemModel* m, int i ) {
     cGroupModel = m;
@@ -42,6 +43,7 @@ void cGroupItem::addApplianceTexts() {
             txtItem->setParentItem(this);
             txtItem->setZValue(2);
             txtItem->setFont( qApp->property( "contentFont" ).value<QFont>() );
+            txtItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
         }
     }
 
@@ -49,11 +51,11 @@ void cGroupItem::addApplianceTexts() {
 
     maxChildWidth = 60;
     for( int i=0; i<childItems().count(); i++ ) {
-        if( ((QGraphicsSimpleTextItem*)(childItems()[i]))->boundingRect().width() > maxChildWidth ) {
-            maxChildWidth = ((QGraphicsSimpleTextItem*)(childItems()[i]))->boundingRect().width();
-            qDebug() << "   maxChildWidth " << maxChildWidth;
-        }
+        float w = ((QGraphicsSimpleTextItem*)(childItems()[i]))->boundingRect().width();
+        if( w > maxChildWidth ) { maxChildWidth = w; }
     }
+
+    maxChildWidth += 30; // For source icon.
 
     recalcBoundingRect();
 
@@ -113,6 +115,7 @@ void cGroupItem::dropEvent(QGraphicsSceneDragDropEvent *event)
 
     this->prepareGeometryChange();
     cGroupModel->numberedItemData[itemIndex].links.append(app);
+    cGroupModel->numberedItemData[itemIndex].ctrlFunctions.append(ecsEvent::Key0);
     addApplianceTexts();
     recalcBoundingRect();
     ((MainWindow*)qApp->activeWindow())->updateScene();

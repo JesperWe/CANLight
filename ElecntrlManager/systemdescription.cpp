@@ -72,6 +72,7 @@ void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances,
         for( int j=0; j<cGroups->numberedItemData[i].events.count(); j++) {
             out.writeStartElement( "controlevent" );
             out.writeAttribute( "type", QString::number(cGroups->numberedItemData[i].events[j]) );
+            out.writeAttribute( "action", QString::number(cGroups->numberedItemData[i].actions[j]) );
             out.writeEndElement();
         }
 
@@ -150,9 +151,15 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
     }
 
     else if(name == "controlevent") {
-        QString evtType = attrs.value("type");
-        if( evtType != "" )
-            cGroups->numberedItemData.last().events.append(evtType.toInt());
+        QString attrVal = attrs.value("type");
+        if( attrVal != "" ) {
+            cGroups->numberedItemData.last().events.append(attrVal.toInt());
+            cGroups->numberedItemData.last().actions.append(0);
+        }
+        attrVal = attrs.value("action");
+        if( attrVal != "" ) {
+            cGroups->numberedItemData.last().actions.last() = attrVal.toInt();
+        }
     }
 
     return true;

@@ -189,7 +189,6 @@ float NumberedItemModel::accumulatedOffset( int itemIndex )
 
     myOffset = numberedItemData[itemIndex-1].offset + calculateHeight(itemIndex-1);
     numberedItemData[itemIndex].offset = myOffset;
-    qDebug() << "   Offset of " << itemIndex << " is " << myOffset;
     return myOffset;
 }
 
@@ -209,7 +208,6 @@ float NumberedItemModel::calculateHeight( int itemIndex )
         myHeight = myHeight2;
     }
 
-    qDebug() << "   Height of " << itemIndex << " is " << myHeight;
     return myHeight;
 }
 

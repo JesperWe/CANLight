@@ -3,18 +3,18 @@
 
 #include <QtGui>
 #include "numberedItemModel.h"
-#include "ecsEvent.h"
 
 #define lineSpacing 16
 
 class cGroupItem : public QGraphicsItem {
 
 public:
-    cGroupItem( NumberedItemModel* m, int i );
     enum { Type = UserType + 1 };
-    int type() const { return Type; }
+    int type() const { return Type; };
 
-    QRectF boundingRect() const { return rect; }
+    cGroupItem( NumberedItemModel* m, int i );
+
+    QRectF boundingRect() const { return rect; };
     void addApplianceTexts();
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
@@ -27,8 +27,9 @@ public:
     QRectF rect;
 
 private:
-    NumberedItemModel* cGroupModel;
     void recalcBoundingRect();
+    NumberedItemModel* cGroupModel;
+
 };
 
 #endif // CGROUPITEM_H

@@ -30,15 +30,17 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         painter->setBrush( QColor( 0, 50, 255, 60 ) );
     }
 
+    painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
+
     painter->drawPolygon( QPolygon( 4, &ecsAction::polygon[0][0] ) );
-    painter->drawPixmap(-size*0.35,-size*0.35,size*0.7,size*0.7,*icon);
+    painter->drawPixmap(-size*0.25,-size*0.25,size*0.5,size*0.5,*icon);   
 }
 
 //------------------------------------------------------------------------------------
 
 QPoint ecsAction::anchorIn() {
     return QPoint(
-                this->pos().x()-size,
+                this->pos().x()-size/2,
                 this->pos().y()
            );
 }
