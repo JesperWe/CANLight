@@ -8,12 +8,14 @@
 class ecsEvent : public QGraphicsItem {
 
 public:
+    enum { Type = UserType + 2 };
+    int type() const { return Type; }
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     QPoint anchorIn();
 
-    enum eventType {
+    enum eventTypes_e {
         SingleClick,
         DoubleClick,
         PressHold,
@@ -22,9 +24,9 @@ public:
     };
 
     ecsEvent();
-    ecsEvent( int t ) { type = t; };
+    ecsEvent( int t ) { eventType = t; };
 
-    int type;
+    int eventType;
 
 private:
     QRectF rect;

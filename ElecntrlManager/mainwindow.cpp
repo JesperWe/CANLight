@@ -118,6 +118,7 @@ void MainWindow::updateScene() {
 
             float xp = gItem->maxChildWidth + 120;
             ecsEvent* eItem = new ecsEvent(cGroupModel->numberedItemData[i].events[j]);
+            eItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
             eItem->setPos( xp, midpoint + eventOffset );
             scene->addItem( eItem );
 
@@ -174,36 +175,59 @@ void MainWindow::on_actionSave_triggered()
 
 void MainWindow::on_actionSingle_Click_triggered()
 {
-    if( this->ui->graphicsView->scene()->selectedItems().count() != 1 ) return;
-    QList<QGraphicsItem*> si = this->ui->graphicsView->scene()->selectedItems();
-    cGroupItem* cgi = (cGroupItem*)si[0];
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != cGroupItem::Type ) return;
+    cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::SingleClick );
     updateScene();
 }
 
 void MainWindow::on_actionDouble_Click_triggered()
 {
-    if( this->ui->graphicsView->scene()->selectedItems().count() != 1 ) return;
-    QList<QGraphicsItem*> si = this->ui->graphicsView->scene()->selectedItems();
-    cGroupItem* cgi = (cGroupItem*)si[0];
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != cGroupItem::Type ) return;
+    cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::DoubleClick );
     updateScene();
 }
 
 void MainWindow::on_actionPress_Hold_triggered()
 {
-    if( this->ui->graphicsView->scene()->selectedItems().count() != 1 ) return;
-    QList<QGraphicsItem*> si = this->ui->graphicsView->scene()->selectedItems();
-    cGroupItem* cgi = (cGroupItem*)si[0];
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != cGroupItem::Type ) return;
+    cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::PressHold );
     updateScene();
 }
 
 void MainWindow::on_actionRelease_triggered()
 {
-    if( this->ui->graphicsView->scene()->selectedItems().count() != 1 ) return;
-    QList<QGraphicsItem*> si = this->ui->graphicsView->scene()->selectedItems();
-    cGroupItem* cgi = (cGroupItem*)si[0];
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != cGroupItem::Type ) return;
+    cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::Release );
+    updateScene();
+}
+
+void MainWindow::on_actionNew_triggered()
+{
+    scene->clear();
+    cGroupModel->clear();
+    applianceModel->clear();
+}
+
+void MainWindow::on_actionToggle_On_Off_triggered()
+{
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != ecsEvent::Type ) return;
+    ecsEvent* evt = qgraphicsitem_cast<ecsEvent *>(selection[0]);
+
+    // XXX hook event back to cGroup. Where store data?
+
     updateScene();
 }

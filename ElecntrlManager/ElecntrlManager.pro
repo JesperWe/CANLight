@@ -10,7 +10,8 @@ SOURCES += main.cpp \
     ecstableview.cpp \
     numberedItemModel.cpp \
     cGroupItem.cpp \
-    ecsEvent.cpp
+    ecsEvent.cpp \
+    ecsAction.cpp
 HEADERS += mainwindow.h \
     systemdescription.h \
     ecmgraphicsview.h \
@@ -18,7 +19,8 @@ HEADERS += mainwindow.h \
     ecstableview.h \
     numberedItemModel.h \
     cGroupItem.h \
-    ecsEvent.h
+    ecsEvent.h \
+    ecsAction.h
 FORMS += mainwindow.ui \
     about.ui
 RESOURCES += resources.qrc

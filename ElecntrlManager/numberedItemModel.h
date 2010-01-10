@@ -42,6 +42,7 @@ public:
     void setItemOffset( int itemIndex, float newOffset );
     void updateComplete();
     NumberedItem* findItem( int id );
+    void clear();
 
     QList<NumberedItem> numberedItemData;
 

@@ -26,6 +26,8 @@ private:
     QGraphicsScene *scene;
 
 private slots:
+    void on_actionToggle_On_Off_triggered();
+    void on_actionNew_triggered();
     void on_actionRelease_triggered();
     void on_actionPress_Hold_triggered();
     void on_actionDouble_Click_triggered();

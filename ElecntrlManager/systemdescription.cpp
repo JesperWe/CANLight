@@ -149,5 +149,11 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
         }
     }
 
+    else if(name == "controlevent") {
+        QString evtType = attrs.value("type");
+        if( evtType != "" )
+            cGroups->numberedItemData.last().events.append(evtType.toInt());
+    }
+
     return true;
 }

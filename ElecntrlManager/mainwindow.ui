@@ -155,6 +155,7 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
@@ -196,8 +197,8 @@
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuEvents"/>
-   <addaction name="menuHelp"/>
    <addaction name="menuActions"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="toolBar">
@@ -419,6 +420,11 @@
    </property>
    <property name="text">
     <string>Switch Color</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
    </property>
   </action>
  </widget>

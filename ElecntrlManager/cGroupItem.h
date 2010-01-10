@@ -11,6 +11,8 @@ class cGroupItem : public QGraphicsItem {
 
 public:
     cGroupItem( NumberedItemModel* m, int i );
+    enum { Type = UserType + 1 };
+    int type() const { return Type; }
 
     QRectF boundingRect() const { return rect; }
     void addApplianceTexts();

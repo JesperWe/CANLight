@@ -236,3 +236,12 @@ NumberedItem* NumberedItemModel::findItem( int id )
     }
     return NULL;
 }
+
+//---------------------------------------------------------------------------
+
+void NumberedItemModel::clear()
+{
+    beginResetModel();
+    numberedItemData.clear();
+    endResetModel();
+}
