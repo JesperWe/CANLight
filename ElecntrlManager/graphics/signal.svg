@@ -14,7 +14,7 @@
    id="svg9573"
    version="1.1"
    inkscape:version="0.47 r22583"
-   sodipodi:docname="New document 32">
+   sodipodi:docname="signal.svg">
   <defs
      id="defs9575">
     <inkscape:perspective
@@ -59,7 +59,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -69,7 +69,7 @@
      id="layer1"
      transform="translate(0,-952.36218)">
     <g
-       transform="matrix(3.4802692,0,0,3.4802692,-1104.3368,-310.06418)"
+       transform="matrix(3.4802692,0,0,3.4802692,-1104.3368,-318.06418)"
        id="signal"
        inkscape:label="#g4999">
       <path
