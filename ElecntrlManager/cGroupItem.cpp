@@ -93,6 +93,27 @@ void cGroupItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     painter->drawRoundedRect(rect.x(), rect.y(), rect.width(), rect.height(), 6, 6);
     painter->drawText( rect.x(), rect.y()-6, QString::number(cGroupModel->numberedItemData[itemIndex].id)
                        + " - " + cGroupModel->numberedItemData[itemIndex].description );
+
+    QPixmap* icon = new QPixmap(":/graphics/button.svg");
+    float buttonDim = 20;
+
+    for( int i=0; i<childItems().count(); i++ ) {
+        QPointF pos = ((QGraphicsSimpleTextItem*)(childItems()[i]))->pos();
+        pos.setX( pos.x() + ((QGraphicsSimpleTextItem*)(childItems()[i]))->boundingRect().width() + 10 );
+
+        int func = cGroupModel->numberedItemData[itemIndex].ctrlFunctions[i];
+        if( func != ecsEvent::Unknown ) {
+            painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *icon );
+
+            switch( func ) {
+            case ecsEvent::Key0: { break; }
+            case ecsEvent::Key1: { break; }
+            case ecsEvent::Key2: { break; }
+            case ecsEvent::AnalogSignal: { break; }
+            case ecsEvent::ChangeNotifiation: { break; }
+            }
+        }
+    }
 }
 
 void cGroupItem::dragEnterEvent(QGraphicsSceneDragDropEvent *event)

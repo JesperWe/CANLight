@@ -30,7 +30,8 @@ public:
         Key0,
         Key1,
         Key2,
-        Analog,
+        AnalogSignal,
+        ChangeNotifiation,
         noEventSources
     };
 
