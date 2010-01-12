@@ -21,7 +21,12 @@ void ECMGraphicsView::scaleView(qreal scaleFactor)
 }
 
 void ECMGraphicsView::keyPressEvent( QKeyEvent *event ) {
-    if( event->text() == "+" ) this->scale( 1.1, 1.1 );
-    else if( event->text() == "-" ) this->scale( 0.9, 0.9 );
-    else if( event->key() == Qt::Key_0 && event->modifiers() == Qt::Key_Control ) this->resetTransform();
+    switch( event->text() ) {
+    case "+": { this->scale( 1.1, 1.1 ); break; }
+    case  "-": { this->scale( 0.9, 0.9 ); break; }
+    case "f": { this->resetTransform(); break; }
+    case "1": { emit keypress( event->text() ); break; }
+    case "2": { emit keypress( event->text() ); break; }
+    case "3": { emit keypress( event->text() ); break; }
+    }
 }
