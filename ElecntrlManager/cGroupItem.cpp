@@ -34,13 +34,15 @@ void cGroupItem::addApplianceTexts() {
         QString app = QString::number(cGroupModel->numberedItemData[itemIndex].links[i]->id)
                       + " - " + cGroupModel->numberedItemData[itemIndex].links[i]->description;
         if( childItems().count() > i ) {
-            qDebug() << "   Reusing " + QString::number(i);
+            qDebug() << "   Reusing appTextItem " + QString::number(i);
             ((QGraphicsSimpleTextItem*)(childItems()[i]))->setText(app);
         }
         else {
-            qDebug() << "   Creating " + QString::number(i);
+            qDebug() << "   Creating appTextItem " + QString::number(i);
             QGraphicsSimpleTextItem* txtItem = new QGraphicsSimpleTextItem(app);
             txtItem->setParentItem(this);
+            txtItem->setData( 0, this->itemIndex ); // data[0] is my parents cGroupItem index.
+            txtItem->setData( 1, i );               // data[1] is my child index.
             txtItem->setZValue(2);
             txtItem->setFont( qApp->property( "contentFont" ).value<QFont>() );
             txtItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -95,11 +97,14 @@ void cGroupItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
                        + " - " + cGroupModel->numberedItemData[itemIndex].description );
 
     QPixmap* icon = new QPixmap(":/graphics/button.svg");
-    float buttonDim = 20;
+
+    float buttonDim = 17;
 
     for( int i=0; i<childItems().count(); i++ ) {
         QPointF pos = ((QGraphicsSimpleTextItem*)(childItems()[i]))->pos();
         pos.setX( pos.x() + ((QGraphicsSimpleTextItem*)(childItems()[i]))->boundingRect().width() + 10 );
+
+        if( cGroupModel->numberedItemData[itemIndex].ctrlFunctions.count() <= i ) continue;
 
         int func = cGroupModel->numberedItemData[itemIndex].ctrlFunctions[i];
         if( func != ecsEvent::Unknown ) {

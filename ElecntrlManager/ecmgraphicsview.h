@@ -8,10 +8,13 @@
 
 class ECMGraphicsView : public QGraphicsView
 {
-    Q_OBJECT
+
+Q_OBJECT
 
 public:
-    ECMGraphicsView( QWidget* parent );
+    ECMGraphicsView( QWidget* parent ) : QGraphicsView( parent )
+        { setFocusPolicy( Qt::StrongFocus ); };
+
     void keyPressEvent( QKeyEvent *event );
 
 protected:
@@ -19,6 +22,6 @@ protected:
     void scaleView(qreal scaleFactor);
 
 signals:
-    keypress( QString key );
+    void keypress( QString key );
 };
 #endif // ECMGRAPHICSVIEW_H

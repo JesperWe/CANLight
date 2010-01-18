@@ -4,7 +4,7 @@
 #include <QtGui>
 #include "numberedItemModel.h"
 
-#define lineSpacing 16
+#define lineSpacing 18
 
 class cGroupItem : public QGraphicsItem {
 

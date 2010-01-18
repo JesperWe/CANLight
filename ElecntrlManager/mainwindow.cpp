@@ -55,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->cGroupView->setColumnWidth( 1, 120 );
 
     connect( this->ui->cGroupView->model(), SIGNAL( modified() ), this, SLOT(on_modifiedData()) );
+    connect( this->ui->graphicsView, SIGNAL(keypress(QString)), this, SLOT(on_keypress(QString)) );
 }
 
 MainWindow::~MainWindow()
@@ -309,4 +310,25 @@ void MainWindow::on_actionSwitch_Color_triggered()
     evt->eventAction = ecsAction::ChangeColor;
     cGroupModel->numberedItemData[evt->cGroupIndex].actions[evt->eventIndex] = ecsAction::ChangeColor;
     updateScene();
+}
+
+void MainWindow::on_keypress(QString key) {
+    QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
+    if( selection.count() != 1 ) return;
+    if( selection[0]->type() != QGraphicsSimpleTextItem::Type ) return;
+    QGraphicsSimpleTextItem* txt = qgraphicsitem_cast<QGraphicsSimpleTextItem *>(selection[0]);
+
+    int cgIndex = txt->data(0).toInt();
+    int childIndex = txt->data(1).toInt();
+
+    int func = 0;
+    if( key == "1" ) func = ecsEvent::Key0;
+    else if( key == "2" ) func = ecsEvent::Key1;
+    else if( key == "3" ) func = ecsEvent::Key2;
+    else if( key == "a" ) func = ecsEvent::AnalogSignal;
+    else if( key == "i" ) func = ecsEvent::ChangeNotifiation;
+
+    cGroupModel->numberedItemData[cgIndex].ctrlFunctions[childIndex] = func;
+
+    txt->setSelected( false );
 }

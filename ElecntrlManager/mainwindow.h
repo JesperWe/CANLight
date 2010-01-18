@@ -45,6 +45,8 @@ private slots:
     void on_actionOpen_triggered();
     void on_actionAbout_triggered();
 
+    void on_keypress( QString key );
+
 public slots:
     void on_modifiedData();
 };

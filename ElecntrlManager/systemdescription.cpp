@@ -1,4 +1,6 @@
 #include "systemdescription.h"
+#include "ecsEvent.h"
+
 #include <QXmlSimpleReader>
 #include <QMessageBox>
 #include <QFile>
@@ -147,6 +149,7 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
         NumberedItem* app = appliances->findItem(attrs.value("id").toInt());
         if( app ) {
             cGroups->numberedItemData.last().links.append(app);
+            cGroups->numberedItemData.last().ctrlFunctions.append(ecsEvent::Unknown);
         }
     }
 

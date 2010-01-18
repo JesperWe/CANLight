@@ -1,11 +1,6 @@
 
 #include "ecmgraphicsview.h"
 
-ECMGraphicsView::ECMGraphicsView( QWidget* parent ) : QGraphicsView( parent )
-{
-    setFocusPolicy( Qt::StrongFocus );
-}
-
 void ECMGraphicsView::wheelEvent( QWheelEvent *event )
 {
     scaleView(pow((double)2, -event->delta() / 240.0));
@@ -20,13 +15,12 @@ void ECMGraphicsView::scaleView(qreal scaleFactor)
     scale(scaleFactor, scaleFactor);
 }
 
+
 void ECMGraphicsView::keyPressEvent( QKeyEvent *event ) {
-    switch( event->text() ) {
-    case "+": { this->scale( 1.1, 1.1 ); break; }
-    case  "-": { this->scale( 0.9, 0.9 ); break; }
-    case "f": { this->resetTransform(); break; }
-    case "1": { emit keypress( event->text() ); break; }
-    case "2": { emit keypress( event->text() ); break; }
-    case "3": { emit keypress( event->text() ); break; }
-    }
+    if( event->text() == "+" ) this->scale( 1.1, 1.1 );
+    else if( event->text() == "-" ) this->scale( 0.9, 0.9 );
+    else if( event->text() == "f" ) this->resetTransform();
+    else if( event->text() == "1" ) { emit keypress( event->text() ); }
+    else if( event->text() == "2" ) { emit keypress( event->text() ); }
+    else if( event->text() == "3" ) { emit keypress( event->text() ); }
 }
