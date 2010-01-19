@@ -68,6 +68,7 @@ void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances,
         for( int j=0; j<cGroups->numberedItemData[i].links.count(); j++) {
             out.writeStartElement( "linked-appliance" );
             out.writeAttribute( "id", QString::number(cGroups->numberedItemData[i].links[j]->id) );
+            out.writeAttribute( "function", QString::number(cGroups->numberedItemData[i].ctrlFunctions[j]) );
             out.writeEndElement();
         }
 
@@ -149,7 +150,7 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
         NumberedItem* app = appliances->findItem(attrs.value("id").toInt());
         if( app ) {
             cGroups->numberedItemData.last().links.append(app);
-            cGroups->numberedItemData.last().ctrlFunctions.append(ecsEvent::Unknown);
+            cGroups->numberedItemData.last().ctrlFunctions.append(attrs.value("function").toInt());
         }
     }
 

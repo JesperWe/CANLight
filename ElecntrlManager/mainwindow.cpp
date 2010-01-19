@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     qApp->setProperty( "headerFont", QVariant( QFont( "Helvetica", 11, QFont::Bold )));
     qApp->setProperty( "contentFont", QVariant( QFont( "Helvetica", 9 )));
+    qApp->setProperty( "buttonFont", QVariant( QFont( "Helvetica", 7, QFont::Bold )));
 
     QLinearGradient cgb( 0, 0, 0, 50 );
     cgb.setSpread( QGradient::ReflectSpread );

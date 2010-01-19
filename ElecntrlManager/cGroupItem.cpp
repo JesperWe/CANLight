@@ -108,14 +108,31 @@ void cGroupItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
         int func = cGroupModel->numberedItemData[itemIndex].ctrlFunctions[i];
         if( func != ecsEvent::Unknown ) {
-            painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *icon );
+            painter->setFont( qApp->property( "buttonFont" ).value<QFont>() );
 
             switch( func ) {
-            case ecsEvent::Key0: { break; }
-            case ecsEvent::Key1: { break; }
-            case ecsEvent::Key2: { break; }
-            case ecsEvent::AnalogSignal: { break; }
-            case ecsEvent::ChangeNotifiation: { break; }
+            case ecsEvent::Key0: {
+                    painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *icon );
+                    painter->drawText( pos.x(), pos.y(), buttonDim, buttonDim, Qt::AlignHCenter|Qt::AlignVCenter, "1", 0 );
+                    break; }
+            case ecsEvent::Key1: {
+                    painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *icon );
+                    painter->drawText( pos.x(), pos.y(), buttonDim, buttonDim, Qt::AlignHCenter|Qt::AlignVCenter, "2", 0 );
+                    break; }
+            case ecsEvent::Key2: {
+                    painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *icon );
+                    painter->drawText( pos.x(), pos.y(), buttonDim, buttonDim, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
+                    break; }
+            case ecsEvent::AnalogSignal: {
+                    QPixmap* sym = new QPixmap(":/graphics/signal.svg");
+                    painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
+                    painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *sym );
+                    break; }
+            case ecsEvent::ChangeNotifiation: {
+                    QPixmap* sym = new QPixmap(":/graphics/connections.svg");
+                    painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
+                    painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *sym );
+                    break; }
             }
         }
     }

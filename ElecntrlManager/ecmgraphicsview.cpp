@@ -23,4 +23,6 @@ void ECMGraphicsView::keyPressEvent( QKeyEvent *event ) {
     else if( event->text() == "1" ) { emit keypress( event->text() ); }
     else if( event->text() == "2" ) { emit keypress( event->text() ); }
     else if( event->text() == "3" ) { emit keypress( event->text() ); }
+    else if( event->text() == "a" ) { emit keypress( event->text() ); }
+    else if( event->text() == "i" ) { emit keypress( event->text() ); }
 }
