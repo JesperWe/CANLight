@@ -10,8 +10,8 @@ public:
     static const int polygon[4][2];
 
     ecsAction();
-    ecsAction( int t ) { actionType = t; };
-    ecsAction( int itemIndex, int t ) { cGroupIndex = itemIndex; actionType = t; };
+    ecsAction( int t ) { actionType = t; setAcceptDrops(true); };
+    ecsAction( int itemIndex, int t ) { cGroupSource = itemIndex; actionType = t; setAcceptDrops(true); };
 
     enum { Type = UserType + 3 };
     int type1() const { return Type; }
@@ -19,6 +19,8 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     QPoint anchorIn();
+    void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
+    void dropEvent(QGraphicsSceneDragDropEvent *event);
 
     enum actionType_e {
         None,
@@ -33,7 +35,8 @@ public:
 
 
     int actionType;
-    int cGroupIndex;
+    int cGroupSource;
+    int eventIndex;
 
 };
 

@@ -1,8 +1,14 @@
 #include <QtGui>
 
+#include "mainwindow.h"
+#include "numberedItemModel.h"
+#include "numberedItem.h"
 #include "ecsAction.h"
 
-ecsAction::ecsAction() {}
+ecsAction::ecsAction() {
+    setAcceptDrops(true);
+}
+
 const int ecsAction::polygon[4][2] = { { 0, size/2 }, { size/2, 0 }, { 0, -size/2 }, { -size/2, 0 } };
 
 //------------------------------------------------------------------------------------
@@ -43,4 +49,29 @@ QPoint ecsAction::anchorIn() {
                 this->pos().x()-size/2,
                 this->pos().y()
            );
+}
+
+//------------------------------------------------------------------------------------
+
+void ecsAction::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
+{
+    event->setAccepted(event->mimeData()->hasFormat("x-application/ecs-controlgroup-id"));
+}
+
+//------------------------------------------------------------------------------------
+
+void ecsAction::dropEvent(QGraphicsSceneDragDropEvent *event)
+{
+    const QMimeData* data = event->mimeData();
+
+    if( ! data->hasFormat("x-application/ecs-controlgroup-id") ) return;
+
+    QString idString(data->data("x-application/ecs-controlgroup-id"));
+    int cGroupId = idString.toInt();
+    NumberedItemModel* cgs = ((MainWindow*)(qApp->activeWindow()))->cGroupModel;
+    NumberedItem* cg = cgs->findItem( cGroupSource );
+    cg->targetGroupIndex[eventIndex] = cGroupId;
+
+    this->prepareGeometryChange();
+    ((MainWindow*)qApp->activeWindow())->updateScene();
 }

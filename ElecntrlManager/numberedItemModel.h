@@ -43,6 +43,7 @@ public:
     void clear();
 
     QList<NumberedItem> numberedItemData;
+    QString objectType;
 
 signals:
     void modified();

@@ -43,6 +43,12 @@ QVariant NumberedItemModel::data(const QModelIndex &index, int role) const
         }
     }
 
+    // We use UserRole to determine what type of objects are represented by this model.
+
+    if (role == Qt::UserRole) {
+        return (QVariant) ( objectType );
+    }
+
     else
         return QVariant();
 }
@@ -173,7 +179,7 @@ QMimeData *NumberedItemModel::mimeData(const QModelIndexList &indexes) const
 {
     QMimeData *mimeData = new QMimeData();
 
-    mimeData->setData("x-application/ecs-appliance-id", data(indexes[0], Qt::DisplayRole).toByteArray());
+    mimeData->setData( objectType, data(indexes[0], Qt::DisplayRole).toByteArray());
     return mimeData;
 }
 

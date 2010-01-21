@@ -140,9 +140,7 @@ void cGroupItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
 void cGroupItem::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 {
-    const QMimeData* data = event->mimeData();
-    if( ! data->hasFormat("x-application/ecs-appliance-id") ) return;
-    event->setAccepted( true );
+    event->setAccepted(event->mimeData()->hasFormat("x-application/ecs-appliance-id"));
 }
 
 void cGroupItem::dropEvent(QGraphicsSceneDragDropEvent *event)

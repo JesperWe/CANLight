@@ -42,10 +42,12 @@ MainWindow::MainWindow(QWidget *parent) :
     applianceModel = new NumberedItemModel(this);
     applianceModel->insertColumn(0);
     applianceModel->insertColumn(0);
+    applianceModel->objectType = "x-application/ecs-appliance-id";
 
     cGroupModel = new NumberedItemModel(this);
     cGroupModel->insertColumn(0);
     cGroupModel->insertColumn(0);
+    cGroupModel->objectType = "x-application/ecs-controlgroup-id";
 
     this->ui->appliancesView->setModel( applianceModel );
     this->ui->appliancesView->setColumnWidth( 0, 45 );
@@ -198,6 +200,8 @@ void MainWindow::on_actionSingle_Click_triggered()
     if( selection[0]->type() != cGroupItem::Type ) return;
     cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::SingleClick );
+    cGroupModel->numberedItemData[cgi->itemIndex].actions.append( ecsAction::None );
+    cGroupModel->numberedItemData[cgi->itemIndex].targetGroupIndex.append( -1 );
     updateScene();
 }
 
@@ -208,6 +212,8 @@ void MainWindow::on_actionDouble_Click_triggered()
     if( selection[0]->type() != cGroupItem::Type ) return;
     cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::DoubleClick );
+    cGroupModel->numberedItemData[cgi->itemIndex].actions.append( ecsAction::None );
+    cGroupModel->numberedItemData[cgi->itemIndex].targetGroupIndex.append( -1 );
     updateScene();
 }
 
@@ -218,6 +224,8 @@ void MainWindow::on_actionPress_Hold_triggered()
     if( selection[0]->type() != cGroupItem::Type ) return;
     cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::PressHold );
+    cGroupModel->numberedItemData[cgi->itemIndex].actions.append( ecsAction::None );
+    cGroupModel->numberedItemData[cgi->itemIndex].targetGroupIndex.append( -1 );
     updateScene();
 }
 
@@ -228,6 +236,8 @@ void MainWindow::on_actionRelease_triggered()
     if( selection[0]->type() != cGroupItem::Type ) return;
     cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::Release );
+    cGroupModel->numberedItemData[cgi->itemIndex].actions.append( ecsAction::None );
+    cGroupModel->numberedItemData[cgi->itemIndex].targetGroupIndex.append( -1 );
     updateScene();
 }
 

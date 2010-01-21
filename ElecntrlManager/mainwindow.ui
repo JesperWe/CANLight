@@ -34,7 +34,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -89,6 +89,12 @@
          <widget class="ecsTableView" name="cGroupView">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
+          </property>
+          <property name="dragEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="dragDropMode">
+           <enum>QAbstractItemView::DragOnly</enum>
           </property>
           <property name="horizontalScrollMode">
            <enum>QAbstractItemView::ScrollPerPixel</enum>
@@ -201,7 +207,7 @@
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <widget class="QToolBar" name="toolBar">
+  <widget class="QToolBar" name="toolBar_Main">
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -232,7 +238,7 @@
    <addaction name="actionSettings"/>
    <addaction name="action_something"/>
   </widget>
-  <widget class="QToolBar" name="toolBar_2">
+  <widget class="QToolBar" name="toolBar_Events">
    <property name="windowTitle">
     <string>toolBar_2</string>
    </property>
@@ -247,7 +253,7 @@
    <addaction name="actionPress_Hold"/>
    <addaction name="actionRelease"/>
   </widget>
-  <widget class="QToolBar" name="toolBar_3">
+  <widget class="QToolBar" name="toolBar_Actions">
    <property name="windowTitle">
     <string>toolBar_3</string>
    </property>
