@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     cgb.setColorAt( 1.0, QColor( 220, 220, 220 ) );
     qApp->setProperty( "cGroupBrush", QBrush(cgb) );
 
-    QPen cgp(Qt::black, 2);
+    QPen cgp( Qt::black, 2 );
     qApp->setProperty( "cGroupPen", cgp );
 
     scene = new QGraphicsScene;
@@ -106,26 +106,26 @@ void MainWindow::updateScene() {
 
     scene->clear();
 
-    for( int i=0; i<cGroupModel->numberedItemData.count(); i++ ) {
-        gItem = new cGroupItem( cGroupModel, i );
+    for( int cGroupNo=0; cGroupNo<cGroupModel->numberedItemData.count(); cGroupNo++ ) {
+        gItem = new cGroupItem( cGroupModel, cGroupNo );
         gItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
         scene->addItem( gItem );
 
-        float offset = cGroupModel->accumulatedOffset(i);
-        float myHeight = cGroupModel->calculateHeight(i);
+        float offset = cGroupModel->accumulatedOffset(cGroupNo);
+        float myHeight = cGroupModel->calculateHeight(cGroupNo);
         float midpoint = offset + 0.5*myHeight;
 
         gItem->setPos( 0, midpoint );
 
-        for( int j=0; j<cGroupModel->numberedItemData[i].events.count(); j++ ) {
+        for( int eventNo=0; eventNo<cGroupModel->numberedItemData[cGroupNo].events.count(); eventNo++ ) {
 
-            float eventOffset = (j%2==0) ? -1 : +1; // Alternate pos/neg offset
-            eventOffset *= floor((j+1)/2) * 60;
+            float eventOffset = (eventNo%2==0) ? -1 : +1; // Alternate pos/neg offset
+            eventOffset *= floor((eventNo+1)/2) * 60;
             qDebug() << "      eventOffset " << eventOffset;
 
             float xp = gItem->maxChildWidth + 120;
-            ecsEvent* eItem = new ecsEvent( gItem->itemIndex, cGroupModel->numberedItemData[i].events[j] );
-            eItem->eventIndex = j;
+            ecsEvent* eItem = new ecsEvent( gItem->itemIndex, cGroupModel->numberedItemData[cGroupNo].events[eventNo] );
+            eItem->eventIndex = eventNo;
 
             eItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
             eItem->setPos( xp, midpoint + eventOffset );
@@ -138,9 +138,10 @@ void MainWindow::updateScene() {
             line->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
             scene->addItem( line );
 
-            if( cGroupModel->numberedItemData[i].actions[j] != ecsAction::None ) {
+            if( cGroupModel->numberedItemData[cGroupNo].actions[eventNo] != ecsAction::None ) {
                 xp += 100;
-                ecsAction* aItem = new ecsAction( gItem->itemIndex, cGroupModel->numberedItemData[i].actions[j] );
+                ecsAction* aItem = new ecsAction( cGroupNo, cGroupModel->numberedItemData[cGroupNo].actions[eventNo] );
+                aItem->eventIndex = eventNo;
                 aItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
                 aItem->setPos( xp, midpoint + eventOffset );
                 scene->addItem( aItem );
@@ -201,7 +202,7 @@ void MainWindow::on_actionSingle_Click_triggered()
     cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::SingleClick );
     cGroupModel->numberedItemData[cgi->itemIndex].actions.append( ecsAction::None );
-    cGroupModel->numberedItemData[cgi->itemIndex].targetGroupIndex.append( -1 );
+    cGroupModel->numberedItemData[cgi->itemIndex].targetGroups.append( -1 );
     updateScene();
 }
 
@@ -213,7 +214,7 @@ void MainWindow::on_actionDouble_Click_triggered()
     cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::DoubleClick );
     cGroupModel->numberedItemData[cgi->itemIndex].actions.append( ecsAction::None );
-    cGroupModel->numberedItemData[cgi->itemIndex].targetGroupIndex.append( -1 );
+    cGroupModel->numberedItemData[cgi->itemIndex].targetGroups.append( -1 );
     updateScene();
 }
 
@@ -225,7 +226,7 @@ void MainWindow::on_actionPress_Hold_triggered()
     cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::PressHold );
     cGroupModel->numberedItemData[cgi->itemIndex].actions.append( ecsAction::None );
-    cGroupModel->numberedItemData[cgi->itemIndex].targetGroupIndex.append( -1 );
+    cGroupModel->numberedItemData[cgi->itemIndex].targetGroups.append( -1 );
     updateScene();
 }
 
@@ -237,7 +238,7 @@ void MainWindow::on_actionRelease_triggered()
     cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
     cGroupModel->numberedItemData[cgi->itemIndex].events.append( ecsEvent::Release );
     cGroupModel->numberedItemData[cgi->itemIndex].actions.append( ecsAction::None );
-    cGroupModel->numberedItemData[cgi->itemIndex].targetGroupIndex.append( -1 );
+    cGroupModel->numberedItemData[cgi->itemIndex].targetGroups.append( -1 );
     updateScene();
 }
 

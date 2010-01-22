@@ -31,7 +31,7 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     case ecsAction::ChangeColor: { icon = new QPixmap(":/graphics/connections.svg"); break; }
     }
 
-    painter->setBrush( QColor( 200, 110, 110, 255 ) );
+    painter->setBrush( QColor( 255, 125, 135, 255 ) );
     if( isSelected() ) {
         painter->setBrush( QColor( 0, 50, 255, 60 ) );
     }
@@ -39,7 +39,7 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
 
     painter->drawPolygon( QPolygon( 4, &ecsAction::polygon[0][0] ) );
-    painter->drawPixmap(-size*0.25,-size*0.25,size*0.5,size*0.5,*icon);   
+    painter->drawPixmap(-size*0.25,-size*0.25,size*0.5,size*0.5,*icon);
 }
 
 //------------------------------------------------------------------------------------
@@ -69,8 +69,12 @@ void ecsAction::dropEvent(QGraphicsSceneDragDropEvent *event)
     QString idString(data->data("x-application/ecs-controlgroup-id"));
     int cGroupId = idString.toInt();
     NumberedItemModel* cgs = ((MainWindow*)(qApp->activeWindow()))->cGroupModel;
-    NumberedItem* cg = cgs->findItem( cGroupSource );
-    cg->targetGroupIndex[eventIndex] = cGroupId;
+
+    // In this context the dropped ID is the target (for the action)
+
+    NumberedItem sourceGroup = cgs->numberedItemData[ cGroupSource ];
+
+    sourceGroup.targetGroups[ eventIndex ] = cGroupId;
 
     this->prepareGeometryChange();
     ((MainWindow*)qApp->activeWindow())->updateScene();

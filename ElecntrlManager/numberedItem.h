@@ -22,7 +22,7 @@ public:
     QList<int> ctrlFunctions;
     QList<int> events;
     QList<int> actions;
-    QList<int> targetGroupIndex;
+    QList<int> targetGroups;
 };
 
 #endif // NUMBEREDITEM_H
