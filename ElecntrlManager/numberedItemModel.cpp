@@ -26,20 +26,23 @@ QVariant NumberedItemModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        QString data;
 
-        data = index.column()==0 ?
-               QString::number(numberedItemData.at(index.row()).id)
-                   : numberedItemData.at(index.row()).description;
+        switch( index.column() ) {
+        case 0: { return QString::number(numberedItemData.at(index.row()).id); }
+        case 1: { return numberedItemData.at(index.row()).description; }
+        case 2: { return QVariant(); }
+        }
+    }
 
-        return data;
+    if (role == Qt::DecorationRole && index.column() == 1 ) {
+        return numberedItemData.at(index.row()).typeIcon();
     }
 
     if (role == Qt::TextAlignmentRole) {
-        if(index.column() == 0) {
-            return (QVariant) ( Qt::AlignCenter | Qt::AlignVCenter );
-        } else {
-            return (QVariant) ( Qt::AlignLeft | Qt::AlignVCenter );
+        switch( index.column() ) {
+        case 0: { return (QVariant) ( Qt::AlignCenter | Qt::AlignVCenter ); }
+        case 1: { return (QVariant) ( Qt::AlignLeft | Qt::AlignVCenter ); }
+        case 2: { return (QVariant) ( Qt::AlignCenter | Qt::AlignVCenter ); }
         }
     }
 
@@ -65,6 +68,7 @@ QVariant NumberedItemModel::headerData(int section, Qt::Orientation orientation,
         switch( section ) {
         case 0: { return Qt::AlignHCenter; }
         case 1: { return Qt::AlignLeft; }
+        case 2: { return Qt::AlignHCenter; }
         }
     }
 
@@ -75,12 +79,14 @@ QVariant NumberedItemModel::headerData(int section, Qt::Orientation orientation,
         switch( section ) {
         case 0: { header = tr("ID"); break; }
         case 1: { header = tr("Description"); break; }
+        case 2: { header = tr("Type"); break; }
         }
 
         return header;
     }
     else {
-        return QString("%1").arg(section);
+        return QVariant();
+        //return QString("%1").arg(section);
     }
 }
 
@@ -88,12 +94,13 @@ QVariant NumberedItemModel::headerData(int section, Qt::Orientation orientation,
 
 Qt::ItemFlags NumberedItemModel::flags(const QModelIndex &index) const
 {
-    Qt::ItemFlags flags = Qt::ItemIsEditable;
+    Qt::ItemFlags flags = 0;
 
     if (!index.isValid())
         return Qt::ItemIsEnabled;
 
     if( index.column() == 0 ) flags |= Qt::ItemIsDragEnabled;
+    if( index.column() != 2 ) flags |= Qt::ItemIsEditable;
 
     return QAbstractItemModel::flags(index) | flags;
 }
@@ -103,7 +110,9 @@ Qt::ItemFlags NumberedItemModel::flags(const QModelIndex &index) const
 bool NumberedItemModel::setData(const QModelIndex &index,
                              const QVariant &value, int role)
 {
-    if (index.isValid() && role == Qt::EditRole) {
+    if( ! index.isValid() ) return false;
+
+    if( role == Qt::EditRole) {
         switch( index.column() ) {
         case 0: { numberedItemData[index.row()].id = value.toInt(); break; }
         case 1: { numberedItemData[index.row()].description = value.toString(); break; }
@@ -113,6 +122,14 @@ bool NumberedItemModel::setData(const QModelIndex &index,
         emit modified();
         return true;
     }
+
+    if( role == Qt::UserRole) {
+        numberedItemData[index.row()].itemType = 3 - numberedItemData[index.row()].itemType;
+        emit dataChanged(index, index);
+        emit modified();
+        return true;
+    }
+
     return false;
 }
 

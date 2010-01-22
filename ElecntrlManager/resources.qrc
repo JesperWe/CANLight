@@ -33,5 +33,6 @@
         <file>graphics/logo-jm60.png</file>
         <file>graphics/bulb-lit.svg</file>
         <file>graphics/button.svg</file>
+        <file>graphics/flash.svg</file>
     </qresource>
 </RCC>

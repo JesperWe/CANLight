@@ -52,10 +52,14 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->appliancesView->setModel( applianceModel );
     this->ui->appliancesView->setColumnWidth( 0, 45 );
     this->ui->appliancesView->setColumnWidth( 1, 120 );
+    this->ui->appliancesView->setColumnWidth( 2, 20 );
+    this->ui->appliancesView->verticalHeader()->hide();
 
     this->ui->cGroupView->setModel( cGroupModel );
     this->ui->cGroupView->setColumnWidth( 0, 45 );
     this->ui->cGroupView->setColumnWidth( 1, 120 );
+    this->ui->cGroupView->setColumnWidth( 2, 20 );
+    this->ui->cGroupView->verticalHeader()->hide();
 
     connect( this->ui->cGroupView->model(), SIGNAL( modified() ), this, SLOT(on_modifiedData()) );
     connect( this->ui->graphicsView, SIGNAL(keypress(QString)), this, SLOT(on_keypress(QString)) );

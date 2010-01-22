@@ -20,6 +20,7 @@ signals:
 private slots:
     void on_customContextMenuRequested( QPoint pos );
     void on_addItemAction();
+    void on_changeItemAction();
 };
 
 #endif // ECSTABLEVIEW_H
