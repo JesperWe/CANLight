@@ -111,6 +111,9 @@ void MainWindow::updateScene() {
     scene->clear();
 
     for( int cGroupNo=0; cGroupNo<cGroupModel->numberedItemData.count(); cGroupNo++ ) {
+
+        if( cGroupModel->numberedItemData[cGroupNo].itemType != NumberedItem::Controller ) continue;
+
         gItem = new cGroupItem( cGroupModel, cGroupNo );
         gItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
         scene->addItem( gItem );

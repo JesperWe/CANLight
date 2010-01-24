@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<systemdescription>
+    <appliance id="234" description="Hej på dig!"/>
+    <appliance id="123" description="Allan tar kakan"/>
+    <appliance id="46" description="Aft Cabin Port S2"/>
+    <appliance id="45" description="Aft Cabin Port S1"/>
+    <appliance id="17" description="Nav Table 2"/>
+    <controlgroup id="1" description="Test Group" type="2">
+        <linked-appliance id="123" function="2"/>
+        <linked-appliance id="45" function="3"/>
+    </controlgroup>
+    <controlgroup id="0" description="Backlight" type="1">
+        <linked-appliance id="17" function="4"/>
+        <linked-appliance id="46" function="1"/>
+        <linked-appliance id="234" function="5"/>
+        <controlevent type="0" action="5" targetgroup="-1"/>
+        <controlevent type="2" action="0" targetgroup="-1"/>
+        <controlevent type="1" action="5" targetgroup="-1"/>
+    </controlgroup>
+</systemdescription>

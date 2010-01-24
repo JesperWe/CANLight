@@ -20,6 +20,7 @@ QVariant NumberedItem::typeIcon() const {
     switch( itemType ) {
     case NumberedItem::Controller: { return QIcon(":/graphics/finger.svg"); }
     case NumberedItem::Effector: { return QIcon(":/graphics/flash.svg"); }
+    case NumberedItem::Appliance: { return QIcon(":/graphics/appliance.svg"); }
     }
     return QVariant();
 }

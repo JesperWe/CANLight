@@ -1,3 +1,5 @@
+#include <QIcon>
+
 #include "numberedItem.h"
 #include "numberedItemModel.h"
 
@@ -35,7 +37,13 @@ QVariant NumberedItemModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::DecorationRole && index.column() == 1 ) {
-        return numberedItemData.at(index.row()).typeIcon();
+
+        if( this->objectType == "x-application/ecs-appliance-id" ) {
+            return QIcon(":/graphics/appliance.svg");
+        }
+        else {
+            return numberedItemData.at(index.row()).typeIcon();
+        }
     }
 
     if (role == Qt::TextAlignmentRole) {
@@ -124,7 +132,13 @@ bool NumberedItemModel::setData(const QModelIndex &index,
     }
 
     if( role == Qt::UserRole) {
-        numberedItemData[index.row()].itemType = 3 - numberedItemData[index.row()].itemType;
+        int v = value.toInt();
+
+        // v == -1 means toggle between 1 and 2.
+
+        if( v == -1 ) v = 3 - numberedItemData[index.row()].itemType;
+
+        numberedItemData[index.row()].itemType = v;
         emit dataChanged(index, index);
         emit modified();
         return true;
@@ -220,6 +234,9 @@ float NumberedItemModel::accumulatedOffset( int itemIndex )
 float NumberedItemModel::calculateHeight( int itemIndex )
 {
     float myHeight = 0;
+
+    if( numberedItemData[itemIndex].itemType != NumberedItem::Controller )
+        return myHeight;
 
     myHeight = 55 + numberedItemData[itemIndex].links.count()*16;
 

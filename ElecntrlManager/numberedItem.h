@@ -12,6 +12,7 @@ public:
         None,
         Controller,
         Effector,
+        Appliance,
         noItemTypes
     };
 

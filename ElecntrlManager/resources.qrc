@@ -34,5 +34,6 @@
         <file>graphics/bulb-lit.svg</file>
         <file>graphics/button.svg</file>
         <file>graphics/flash.svg</file>
+        <file>graphics/appliance.svg</file>
     </qresource>
 </RCC>

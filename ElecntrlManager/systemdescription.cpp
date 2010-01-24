@@ -64,6 +64,7 @@ void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances,
         out.writeStartElement( "controlgroup" );
         out.writeAttribute( "id", QString::number(cGroups->numberedItemData[i].id) );
         out.writeAttribute( "description", cGroups->numberedItemData[i].description );
+        out.writeAttribute( "type", QString::number(cGroups->numberedItemData[i].itemType) );
 
         for( int j=0; j<cGroups->numberedItemData[i].links.count(); j++) {
             out.writeStartElement( "linked-appliance" );
@@ -145,6 +146,7 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 
         index = cGroups->index( row, 1, QModelIndex() );
         cGroups->setData( index, attrs.value("description"), Qt::EditRole );
+        cGroups->setData( index, attrs.value("type"), Qt::UserRole );
     }
 
     else if(name == "linked-appliance") {

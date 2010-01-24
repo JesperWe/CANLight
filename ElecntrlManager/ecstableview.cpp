@@ -40,6 +40,6 @@ void ecsTableView::on_addItemAction() {
 }
 
 void ecsTableView::on_changeItemAction() {
-    model()->setData( this->selectedIndexes()[0], 0, Qt::UserRole ); // XXX Handle multiple seletion.
+    model()->setData( this->selectedIndexes()[0], -1, Qt::UserRole ); // XXX Handle multiple seletion.
     numberedItemContextMenu->hide();
 }
