@@ -10,26 +10,23 @@
 class SystemDescription {
 
 public:
-    SystemDescription();
-    static QString loadedFileName;
-    static void loadFile( QString fromFile, NumberedItemModel* appliances, NumberedItemModel* cGroups  );
-    static void saveFile( QString toFile, NumberedItemModel* appliances, NumberedItemModel* cGroups );
-    void addAppliance( QString id, QString description );
-    void addControlgroup( QString id, QString description );
-    //void addConnection( QString id, QString description );
+	SystemDescription();
+	static QString loadedFileName;
+	static void loadFile( QString fromFile, NumberedItemModel* appliances, NumberedItemModel* cGroups  );
+	static void saveFile( QString toFile, NumberedItemModel* appliances, NumberedItemModel* cGroups );
 };
 
 class SysDescrHandler : public QXmlDefaultHandler {
 public:
-    SysDescrHandler( NumberedItemModel* appliances, NumberedItemModel* cGroups );
-    bool fatalError (const QXmlParseException & exception);
-    bool startDocument();
-    bool endElement( const QString&, const QString&, const QString &name );
-    bool startElement( const QString&, const QString&, const QString &name, const QXmlAttributes &attrs );
+	SysDescrHandler( NumberedItemModel* appliances, NumberedItemModel* cGroups );
+	bool fatalError (const QXmlParseException & exception);
+	bool startDocument();
+	bool endElement( const QString&, const QString&, const QString &name );
+	bool startElement( const QString&, const QString&, const QString &name, const QXmlAttributes &attrs );
 
 private:
-    NumberedItemModel* appliances;
-    NumberedItemModel* cGroups;
+	NumberedItemModel* appliances;
+	NumberedItemModel* cGroups;
 };
 
 #endif // SYSTEMDESCRIPTION_H
