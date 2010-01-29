@@ -15,6 +15,6 @@
         <linked-appliance id="234" function="5"/>
         <controlevent type="0" action="5" targetgroup="-1"/>
         <controlevent type="2" action="0" targetgroup="-1"/>
-        <controlevent type="1" action="5" targetgroup="-1"/>
+        <controlevent type="1" action="5" targetgroup="1"/>
     </controlgroup>
 </systemdescription>

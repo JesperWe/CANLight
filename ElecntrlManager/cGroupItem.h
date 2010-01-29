@@ -9,26 +9,28 @@
 class cGroupItem : public QGraphicsItem {
 
 public:
-    enum { Type = UserType + 1 };
-    int type() const { return Type; };
+	enum { Type = UserType + 1 };
+	int type() const { return Type; };
 
-    cGroupItem( NumberedItemModel* m, int i );
+	cGroupItem( NumberedItemModel* m, int i );
 
-    QRectF boundingRect() const { return rect; };
-    void addApplianceTexts();
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-    void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
-    void dropEvent(QGraphicsSceneDragDropEvent *event);
+	QRectF boundingRect() const { return rect; };
+	void addApplianceTexts();
+	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+	void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
+	void dropEvent(QGraphicsSceneDragDropEvent *event);
 
-    QPoint anchorOut();
+	QPoint anchorOut();
+	QPoint anchorIn();
 
-    float maxChildWidth;
-    int itemIndex;
-    QRectF rect;
+	float maxChildWidth;
+	int itemIndex;
+	QRectF rect;
+	QPoint sourceEventPos;
 
 private:
-    void recalcBoundingRect();
-    NumberedItemModel* cGroupModel;
+	void recalcBoundingRect();
+	NumberedItemModel* cGroupModel;
 
 };
 
