@@ -28,10 +28,9 @@ QVariant NumberedItemModel::data(const QModelIndex &index, int role) const
 		return QVariant();
 
 	if (role == Qt::DisplayRole || role == Qt::EditRole) {
-
 		switch( index.column() ) {
-		case 0: { return QString::number(numberedItems.at(index.row())->id); }
-		case 1: { return numberedItems.at(index.row())->description; }
+		case 0: { return QString::number( numberedItems[ index.row() ]->id ); }
+		case 1: { return numberedItems[ index.row() ]->description; }
 		case 2: { return QVariant(); }
 		}
 	}
@@ -160,19 +159,24 @@ bool NumberedItemModel::setData(const QModelIndex &index,
 bool NumberedItemModel::insertRows(int position, int rows, const QModelIndex &parent)
 {
 	Q_UNUSED(parent);
-
+	NumberedItem* newItem;
 	int maxId = 0;
-	for( int i=0; i<numberedItems.count(); i++ )
+
+	for( int i=0; i<numberedItems.count(); i++ )  {
 		if( numberedItems[i]->id > maxId ) maxId = numberedItems[i]->id;
+		qDebug() << i << " " << maxId;
+	}
 
 	beginInsertRows( QModelIndex(), position, position+rows-1 );
 
 	for( int row = 0; row < rows; ++row ) {
-		numberedItems.append(new NumberedItem());
-		numberedItems.last()->id = ++maxId;
+		newItem = new NumberedItem();
+		newItem->id = ++maxId;
+		numberedItems.append(  newItem );
 	}
 
 	endInsertRows();
+
 	return true;
 }
 

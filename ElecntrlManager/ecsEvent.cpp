@@ -1,31 +1,16 @@
 #include "ecsEvent.h"
+#include "ecsManager.h"
 
 QRectF ecsEvent::boundingRect() const {
+	float iconDim = ecsManager::EventSize;
 	return QRectF( -0.7*iconDim,-0.7*iconDim,iconDim*1.4,iconDim*1.4 );
-}
-
-//------------------------------------------------------------------------------------
-
-QPoint ecsEvent::anchorIn() {
-	return QPoint(
-				this->pos().x()-iconDim*0.7,
-				this->pos().y()
-		   );
-}
-
-//------------------------------------------------------------------------------------
-
-QPoint ecsEvent::anchorOut() {
-	return QPoint(
-				this->pos().x()+iconDim*0.7,
-				this->pos().y()
-		   );
 }
 
 //------------------------------------------------------------------------------------
 
 void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
 	QPixmap* icon;
+	float iconDim = ecsManager::EventSize;
 
 	switch( eventType ) {
 	case ecsEvent::SingleClick: { icon = new QPixmap(":/graphics/click-single.svg"); break; }
@@ -35,9 +20,10 @@ void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 	default: { return; }
 	}
 
-	painter->setBrush( QColor( 255, 210, 60, 170 ) );
 	if( isSelected() ) {
-		painter->setBrush( QColor( 0, 50, 255, 60 ) );
+		painter->setBrush( qApp->property( "SelectionColor" ).value<QColor>() );
+	} else {
+		painter->setBrush( qApp->property( "EventColor" ).value<QColor>() );
 	}
 
 	painter->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
@@ -47,26 +33,21 @@ void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 	painter->drawEllipse(-0.7*iconDim,-0.7*iconDim,iconDim*1.4,iconDim*1.4);
 	painter->drawPixmap(-iconDim/2,-iconDim/2,iconDim,iconDim,*icon);
 }
-//---------------------------------------------------------------------------
 
-void ecsEvent::drawInputFrom( QPoint from, QGraphicsScene* scene ) {
+//------------------------------------------------------------------------------------
 
-	QGraphicsLineItem* line = new QGraphicsLineItem(
-					from.x(),from.y(), anchorIn().x(), anchorIn().y(), 0, 0);
-
-	line->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
-
-	scene->addItem( line );
+QPoint ecsEvent::anchorIn() {
+	return QPoint(
+			this->pos().x() - ecsManager::EventSize*0.7,
+				this->pos().y()
+		   );
 }
 
+//------------------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------
-
-void ecsEvent::drawOutputTo( QPoint to, QGraphicsScene* scene ) {
-	QGraphicsLineItem* line = new QGraphicsLineItem(
-					 anchorOut().x(), anchorOut().y(), to.x(), to.y(), 0, 0);
-
-	line->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
-
-	scene->addItem( line );
+QPoint ecsEvent::anchorOut() {
+	return QPoint(
+				this->pos().x() + ecsManager::EventSize*0.7,
+				this->pos().y()
+		   );
 }

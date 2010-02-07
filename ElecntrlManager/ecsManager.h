@@ -1,6 +1,8 @@
 #ifndef ECSMANAGER_H
 #define ECSMANAGER_H
 
+#include <QtGUI>
+
 class ecsManager {
 
 public:
@@ -12,11 +14,13 @@ public:
 		Event,
 		Action
 	};
-	static const float GroupChildMinimumWidth = 60;
-	static const float ApplianceLineSpacing = 12;
-	static const float CtrlFunctionIconWidth = 30;
 
-	static const float EventSize = 60;
+	static const float GroupChildMinimumWidth = 60;
+	static const float ApplianceLineSpacing = 20;
+	static const float CtrlFunctionIconWidth = 30;
+	static const float CtrlButtonSize = 17;
+
+	static const float EventSize = 40;
 	static const float EventOffset_X = 120;
 	static const float EventOffset_Y = 60;
 

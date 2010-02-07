@@ -13,7 +13,6 @@
 #include "ecsEvent.h"
 #include "ecsAction.h"
 
-
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
@@ -23,6 +22,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	qApp->setProperty( "headerFont", QVariant( QFont( "Helvetica", 11, QFont::Bold )));
 	qApp->setProperty( "contentFont", QVariant( QFont( "Helvetica", 9 )));
 	qApp->setProperty( "buttonFont", QVariant( QFont( "Helvetica", 7, QFont::Bold )));
+	qApp->setProperty( "SelectionColor", QVariant( QColor( 0, 50, 255, 60 )));
+	qApp->setProperty( "EventColor", QVariant( QColor( 255, 210, 60, 170 )));
 
 	QLinearGradient cgb( 0, 0, 0, 50 );
 	cgb.setSpread( QGradient::ReflectSpread );
@@ -107,6 +108,7 @@ void MainWindow::on_modifiedData()
 }
 
 //--------------------------------------------------------------------
+// Alternate pos/neg offset
 
 float MainWindow::calculateEventOffset( bool & first, float eventOffset ) {
 	if( first ) {
@@ -114,9 +116,11 @@ float MainWindow::calculateEventOffset( bool & first, float eventOffset ) {
 		first = false;
 	}
 	else {
-		if( eventOffset > 0 ) eventOffset = eventOffset + ecsManager::EventOffset_Y;
-		else eventOffset = eventOffset - ecsManager::EventOffset_Y;
-		eventOffset = - eventOffset;	// Alternate pos/neg offset
+		if( eventOffset > 0 ) eventOffset = - eventOffset;
+		else {
+			eventOffset = - eventOffset;
+			eventOffset = eventOffset + ecsManager::EventOffset_Y;
+		}
 	}
 	return eventOffset;
 }
@@ -128,7 +132,6 @@ void MainWindow::updateScene() {
 	float myHeight, midpoint, eventOffset, x_pos, accumulatedOffset;
 	bool first;
 
-	scene->clear();
 	accumulatedOffset = 0;
 
 	foreach ( controlGroup, cGroupModel->numberedItems ) {
@@ -138,12 +141,16 @@ void MainWindow::updateScene() {
 		// Set the position of this group based on how much space previous
 		// groups occupied, and our own height.
 
+		controlGroup->setAcceptDrops(true);
+		controlGroup->setFlag( QGraphicsItem::ItemIsSelectable );
+
 		myHeight =  controlGroup->calculateHeight();
 		midpoint = accumulatedOffset + 0.5 * myHeight;
 		accumulatedOffset += myHeight;
 
 		controlGroup->setPos( 0, midpoint );
-		scene->addItem( controlGroup );
+
+		if( ! scene->items().contains( controlGroup) ) scene->addItem( controlGroup );
 
 		// Now create graphics items for all the events of this group.
 
@@ -151,12 +158,11 @@ void MainWindow::updateScene() {
 
 		foreach( ecsEvent* event, controlGroup->events ) {
 
-			eventOffset = calculateEventOffset( first, eventOffset ) + midpoint;
+			eventOffset = calculateEventOffset( first, eventOffset );
 			x_pos = controlGroup->longestChildWidth + ecsManager::EventOffset_X;
 
 			event->setPos( x_pos, eventOffset );
-			scene->addItem( event );
-			event->drawInputFrom( controlGroup->anchorOut(), scene );
+			event->setParentItem( controlGroup );
 
 			// Draw the action item if it exists.
 
@@ -165,7 +171,6 @@ void MainWindow::updateScene() {
 				x_pos += ecsManager::ActionOffset_X;
 				event->eventAction->setPos( x_pos, eventOffset );
 				scene->addItem( event->eventAction );
-				event->drawOutputTo( event->eventAction->anchorIn(), scene );
 
 				// Now create an item for the control groups this event is controlling.
 
@@ -173,11 +178,11 @@ void MainWindow::updateScene() {
 					targetGroup->setPos( event->eventAction->pos() );
 					targetGroup->moveBy( ecsManager::TargetGroupOffset_X, 0 );
 					scene->addItem( targetGroup );
-					event->eventAction->drawOutputTo( targetGroup->anchorIn(), scene );
 				}
 			}
 		}
 	}
+	scene->update( scene->sceneRect() );
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -275,18 +280,13 @@ void MainWindow::on_actionSwitch_Color_triggered() { _AddAction( ecsAction::Chan
 
 void MainWindow::on_keypress(QString key) {
 	QList<QGraphicsItem*> selection;
-	QGraphicsSimpleTextItem* textItem;
-	NumberedItem* appliance;
-	int linkIndex;
+	QGraphicsSimpleTextItem* link;
 
 	selection = this->ui->graphicsView->scene()->selectedItems();
 	if( selection.count() != 1 ) return;
 	if( selection[0]->type() != QGraphicsSimpleTextItem::Type ) return;
 
-	textItem = qgraphicsitem_cast<QGraphicsSimpleTextItem *>(selection[0]);
-
-	 appliance = (NumberedItem*)( textItem->data(0).value<void*>() );
-	 linkIndex = textItem->data(1).toInt();
+	link = qgraphicsitem_cast<QGraphicsSimpleTextItem *>(selection[0]);
 
 	int func = 0;
 	if( key == "1" ) func = ecsEvent::Key0;
@@ -295,7 +295,6 @@ void MainWindow::on_keypress(QString key) {
 	else if( key == "a" ) func = ecsEvent::AnalogSignal;
 	else if( key == "i" ) func = ecsEvent::ChangeNotifiation;
 
-	appliance->ctrlFunctions[linkIndex] = func;
-
-	textItem->setSelected( false );
+	link->setData( 1, func );
+	link->setSelected( false );
 }

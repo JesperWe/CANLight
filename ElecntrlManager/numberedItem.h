@@ -2,6 +2,7 @@
 #define NUMBEREDITEM_H
 
 #include <QtGui>
+#include "ecsManager.h"
 
 class NumberedItemModel;
 class ecsAction;
@@ -30,9 +31,11 @@ public:
 		id = 0;
 		description = "N/A";
 		itemType = NumberedItem::Controller;
+		longestChildWidth = ecsManager::GroupChildMinimumWidth;
+		offset = 0;
 	}
 
-	NumberedItem( NumberedItemModel* m, int i );
+	NumberedItem( int newId );
 
 	//--------------------------------------------------------------------------------------
 
@@ -44,7 +47,6 @@ public:
 	float calculateHeight();
 	void recalcBoundingRect();
 	QRectF boundingRect() const { return rect; };
-	void addApplianceTexts();
 
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
@@ -65,10 +67,7 @@ public:
 	float          longestChildWidth;
 
 	QRectF rect;
-
-	QList<NumberedItem*> links;
-	QList<int> ctrlFunctions;
-
+	QList<QGraphicsSimpleTextItem*> links; // data[0] is pointer to appliance item. data[1] is ctrlFunction.
 	QList<ecsEvent*> events;
 };
 

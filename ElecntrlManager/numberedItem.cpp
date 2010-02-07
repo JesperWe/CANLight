@@ -6,12 +6,11 @@
 #include "mainwindow.h"
 #include "ecsEvent.h"
 
-NumberedItem::NumberedItem( NumberedItemModel* m, int i ) {
-	id = i;
-	setAcceptDrops(true);
+NumberedItem::NumberedItem( int newId ) : QGraphicsItem(0) {
+	id = newId;
 	setFlag( QGraphicsItem::ItemIsSelectable, true );
 	longestChildWidth = ecsManager::GroupChildMinimumWidth;
-	qDebug() << "Create " << i;
+	qDebug() << "Create " << newId;
 }
 
 bool NumberedItem::compareIdsAsc( const NumberedItem* a1, const NumberedItem* a2 ) { return a1->id < a2->id; }
@@ -55,19 +54,13 @@ float NumberedItem::calculateHeight()
 //------------------------------------------------------------------------------------
 
 QPoint NumberedItem::anchorIn() {
-		return QPoint(
-								rect.x()  + this->pos().x(),
-								rect.y() + rect.height()/2 + this->pos().y()
-				   );
+		return QPoint( rect.x(), rect.y() + rect.height()/2 );
 }
 
 //------------------------------------------------------------------------------------
 
 QPoint NumberedItem::anchorOut() {
-		return QPoint(
-								rect.x() + rect.width() + this->pos().x(),
-								rect.y() + rect.height()/2 + this->pos().y()
-				   );
+		return QPoint( rect.x() + rect.width(), rect.y() + rect.height()/2 );
 }
 
 //------------------------------------------------------------------------------------
@@ -88,62 +81,10 @@ void NumberedItem::recalcBoundingRect()
 
 //------------------------------------------------------------------------------------
 
-void NumberedItem::addApplianceTexts() {
-	QGraphicsSimpleTextItem* txtItem;
-	int noChildren, noAppliances;
-	QString app;
-	float y_pos;
-
-	noChildren = childItems().count();
-	noAppliances = 0;
-
-	foreach( NumberedItem* appliance, links ) {
-		noAppliances++;
-		app = QString::number( appliance->id ) + " - " + appliance->description;
-
-		if( noChildren > noAppliances ) {
-			qDebug() << "   Reusing appTextItem " + QString::number(noAppliances);
-			txtItem = (QGraphicsSimpleTextItem*)(childItems()[noAppliances-1]);
-		}
-		else {
-			qDebug() << "   Creating appTextItem " + QString::number(noAppliances);
-			txtItem = new QGraphicsSimpleTextItem();
-			txtItem->setParentItem(this);
-			txtItem->setZValue(2);
-			txtItem->setFont( qApp->property( "contentFont" ).value<QFont>() );
-			txtItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
-		}
-
-		txtItem->setText(app);
-		txtItem->setData( 0, QVariant::fromValue( (void *) appliance ) );   // Store a pointer to the source appliance object.
-		txtItem->setData( 1, noAppliances-1 );   // And our index.
-	}
-
-	if( childrenBoundingRect().width() > ecsManager::GroupChildMinimumWidth ) {
-		longestChildWidth = childrenBoundingRect().width();
-	} else {
-		longestChildWidth = ecsManager::GroupChildMinimumWidth;
-	}
-
-	longestChildWidth += ecsManager::CtrlFunctionIconWidth;
-
-	recalcBoundingRect();
-
-	y_pos = 0;
-	foreach ( QGraphicsItem* child, childItems() ) {
-		child->setPos( rect.x() + 6, rect.y() + 4 + y_pos );
-		y_pos += ecsManager::ApplianceLineSpacing;
-	}
-}
-
-//------------------------------------------------------------------------------------
-
 void NumberedItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 					   QWidget *widget)
 {
-	qDebug() << "NumberedItem Paint " << QString::number(id) << " : " << this->isSelected();
-
-	addApplianceTexts();
+	recalcBoundingRect();
 
 	if( isSelected() ) {
 		painter->setPen( Qt::NoPen );
@@ -160,43 +101,48 @@ void NumberedItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 
 	QPixmap* icon = new QPixmap(":/graphics/button.svg");
 
-	float buttonDim = 17;
+	float buttonSize = ecsManager::CtrlButtonSize;
 
-	for( int i=0; i<childItems().count(); i++ ) {
-		QPointF pos = ((QGraphicsSimpleTextItem*)(childItems()[i]))->pos();
-		pos.setX( pos.x() + ((QGraphicsSimpleTextItem*)(childItems()[i]))->boundingRect().width() + 10 );
+	foreach( QGraphicsItem* link, childItems() ) {
+		QPointF pos = link->pos();
+		pos.setX( pos.x() + link->boundingRect().width() + 10 );
 
-		if( ctrlFunctions.count() <= i ) continue;
+		int func = link->data(1).toInt();
 
-		int func = ctrlFunctions[i];
 		if( func != ecsEvent::Unknown ) {
 			painter->setFont( qApp->property( "buttonFont" ).value<QFont>() );
 
 			switch( func ) {
 			case ecsEvent::Key0: {
-					painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *icon );
-					painter->drawText( pos.x(), pos.y(), buttonDim, buttonDim, Qt::AlignHCenter|Qt::AlignVCenter, "1", 0 );
+					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *icon );
+					painter->drawText( pos.x(), pos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "1", 0 );
 					break; }
 			case ecsEvent::Key1: {
-					painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *icon );
-					painter->drawText( pos.x(), pos.y(), buttonDim, buttonDim, Qt::AlignHCenter|Qt::AlignVCenter, "2", 0 );
+					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *icon );
+					painter->drawText( pos.x(), pos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "2", 0 );
 					break; }
 			case ecsEvent::Key2: {
-					painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *icon );
-					painter->drawText( pos.x(), pos.y(), buttonDim, buttonDim, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
+					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *icon );
+					painter->drawText( pos.x(), pos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
 					break; }
 			case ecsEvent::AnalogSignal: {
 					QPixmap* sym = new QPixmap(":/graphics/signal.svg");
 					painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
-					painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *sym );
+					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *sym );
 					break; }
 			case ecsEvent::ChangeNotifiation: {
 					QPixmap* sym = new QPixmap(":/graphics/connections.svg");
 					painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
-					painter->drawPixmap( pos.x(), pos.y(), buttonDim, buttonDim, *sym );
+					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *sym );
 					break; }
 			}
 		}
+	}
+
+	// Now draw the output line to our events.
+
+	foreach( ecsEvent* event, events ) {
+		painter->drawLine( anchorOut().x(), anchorOut().y(), event->anchorIn().x(), event->anchorIn().y() );
 	}
 }
 
@@ -209,18 +155,44 @@ void NumberedItem::dragEnterEvent( QGraphicsSceneDragDropEvent *event ) {
 //------------------------------------------------------------------------------------
 
 void NumberedItem::dropEvent( QGraphicsSceneDragDropEvent *event ) {
+	NumberedItemModel* appsModel;
+	NumberedItem* appliance;
+	QGraphicsSimpleTextItem* link;
+	float y_pos;
+
 	const QMimeData* data = event->mimeData();
 
 	if( ! data->hasFormat("x-application/ecs-appliance-id") ) return;
 
 	QString idString(data->data("x-application/ecs-appliance-id"));
 	int applianceId = idString.toInt() ;
-	NumberedItemModel* apps = ((MainWindow*)(qApp->activeWindow()))->applianceModel;
-	NumberedItem* app = apps->findItem( applianceId );
 
-	this->prepareGeometryChange();
-	this->links.append( app );
-	this->ctrlFunctions.append( ecsEvent::Key0 );
+	appsModel = ((MainWindow*)(qApp->activeWindow()))->applianceModel;
+	appliance = appsModel->findItem( applianceId );
+
+	prepareGeometryChange();
+
+	link = new QGraphicsSimpleTextItem( QString::number( appliance->id ) + " - " + appliance->description );
+	link->setData( 0, QVariant::fromValue( (void*) appliance ) );
+	link->setData( 1, ecsEvent::Key0 );
+	link->setParentItem(this);
+	link->setZValue(2);
+	link->setFont( qApp->property( "contentFont" ).value<QFont>() );
+	link->setFlag(QGraphicsItem::ItemIsSelectable, true);
+
+	links.append( link );
+
+	if( childrenBoundingRect().width() > ecsManager::GroupChildMinimumWidth ) {
+		longestChildWidth = childrenBoundingRect().width();
+	} else {
+		longestChildWidth = ecsManager::GroupChildMinimumWidth;
+	}
+	longestChildWidth += ecsManager::CtrlFunctionIconWidth;
 	recalcBoundingRect();
-	((MainWindow*)qApp->activeWindow())->updateScene();
+
+	y_pos = 0;
+	foreach ( QGraphicsItem* child, childItems() ) {
+		child->setPos( rect.x() + 6, rect.y() + 4 + y_pos );
+		y_pos += ecsManager::ApplianceLineSpacing;
+	}
 }

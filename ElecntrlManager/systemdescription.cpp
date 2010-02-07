@@ -72,13 +72,11 @@ void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances,
 		out.writeAttribute( "description", group->description );
 		out.writeAttribute( "type", QString::number( group->itemType) );
 
-		QListIterator<int> ctrlFunction(group->ctrlFunctions);
-
-		foreach( NumberedItem* appliance,  group->links ) {
-			assert( ctrlFunction.hasNext() );
+		foreach( QGraphicsSimpleTextItem* link,  group->links ) {
+			NumberedItem* linkedapp = (NumberedItem*)(link->data(0).value<void*>());
 			out.writeStartElement( "appliance-function" );
-			out.writeAttribute( "id", QString::number( appliance->id ) );
-			out.writeAttribute( "function", QString::number( ctrlFunction.next() ) );
+			out.writeAttribute( "id", QString::number( linkedapp->id ) );
+			out.writeAttribute( "function", QString::number( link->data(1).toInt() ) );
 			out.writeEndElement();
 		}
 
@@ -166,8 +164,10 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 	else if(name == "appliance-function") {
 		NumberedItem* app = appliances->findItem(attrs.value("id").toInt());
 		if( app ) {
-			currentGroup->links.append( app );
-			currentGroup->ctrlFunctions.append( attrs.value("function").toInt() );
+			QGraphicsSimpleTextItem* link = new QGraphicsSimpleTextItem();
+			link->setData( 0, QVariant::fromValue<void*>(app) );
+			link->setData( 1, attrs.value("function").toInt() );
+			currentGroup->links.append( link );
 		}
 	}
 

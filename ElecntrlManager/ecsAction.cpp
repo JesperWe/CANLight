@@ -63,7 +63,6 @@ QPoint ecsAction::anchorOut() {
 		   );
 }
 
-
 //------------------------------------------------------------------------------------
 
 void ecsAction::drawOutputTo( QPoint to, QGraphicsScene* scene ) {

@@ -5,8 +5,6 @@
 #include "ecsAction.h"
 #include "numberedItem.h"
 
-#define iconDim 30
-
 class ecsEvent : public QGraphicsItem {
 
 public:
@@ -25,8 +23,6 @@ public:
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	QPoint anchorIn();
 	QPoint anchorOut();
-	void drawInputFrom( QPoint from, QGraphicsScene* scene );
-	void drawOutputTo( QPoint to, QGraphicsScene* scene );
 
 	enum eventTypes_e {
 		None,
