@@ -52,8 +52,25 @@ float NumberedItem::calculateHeight()
 
 	return myHeight;
 }
+//------------------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------
+QPoint NumberedItem::anchorIn() {
+		return QPoint(
+								rect.x()  + this->pos().x(),
+								rect.y() + rect.height()/2 + this->pos().y()
+				   );
+}
+
+//------------------------------------------------------------------------------------
+
+QPoint NumberedItem::anchorOut() {
+		return QPoint(
+								rect.x() + rect.width() + this->pos().x(),
+								rect.y() + rect.height()/2 + this->pos().y()
+				   );
+}
+
+//------------------------------------------------------------------------------------
 
 void NumberedItem::recalcBoundingRect()
 {

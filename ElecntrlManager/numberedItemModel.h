@@ -35,10 +35,7 @@ public:
 
 	void sort( int column, Qt::SortOrder order = Qt::AscendingOrder );
 	QMimeData *mimeData(const QModelIndexList &indexes) const;
-	float accumulatedOffset( int itemIndex );
-	float calculateHeight( int itemIndex );
 
-	void setItemOffset( int itemIndex, float newOffset );
 	void updateComplete();
 	NumberedItem* findItem( int id );
 	int findItemIndex( int id );

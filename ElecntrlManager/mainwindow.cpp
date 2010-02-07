@@ -9,7 +9,6 @@
 #include "ui_about.h"
 #include "systemdescription.h"
 #include "numberedItem.h"
-#include "cGroupItem.h"
 #include "ecsManager.h"
 #include "ecsEvent.h"
 #include "ecsAction.h"
@@ -226,14 +225,14 @@ void MainWindow::_AddEvent( int eventType )
 
 	QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
 	if( selection.count() != 1 ) return;
-	if( selection[0]->type() != cGroupItem::Type ) return;
+	if( selection[0]->type() != NumberedItem::Type ) return;
 
-	cGroupItem* cgi = qgraphicsitem_cast<cGroupItem *>(selection[0]);
+	NumberedItem* group = qgraphicsitem_cast<NumberedItem *>(selection[0]);
 
-	thisEvent = new ecsEvent(cgi->itemIndex, eventType);
+	thisEvent = new ecsEvent( group->id, eventType );
 	thisEvent->eventAction = new ecsAction();
 
-	cGroupModel->numberedItems[cgi->itemIndex]->events.append(  thisEvent  );
+	group->events.append(  thisEvent  );
 
 	updateScene();
 }

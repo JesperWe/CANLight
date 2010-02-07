@@ -48,11 +48,11 @@ public:
 
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
+	QPoint anchorIn();
+	QPoint anchorOut();
+
 	void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
 	void dropEvent(QGraphicsSceneDragDropEvent *event);
-
-	QPoint anchorOut();
-	QPoint anchorIn();
 
 	QVariant typeIcon() const;
 

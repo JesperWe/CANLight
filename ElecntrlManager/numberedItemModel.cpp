@@ -224,28 +224,6 @@ QMimeData *NumberedItemModel::mimeData(const QModelIndexList &indexes) const
 
 //---------------------------------------------------------------------------
 
-float NumberedItemModel::accumulatedOffset( int itemIndex )
-{
-	float myOffset = 0;
-	if( itemIndex == 0 ) {
-		numberedItems[0]->offset = 0;
-		return 0;
-	}
-
-	myOffset = numberedItems[itemIndex-1]->offset + calculateHeight(itemIndex-1);
-	numberedItems[itemIndex]->offset = myOffset;
-	return myOffset;
-}
-
-//---------------------------------------------------------------------------
-
-void NumberedItemModel::setItemOffset( int itemIndex, float newOffset )
-{
-	numberedItems[itemIndex]->offset = newOffset;
-}
-
-//---------------------------------------------------------------------------
-
 void NumberedItemModel::updateComplete()
 {
 	emit modified();

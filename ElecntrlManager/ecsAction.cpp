@@ -89,14 +89,8 @@ void ecsAction::dropEvent(QGraphicsSceneDragDropEvent *event)
 
 	QString idString(data->data("x-application/ecs-controlgroup-id"));
 	int cGroupId = idString.toInt();
-	NumberedItemModel* cgs = ((MainWindow*)(qApp->activeWindow()))->cGroupModel;
 
-	// In this context the dropped ID is the target (for the action)
-
-	NumberedItem &sourceGroup = cgs->numberedItems[ cGroupSource ];
-
-	sourceGroup.targetGroups[ eventIndex ] = cGroupId;
-
-	this->prepareGeometryChange();
+	prepareGeometryChange();
+	targetGroups.append( ((MainWindow*)qApp->activeWindow())->cGroupModel->findItem( cGroupId ) );
 	((MainWindow*)qApp->activeWindow())->updateScene();
 }
