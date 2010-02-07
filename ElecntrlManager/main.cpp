@@ -5,16 +5,15 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    MainWindow w;
+	QApplication a(argc, argv);
+	MainWindow w;
 
-    QDesktopWidget *desktop = QApplication::desktop();
+	//QDesktopWidget *desktop = QApplication::desktop();
 
-    int screenWidth = desktop->width();
-    int screenHeight = desktop->height();
+	//int screenWidth = desktop->width();
+	//int screenHeight = desktop->height();
 
-    w.show();
+	w.show();
 
-
-    return a.exec();
+	return a.exec();
 }
