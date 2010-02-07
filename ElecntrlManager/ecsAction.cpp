@@ -7,6 +7,7 @@
 
 ecsAction::ecsAction() {
 	setAcceptDrops(true);
+	actionType = ecsAction::None;
 }
 
 const int ecsAction::polygon[4][2] = { { 0, size/2 }, { size/2, 0 }, { 0, -size/2 }, { -size/2, 0 } };
@@ -60,6 +61,15 @@ QPoint ecsAction::anchorOut() {
 				this->pos().x()+size/2,
 				this->pos().y()
 		   );
+}
+
+
+//------------------------------------------------------------------------------------
+
+void ecsAction::drawOutputTo( QPoint to, QGraphicsScene* scene ) {
+	QGraphicsLineItem* line = new QGraphicsLineItem( anchorOut().x(), anchorOut().y(), to.x(), to.y(), 0, 0);
+	line->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
+	scene->addItem( line );
 }
 
 //------------------------------------------------------------------------------------

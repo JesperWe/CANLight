@@ -1,7 +1,9 @@
 #ifndef ECSACTION_H
 #define ECSACTION_H
 
-#include <QGraphicsItem>
+#include <QtGui>
+#include "numberedItem.h"
+#include "ecsEvent.h"
 
 class ecsAction : public QGraphicsItem
 {
@@ -14,14 +16,12 @@ public:
 	ecsAction( int itemIndex, int t ) { cGroupSource = itemIndex; actionType = t; setAcceptDrops(true); };
 
 	enum { Type = UserType + 3 };
-	int type1() const { return Type; }
+	int type() const { return Type; }
 
-	QRectF boundingRect() const;
-	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-	QPoint anchorIn();
-	QPoint anchorOut();
+	void drawOutputTo( QPoint to, QGraphicsScene* scene );
 	void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
 	void dropEvent(QGraphicsSceneDragDropEvent *event);
+	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
 	enum actionType_e {
 		None,
@@ -34,10 +34,15 @@ public:
 		noActionTypes
 	};
 
-
 	int actionType;
 	int cGroupSource;
 	int eventIndex;
+
+	QRectF boundingRect() const;
+	QPoint anchorIn();
+	QPoint anchorOut();
+
+	QList<NumberedItem*> targetGroups;
 
 };
 

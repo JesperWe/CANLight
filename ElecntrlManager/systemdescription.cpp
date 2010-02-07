@@ -1,14 +1,18 @@
-#include "systemdescription.h"
-#include "ecsEvent.h"
+#include <assert.h>
 
 #include <QXmlSimpleReader>
 #include <QMessageBox>
 #include <QFile>
 #include <QXmlStreamWriter>
 
+#include "systemdescription.h"
+#include "ecsEvent.h"
+
 SystemDescription::SystemDescription() {}
 
 QString SystemDescription::loadedFileName;
+
+//-------------------------------------------------------------------------------------------------
 
 void SystemDescription::loadFile( QString fromFile, NumberedItemModel* appliances, NumberedItemModel* cGroups ) {
 
@@ -43,6 +47,8 @@ void SystemDescription::loadFile( QString fromFile, NumberedItemModel* appliance
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
+
 void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances, NumberedItemModel* cGroups )
 {
 	QFile file( toFile );
@@ -53,37 +59,42 @@ void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances,
 	out.writeStartDocument( "1.0" );
 	out.writeStartElement( "systemdescription" );
 
-	for( int i=0; i<appliances->rowCount(); i++ ) {
+	foreach( NumberedItem* appliance, appliances->numberedItems ) {
 		out.writeStartElement( "appliance" );
-		out.writeAttribute( "id", QString::number(appliances->numberedItems[i].id) );
-		out.writeAttribute( "description", appliances->numberedItems[i].description );
+		out.writeAttribute( "id", QString::number(appliance->id) );
+		out.writeAttribute( "description", appliance->description );
 		out.writeEndElement();
 	}
 
-	for( int i=0; i<cGroups->rowCount(); i++ ) {
+	foreach( NumberedItem* group, cGroups->numberedItems ) {
 		out.writeStartElement( "controlgroup" );
-		out.writeAttribute( "id", QString::number(cGroups->numberedItems[i].id) );
-		out.writeAttribute( "description", cGroups->numberedItems[i].description );
-		out.writeAttribute( "type", QString::number(cGroups->numberedItems[i].itemType) );
+		out.writeAttribute( "id", QString::number( group->id ) );
+		out.writeAttribute( "description", group->description );
+		out.writeAttribute( "type", QString::number( group->itemType) );
 
-		for( int j=0; j<cGroups->numberedItems[i].links.count(); j++) {
-			out.writeStartElement( "linked-appliance" );
-			out.writeAttribute( "id", QString::number(cGroups->numberedItems[i].links[j]->id) );
-			out.writeAttribute( "function", QString::number(cGroups->numberedItems[i].ctrlFunctions[j]) );
+		QListIterator<int> ctrlFunction(group->ctrlFunctions);
+
+		foreach( NumberedItem* appliance,  group->links ) {
+			assert( ctrlFunction.hasNext() );
+			out.writeStartElement( "appliance-function" );
+			out.writeAttribute( "id", QString::number( appliance->id ) );
+			out.writeAttribute( "function", QString::number( ctrlFunction.next() ) );
 			out.writeEndElement();
 		}
 
-		for( int j=0; j<cGroups->numberedItems[i].events.count(); j++) {
+		foreach( ecsEvent* e, group->events ) {
 			out.writeStartElement( "controlevent" );
-			out.writeAttribute( "type", QString::number(cGroups->numberedItems[i].events[j]) );
-			out.writeAttribute( "action", QString::number(cGroups->numberedItems[i].actions[j]) );
-			out.writeAttribute( "targetgroup", QString::number(cGroups->numberedItems[i].targetGroups[j]) );
+			out.writeAttribute( "type", QString::number(e->eventType) );
+			out.writeAttribute( "action", QString::number(e->eventAction->actionType) );
+			foreach( NumberedItem* target, e->eventAction->targetGroups ) {
+				out.writeStartElement( "targetgroup");
+				out.writeAttribute( "id", QString::number(target->id) );
+				out.writeEndElement();
+			}
 			out.writeEndElement();
 		}
-
 		out.writeEndElement();
 	}
-
 	out.writeEndDocument();
 	file.close();
 }
@@ -94,6 +105,8 @@ SysDescrHandler::SysDescrHandler( NumberedItemModel* a, NumberedItemModel* cg ) 
 	appliances = a;
 	cGroups = cg;
 }
+
+//-------------------------------------------------------------------------------------------------
 
 bool SysDescrHandler::fatalError(const QXmlParseException &exception) {
 
@@ -112,67 +125,71 @@ bool SysDescrHandler::fatalError(const QXmlParseException &exception) {
 	return false;
 }
 
+//-------------------------------------------------------------------------------------------------
+
 bool SysDescrHandler::startDocument()
 {
 	return true;
 }
+
+//-------------------------------------------------------------------------------------------------
+
 bool SysDescrHandler::endElement( const QString&, const QString&, const QString &name )
 {
 	return true;
 }
 
+//-------------------------------------------------------------------------------------------------
+
 bool SysDescrHandler::startElement( const QString&, const QString&, const QString &name, const QXmlAttributes &attrs )
 {
-	int row;
+	QModelIndex index;
+	QString attrVal;
 
 	if( name == "appliance" ) {
-		row = appliances->rowCount();
-		appliances->insertRows( row, 1, QModelIndex() );
-
-		QModelIndex index = appliances->index( row, 0, QModelIndex() );
+		index = appliances->insertRow();
 		appliances->setData( index, attrs.value("id"), Qt::EditRole );
-
-		index = appliances->index( row, 1, QModelIndex() );
+		index = appliances->index( index.row(), 1, QModelIndex() );
 		appliances->setData( index, attrs.value("description"), Qt::EditRole );
 	}
 
 	else if( name == "controlgroup" ) {
-		row = cGroups->rowCount();
-
-		cGroups->insertRows( row, 1, QModelIndex() );
-
-		QModelIndex index = cGroups->index( row, 0, QModelIndex() );
+		index = cGroups->insertRow();
 		cGroups->setData( index, attrs.value("id"), Qt::EditRole );
-
-		index = cGroups->index( row, 1, QModelIndex() );
+		index = cGroups->index( index.row(), 1, QModelIndex() );
 		cGroups->setData( index, attrs.value("description"), Qt::EditRole );
 		cGroups->setData( index, attrs.value("type"), Qt::UserRole );
+
+		currentGroup = cGroups->numberedItems.last();
 	}
 
-	else if(name == "linked-appliance") {
+	else if(name == "appliance-function") {
 		NumberedItem* app = appliances->findItem(attrs.value("id").toInt());
 		if( app ) {
-			cGroups->numberedItems.last().links.append(app);
-			cGroups->numberedItems.last().ctrlFunctions.append(attrs.value("function").toInt());
+			currentGroup->links.append( app );
+			currentGroup->ctrlFunctions.append( attrs.value("function").toInt() );
 		}
 	}
 
 	else if(name == "controlevent") {
-		QString attrVal = attrs.value("type");
+		attrVal = attrs.value("type");
 		if( attrVal != "" ) {
-			cGroups->numberedItems.last().events.append(attrVal.toInt());
-			cGroups->numberedItems.last().actions.append(0);
-			cGroups->numberedItems.last().targetGroups.append( -1 );
+			currentEvent = new ecsEvent( attrVal.toInt() );
+			currentGroup->events.append( currentEvent );
+			currentEvent->cGroupId = currentGroup->id;
 		}
 		attrVal = attrs.value("action");
 		if( attrVal != "" ) {
-			cGroups->numberedItems.last().actions.last() = attrVal.toInt();
-		}
-		attrVal = attrs.value("targetgroup");
-		if( attrVal != "" ) {
-			cGroups->numberedItems.last().targetGroups.last() = attrVal.toInt();
+			currentEvent->eventAction = new ecsAction( attrVal.toInt() );
 		}
 	}
 
+	else if(name == "targetgroup") {
+		attrVal = attrs.value("id");
+		if( attrVal != "" ) {
+			currentEvent->eventAction->targetGroups.append( cGroups->findItem( attrVal.toInt() ) );
+		}
+
+	}
 	return true;
 }

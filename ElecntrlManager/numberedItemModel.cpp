@@ -30,8 +30,8 @@ QVariant NumberedItemModel::data(const QModelIndex &index, int role) const
 	if (role == Qt::DisplayRole || role == Qt::EditRole) {
 
 		switch( index.column() ) {
-		case 0: { return QString::number(numberedItems.at(index.row()).id); }
-		case 1: { return numberedItems.at(index.row()).description; }
+		case 0: { return QString::number(numberedItems.at(index.row())->id); }
+		case 1: { return numberedItems.at(index.row())->description; }
 		case 2: { return QVariant(); }
 		}
 	}
@@ -42,7 +42,7 @@ QVariant NumberedItemModel::data(const QModelIndex &index, int role) const
 			return QIcon(":/graphics/appliance.svg");
 		}
 		else {
-			return numberedItems.at(index.row()).typeIcon();
+			return numberedItems.at(index.row())->typeIcon();
 		}
 	}
 
@@ -115,6 +115,14 @@ Qt::ItemFlags NumberedItemModel::flags(const QModelIndex &index) const
 
 //---------------------------------------------------------------------------
 
+QModelIndex NumberedItemModel:: insertRow() {
+	int row = rowCount();
+	insertRows( row, 1, QModelIndex() );
+	return index( row, 0, QModelIndex() );
+}
+
+//---------------------------------------------------------------------------
+
 bool NumberedItemModel::setData(const QModelIndex &index,
 							 const QVariant &value, int role)
 {
@@ -122,8 +130,8 @@ bool NumberedItemModel::setData(const QModelIndex &index,
 
 	if( role == Qt::EditRole) {
 		switch( index.column() ) {
-		case 0: { numberedItems[index.row()].id = value.toInt(); break; }
-		case 1: { numberedItems[index.row()].description = value.toString(); break; }
+		case 0: { numberedItems[index.row()]->id = value.toInt(); break; }
+		case 1: { numberedItems[index.row()]->description = value.toString(); break; }
 		}
 
 		emit dataChanged(index, index);
@@ -136,9 +144,9 @@ bool NumberedItemModel::setData(const QModelIndex &index,
 
 		// v == -1 means toggle between 1 and 2.
 
-		if( v == -1 ) v = 3 - numberedItems[index.row()].itemType;
+		if( v == -1 ) v = 3 - numberedItems[index.row()]->itemType;
 
-		numberedItems[index.row()].itemType = v;
+		numberedItems[index.row()]->itemType = v;
 		emit dataChanged(index, index);
 		emit modified();
 		return true;
@@ -155,13 +163,13 @@ bool NumberedItemModel::insertRows(int position, int rows, const QModelIndex &pa
 
 	int maxId = 0;
 	for( int i=0; i<numberedItems.count(); i++ )
-		if( numberedItems[i].id > maxId ) maxId = numberedItems[i].id;
+		if( numberedItems[i]->id > maxId ) maxId = numberedItems[i]->id;
 
 	beginInsertRows( QModelIndex(), position, position+rows-1 );
 
 	for( int row = 0; row < rows; ++row ) {
-		numberedItems.append(NumberedItem());
-		numberedItems.last().id = ++maxId;
+		numberedItems.append(new NumberedItem());
+		numberedItems.last()->id = ++maxId;
 	}
 
 	endInsertRows();
@@ -220,42 +228,20 @@ float NumberedItemModel::accumulatedOffset( int itemIndex )
 {
 	float myOffset = 0;
 	if( itemIndex == 0 ) {
-		numberedItems[0].offset = 0;
+		numberedItems[0]->offset = 0;
 		return 0;
 	}
 
-	myOffset = numberedItems[itemIndex-1].offset + calculateHeight(itemIndex-1);
-	numberedItems[itemIndex].offset = myOffset;
+	myOffset = numberedItems[itemIndex-1]->offset + calculateHeight(itemIndex-1);
+	numberedItems[itemIndex]->offset = myOffset;
 	return myOffset;
-}
-
-//---------------------------------------------------------------------------
-
-float NumberedItemModel::calculateHeight( int itemIndex )
-{
-	float myHeight = 0;
-
-	if( numberedItems[itemIndex].itemType != NumberedItem::Controller )
-		return myHeight;
-
-	myHeight = 55 + numberedItems[itemIndex].links.count()*16;
-
-	// Try height based on number of events, use it if it is larger.
-
-	float myHeight2 = 40 + numberedItems[itemIndex].events.count()*60;
-
-	if( myHeight2 > myHeight ) {
-		myHeight = myHeight2;
-	}
-
-	return myHeight;
 }
 
 //---------------------------------------------------------------------------
 
 void NumberedItemModel::setItemOffset( int itemIndex, float newOffset )
 {
-	numberedItems[itemIndex].offset = newOffset;
+	numberedItems[itemIndex]->offset = newOffset;
 }
 
 //---------------------------------------------------------------------------
@@ -270,7 +256,7 @@ void NumberedItemModel::updateComplete()
 NumberedItem* NumberedItemModel::findItem( int id )
 {
 	for( int i = 0; i < numberedItems.count(); i++ ) {
-		if( numberedItems[i].id == id ) return &numberedItems[i];
+		if( numberedItems[i]->id == id ) return numberedItems[i];
 	}
 	return NULL;
 }
@@ -280,7 +266,7 @@ NumberedItem* NumberedItemModel::findItem( int id )
 int NumberedItemModel::findItemIndex( int id )
 {
 	for( int i = 0; i < numberedItems.count(); i++ ) {
-		if( numberedItems[i].id == id ) return i;
+		if( numberedItems[i]->id == id ) return i;
 	}
 	return NULL;
 }

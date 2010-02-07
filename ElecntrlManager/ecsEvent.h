@@ -2,47 +2,54 @@
 #define ECSEVENT_H
 
 #include <QtGui>
-#include "cGroupItem.h"
+#include "ecsAction.h"
+#include "numberedItem.h"
 
 #define iconDim 30
 
 class ecsEvent : public QGraphicsItem {
 
 public:
-    enum { Type = UserType + 2 };
-    int type() const { return Type; };
+	ecsEvent() {};
+	ecsEvent( int t ) { eventType = t; };
+	ecsEvent( int itemId, int t ) {
+		cGroupId = itemId;
+		eventType = t;
+		this->setFlag(QGraphicsItem::ItemIsSelectable, true);
+	};
 
-    QRectF boundingRect() const;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-    QPoint anchorIn();
-    QPoint anchorOut();
+	enum { Type = UserType + 2 };
+	int type() const { return Type; };
 
-    enum eventTypes_e {
-        SingleClick,
-        DoubleClick,
-        PressHold,
-        Release,
-        noEventTypes
-    };
+	QRectF boundingRect() const;
+	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+	QPoint anchorIn();
+	QPoint anchorOut();
+	void drawInputFrom( QPoint from, QGraphicsScene* scene );
+	void drawOutputTo( QPoint to, QGraphicsScene* scene );
 
-    enum eventSources_e {
-        Unknown,
-        Key0,
-        Key1,
-        Key2,
-        AnalogSignal,
-        ChangeNotifiation,
-        noEventSources
-    };
+	enum eventTypes_e {
+		None,
+		SingleClick,
+		DoubleClick,
+		PressHold,
+		Release,
+		noEventTypes
+	};
 
-    ecsEvent();
-    ecsEvent( int t ) { eventType = t; };
-    ecsEvent( int itemIndex, int t ) { cGroupIndex = itemIndex; eventType = t; };
+	enum eventSources_e {
+		Unknown,
+		Key0,
+		Key1,
+		Key2,
+		AnalogSignal,
+		ChangeNotifiation,
+		noEventSources
+	};
 
-    int eventType;
-    int eventAction;
-    int cGroupIndex;
-    int eventIndex;
+	int eventType;
+	ecsAction* eventAction;
+	int cGroupId;
 
 };
 

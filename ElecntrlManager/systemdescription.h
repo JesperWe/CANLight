@@ -27,6 +27,8 @@ public:
 private:
 	NumberedItemModel* appliances;
 	NumberedItemModel* cGroups;
+	NumberedItem* currentGroup;
+	ecsEvent* currentEvent;
 };
 
 #endif // SYSTEMDESCRIPTION_H

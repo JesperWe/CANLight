@@ -1,5 +1,5 @@
-#ifndef APPLIANCEMODEL_H
-#define APPLIANCEMODEL_H
+#ifndef NUMBEREDITEMMODEL_H
+#define NUMBEREDITEMMODEL_H
 
 #include <QStringList>
 #include <QModelIndex>
@@ -29,6 +29,7 @@ public:
 
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
 
+	QModelIndex insertRow();
 	bool insertRows(int position, int rows, const QModelIndex &index = QModelIndex());
 	bool removeRows(int position, int rows, const QModelIndex &index = QModelIndex());
 
@@ -43,7 +44,7 @@ public:
 	int findItemIndex( int id );
 	void clear();
 
-	QList<NumberedItem> numberedItems;
+	QList<NumberedItem*> numberedItems;
 	QString objectType;
 
 signals:
@@ -51,4 +52,4 @@ signals:
 };
 
 
-#endif // APPLIANCEMODEL_H
+#endif // NUMBEREDITEMMODEL_H
