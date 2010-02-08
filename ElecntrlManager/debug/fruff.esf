@@ -1,20 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <systemdescription>
-    <appliance id="234" description="Hej på dig!"/>
-    <appliance id="123" description="Allan tar kakan"/>
-    <appliance id="46" description="Aft Cabin Port S2"/>
-    <appliance id="45" description="Aft Cabin Port S1"/>
-    <appliance id="17" description="Nav Table 2"/>
-    <controlgroup id="1" description="Test Group" type="2">
-        <linked-appliance id="123" function="2"/>
-        <linked-appliance id="45" function="3"/>
+    <appliance id="1" description="Aft Cabin Port Switch"/>
+    <appliance id="2" description="Aft Cabin Stbd Switch"/>
+    <appliance id="3" description="Steering Port Switch 1"/>
+    <appliance id="4" description="Steering Port Switch 2"/>
+    <appliance id="5" description="Aft Cabin Port Ceiling Light 1"/>
+    <appliance id="6" description="Aft Cabin Port Ceiling Light 2"/>
+    <appliance id="7" description="sdfgdsf"/>
+    <controlgroup id="1" description="System Backlight" type="1"/>
+    <controlgroup id="2" description="Aft Cabin Port Light" type="2">
+        <appliance-function id="6" function="1"/>
+        <appliance-function id="5" function="1"/>
     </controlgroup>
-    <controlgroup id="0" description="Backlight" type="1">
-        <linked-appliance id="17" function="4"/>
-        <linked-appliance id="46" function="1"/>
-        <linked-appliance id="234" function="5"/>
-        <controlevent type="4" action="5" targetgroup="-1"/>
-        <controlevent type="2" action="0" targetgroup="-1"/>
-        <controlevent type="1" action="5" targetgroup="1"/>
+    <controlgroup id="3" description="Aft Cabin Port Light" type="1">
+        <appliance-function id="1" function="1"/>
+        <appliance-function id="4" function="3"/>
+        <controlevent type="2" action="6">
+            <targetgroup id="2"/>
+        </controlevent>
+        <controlevent type="1" action="3"/>
+        <controlevent type="3" action="4"/>
+        <controlevent type="4" action="5"/>
+    </controlgroup>
+    <controlgroup id="4" description="Aft Cabin Stbd Light" type="1">
+        <appliance-function id="2" function="1"/>
+        <appliance-function id="3" function="3"/>
     </controlgroup>
 </systemdescription>

@@ -129,49 +129,57 @@ float MainWindow::calculateEventOffset( bool & first, float eventOffset ) {
 
 void MainWindow::updateScene() {
 	NumberedItem* controlGroup;
-	float myHeight, midpoint, eventOffset, x_pos, accumulatedOffset;
+	float  midpoint, eventOffset, x_pos, accumulatedOffset;
 	bool first;
+	float evenCountOffset;
+	QRectF groupRect;
+
+	// Set the position of this group based on how much space previous
+	// groups occupied, and our own height.
 
 	accumulatedOffset = 0;
-
 	foreach ( controlGroup, cGroupModel->numberedItems ) {
 
-		if( controlGroup->itemType != NumberedItem::Controller ) continue;
+		if( controlGroup->itemType != NumberedItem::Controller ) {
+			controlGroup->setVisible( false );
+			continue;
+		}
 
-		// Set the position of this group based on how much space previous
-		// groups occupied, and our own height.
-
+		controlGroup->setVisible( true );
 		controlGroup->setAcceptDrops(true);
 		controlGroup->setFlag( QGraphicsItem::ItemIsSelectable );
 
-		myHeight =  controlGroup->calculateHeight();
-		midpoint = accumulatedOffset + 0.5 * myHeight;
-		accumulatedOffset += myHeight;
+		// Spread child events in a nice centered fanout.
 
+		first = true;
+		evenCountOffset = 0;
+		if((controlGroup->events.count() % 2 == 0) && (controlGroup->events.count() > 0))
+			evenCountOffset = ecsManager::EventOffset_Y/2;
+
+		foreach( ecsEvent* event, controlGroup->events ) {
+			eventOffset = calculateEventOffset( first, eventOffset );
+			x_pos = controlGroup->longestChildWidth + ecsManager::EventOffset_X;
+			event->setPos( x_pos, eventOffset - evenCountOffset );
+		}
+
+		groupRect = controlGroup->childrenBoundingRect().united( controlGroup->selectBox );
+		midpoint = accumulatedOffset + 0.5 * groupRect.height();
+		accumulatedOffset += groupRect.height();
 		controlGroup->setPos( 0, midpoint );
 
 		if( ! scene->items().contains( controlGroup) ) scene->addItem( controlGroup );
-
-		// Now create graphics items for all the events of this group.
-
-		first = true;
-
-		foreach( ecsEvent* event, controlGroup->events ) {
-
-			eventOffset = calculateEventOffset( first, eventOffset );
-			x_pos = controlGroup->longestChildWidth + ecsManager::EventOffset_X;
-
-			event->setPos( x_pos, eventOffset );
-			event->setParentItem( controlGroup );
-		}
 	}
 	scene->update( scene->sceneRect() );
 }
+
+//--------------------------------------------------------------------
 
 void MainWindow::on_actionExit_triggered()
 {
 	this->close();
 }
+
+//--------------------------------------------------------------------
 
 void MainWindow::on_action_something_triggered()
 {
@@ -219,6 +227,7 @@ void MainWindow::_AddEvent( int eventType )
 
 	thisEvent = new ecsEvent( group->id, eventType );
 	group->events.append(  thisEvent  );
+	thisEvent->setParentItem( group );
 	updateScene();
 }
 

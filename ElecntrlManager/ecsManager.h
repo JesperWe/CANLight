@@ -15,6 +15,8 @@ public:
 		Action
 	};
 
+	static const float GraphicsDebug  = true;
+
 	static const float GroupChildMinimumWidth = 60;
 	static const float ApplianceLineSpacing = 20;
 	static const float CtrlFunctionIconWidth = 30;

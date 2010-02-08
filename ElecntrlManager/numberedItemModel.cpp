@@ -141,9 +141,10 @@ bool NumberedItemModel::setData(const QModelIndex &index,
 	if( role == Qt::UserRole) {
 		int v = value.toInt();
 
-		// v == -1 means toggle between 1 and 2.
+		// v == -1 means toggle type.
 
-		if( v == -1 ) v = 3 - numberedItems[index.row()]->itemType;
+		if( v == -1 && numberedItems[index.row()]->itemType == NumberedItem::Controller )  	v = NumberedItem::Activity;
+		if( v == -1 && numberedItems[index.row()]->itemType == NumberedItem::Activity )  	v = NumberedItem::Controller;
 
 		numberedItems[index.row()]->itemType = v;
 		emit dataChanged(index, index);
@@ -164,7 +165,6 @@ bool NumberedItemModel::insertRows(int position, int rows, const QModelIndex &pa
 
 	for( int i=0; i<numberedItems.count(); i++ )  {
 		if( numberedItems[i]->id > maxId ) maxId = numberedItems[i]->id;
-		qDebug() << i << " " << maxId;
 	}
 
 	beginInsertRows( QModelIndex(), position, position+rows-1 );
@@ -172,6 +172,7 @@ bool NumberedItemModel::insertRows(int position, int rows, const QModelIndex &pa
 	for( int row = 0; row < rows; ++row ) {
 		newItem = new NumberedItem();
 		newItem->id = ++maxId;
+		newItem->recalcBoxSize();
 		numberedItems.append(  newItem );
 	}
 

@@ -143,6 +143,7 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 {
 	QModelIndex index;
 	QString attrVal;
+	QGraphicsSimpleTextItem* link;
 
 	if( name == "appliance" ) {
 		index = appliances->insertRow();
@@ -164,10 +165,8 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 	else if(name == "appliance-function") {
 		NumberedItem* app = appliances->findItem(attrs.value("id").toInt());
 		if( app ) {
-			QGraphicsSimpleTextItem* link = new QGraphicsSimpleTextItem();
-			link->setData( 0, QVariant::fromValue<void*>(app) );
+			link = currentGroup->appendLinkedAppliance( app );
 			link->setData( 1, attrs.value("function").toInt() );
-			currentGroup->links.append( link );
 		}
 	}
 
@@ -175,12 +174,16 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 		attrVal = attrs.value("type");
 		if( attrVal != "" ) {
 			currentEvent = new ecsEvent( attrVal.toInt() );
-			currentGroup->events.append( currentEvent );
+			currentEvent->setParentItem( currentGroup );
 			currentEvent->cGroupId = currentGroup->id;
+
+			currentGroup->events.append( currentEvent );
 		}
 		attrVal = attrs.value("action");
 		if( attrVal != "" ) {
 			currentEvent->eventAction = new ecsAction( attrVal.toInt() );
+			currentEvent->eventAction->setX( ecsManager::ActionOffset_X );
+			currentEvent->eventAction->setParentItem( currentEvent );
 		}
 	}
 

@@ -27,53 +27,52 @@ QVariant NumberedItem::typeIcon() const {
 	return QVariant();
 }
 
-//---------------------------------------------------------------------------
-
-float NumberedItem::calculateHeight()
-{
-	float myHeight = 0;
-
-	if( itemType == NumberedItem::Appliance ) return myHeight;
-
-	myHeight = 55 + links.count()*ecsManager::ApplianceLineSpacing;
-
-	// For controllers, try height based on number of events, use it if it is larger.
-
-	if( itemType == NumberedItem::Controller ) {
-		float myHeight2 = 40 + events.count()*ecsManager::EventSpacing;
-		if( myHeight2 > myHeight ) {
-			myHeight = myHeight2;
-		}
-	}
-
-	return myHeight;
-}
 //------------------------------------------------------------------------------------
 
 QPoint NumberedItem::anchorIn() {
-		return QPoint( rect.x(), rect.y() + rect.height()/2 );
+		return QPoint( boxSize.x(), boxSize.y() + boxSize.height()/2 );
 }
 
 //------------------------------------------------------------------------------------
 
 QPoint NumberedItem::anchorOut() {
-		return QPoint( rect.x() + rect.width(), rect.y() + rect.height()/2 );
+		return QPoint( boxSize.x() + boxSize.width(), boxSize.y() + boxSize.height()/2 );
 }
 
 //------------------------------------------------------------------------------------
 
-void NumberedItem::recalcBoundingRect()
+void NumberedItem::recalcBoxSize()
 {
+	float boxWidth, rw, rh, rx, ry;
 	qreal penWidth = qApp->property( "cGroupPen" ).value<QPen>().width();
-	float boxWidth = longestChildWidth + 10;
 
-	float rw = boxWidth + penWidth;
-	float rh = 10 + penWidth + ( links.count() * ecsManager::ApplianceLineSpacing );
-	float rx = -rw / 2;
-	float ry = -rh / 2;
-	rect.setRect( rx, ry, rw, rh );
+	longestChildWidth = ecsManager::GroupChildMinimumWidth;
+	foreach( QGraphicsSimpleTextItem* link, links ) {
+		if( link->boundingRect().width() > longestChildWidth )
+			longestChildWidth = link->boundingRect().width();
+	}
 
-	qDebug() << "   boundingRect " << id << ": " << rect.x() << "," << rect.y() << "  " << rect.width() << "," << rect.height();
+	 boxWidth = longestChildWidth + ecsManager::CtrlFunctionIconWidth + 10;
+
+	rw = boxWidth + penWidth;
+	rh = 10 + penWidth + ( links.count() * ecsManager::ApplianceLineSpacing );
+	rx = -rw / 2;
+	ry = -rh / 2;
+
+	boxSize.setRect( rx, ry, rw, rh );
+
+	rx -= 5;
+	ry -= 25;
+	rw += 10;
+	rh += 30;
+	selectBox.setRect( rx, ry, rw, rh );
+
+}
+
+//------------------------------------------------------------------------------------
+
+QString NumberedItem::displayText() {
+	return QString::number( id ) + " - " + description;
 }
 
 //------------------------------------------------------------------------------------
@@ -81,20 +80,20 @@ void NumberedItem::recalcBoundingRect()
 void NumberedItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 					   QWidget *widget)
 {
-	recalcBoundingRect();
+	recalcBoxSize();
 
 	if( isSelected() ) {
 		painter->setPen( Qt::NoPen );
 		painter->setBrush( QColor( 0, 50, 255, 60 ) );
-		painter->drawRect( rect.x()-5, rect.y()-25, rect.width()+10, rect.height()+30 );
+		painter->drawRect( selectBox );
 	}
 
 	painter->setBrush( qApp->property( "cGroupBrush" ).value<QBrush>() );
 	painter->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
 	painter->setFont( qApp->property( "headerFont" ).value<QFont>() );
 
-	painter->drawRoundedRect(rect.x(), rect.y(), rect.width(), rect.height(), 6, 6);
-	painter->drawText( rect.x(), rect.y()-6, QString::number(id)   + " - " + description );
+	painter->drawRoundedRect(boxSize.x(), boxSize.y(), boxSize.width(), boxSize.height(), 6, 6);
+	painter->drawText( boxSize.x(), boxSize.y()-6, displayText() );
 
 	QPixmap* icon = new QPixmap(":/graphics/button.svg");
 
@@ -141,6 +140,19 @@ void NumberedItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 	foreach( ecsEvent* event, events ) {
 		painter->drawLine( anchorOut().x(), anchorOut().y(), event->anchorIn().x(), event->anchorIn().y() );
 	}
+
+	if( ecsManager::GraphicsDebug ) {
+		painter->setPen( Qt::NoPen );
+		painter->setBrush( QColor( 0, 255, 0, 30 ) );
+		painter->drawRect( childrenBoundingRect().united( selectBox ) );
+		painter->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
+		painter->setBrush( QColor( 0, 0, 0 ) );
+		painter->drawLine( -10, -10, 10, 10 );
+		painter->drawLine( -10,  10, 10, -10 );
+		painter->setFont( qApp->property( "buttonFont" ).value<QFont>() );
+		painter->drawText( 5, 0, "("+QString::number(pos().x())+","+QString::number(pos().y())+")" );
+		painter->drawText( 5, -20, "("+QString::number(childrenBoundingRect().united( selectBox ).width())+","+QString::number(childrenBoundingRect().united( selectBox ).height())+")" );
+	}
 }
 
 //------------------------------------------------------------------------------------
@@ -151,11 +163,37 @@ void NumberedItem::dragEnterEvent( QGraphicsSceneDragDropEvent *event ) {
 
 //------------------------------------------------------------------------------------
 
+QGraphicsSimpleTextItem* NumberedItem::appendLinkedAppliance( NumberedItem* appliance ) {
+	QGraphicsSimpleTextItem* link;
+	float y_pos;
+
+	link = new QGraphicsSimpleTextItem( appliance->displayText() );
+	link->setData( 0, QVariant::fromValue( (void*) appliance ) );
+	link->setData( 1, ecsEvent::None );
+	link->setParentItem(this);
+	link->setZValue(2);
+	link->setFont( qApp->property( "contentFont" ).value<QFont>() );
+	link->setFlag(QGraphicsItem::ItemIsSelectable, true);
+
+	links.append( link );
+
+	recalcBoxSize();
+	y_pos = 0;
+	foreach ( QGraphicsItem* child, links ) {
+		child->setPos( boxSize.x() + 6, boxSize.y() + 4 + y_pos );
+		y_pos += ecsManager::ApplianceLineSpacing;
+	}
+
+	emit modified();
+
+	return link;
+}
+
+//------------------------------------------------------------------------------------
+
 void NumberedItem::dropEvent( QGraphicsSceneDragDropEvent *event ) {
 	NumberedItemModel* appsModel;
 	NumberedItem* appliance;
-	QGraphicsSimpleTextItem* link;
-	float y_pos;
 
 	const QMimeData* data = event->mimeData();
 
@@ -168,28 +206,5 @@ void NumberedItem::dropEvent( QGraphicsSceneDragDropEvent *event ) {
 	appliance = appsModel->findItem( applianceId );
 
 	prepareGeometryChange();
-
-	link = new QGraphicsSimpleTextItem( QString::number( appliance->id ) + " - " + appliance->description );
-	link->setData( 0, QVariant::fromValue( (void*) appliance ) );
-	link->setData( 1, ecsEvent::Key0 );
-	link->setParentItem(this);
-	link->setZValue(2);
-	link->setFont( qApp->property( "contentFont" ).value<QFont>() );
-	link->setFlag(QGraphicsItem::ItemIsSelectable, true);
-
-	links.append( link );
-
-	if( childrenBoundingRect().width() > ecsManager::GroupChildMinimumWidth ) {
-		longestChildWidth = childrenBoundingRect().width();
-	} else {
-		longestChildWidth = ecsManager::GroupChildMinimumWidth;
-	}
-	longestChildWidth += ecsManager::CtrlFunctionIconWidth;
-	recalcBoundingRect();
-
-	y_pos = 0;
-	foreach ( QGraphicsItem* child, childItems() ) {
-		child->setPos( rect.x() + 6, rect.y() + 4 + y_pos );
-		y_pos += ecsManager::ApplianceLineSpacing;
-	}
+	appendLinkedAppliance( appliance );
 }

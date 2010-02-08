@@ -8,8 +8,9 @@ class NumberedItemModel;
 class ecsAction;
 class ecsEvent;
 
-class NumberedItem : public QGraphicsItem
+class NumberedItem :  public QObject, public QGraphicsItem
 {
+	Q_OBJECT
 
 public:
 
@@ -44,9 +45,10 @@ public:
 	static bool compareDscrAsc( const NumberedItem* a1, const NumberedItem* a2 );
 	static bool compareDscrDesc( const NumberedItem* a1, const NumberedItem* a2 );
 
-	float calculateHeight();
-	void recalcBoundingRect();
-	QRectF boundingRect() const { return rect; };
+	void recalcBoxSize();
+	QRectF boundingRect() const { return selectBox; };
+	QString displayText();
+	QGraphicsSimpleTextItem* appendLinkedAppliance( NumberedItem* appliance );
 
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
@@ -66,9 +68,13 @@ public:
 	float          offset;
 	float          longestChildWidth;
 
-	QRectF rect;
+	QRectF boxSize, selectBox;
 	QList<QGraphicsSimpleTextItem*> links; // data[0] is pointer to appliance item. data[1] is ctrlFunction.
 	QList<ecsEvent*> events;
+
+signals:
+	void modified();
+
 };
 
 #endif // NUMBEREDITEM_H
