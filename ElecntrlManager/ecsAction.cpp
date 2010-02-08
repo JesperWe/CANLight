@@ -5,11 +5,6 @@
 #include "numberedItem.h"
 #include "ecsAction.h"
 
-ecsAction::ecsAction() {
-	setAcceptDrops(true);
-	actionType = ecsAction::None;
-}
-
 const int ecsAction::polygon[4][2] = { { 0, size/2 }, { size/2, 0 }, { 0, -size/2 }, { -size/2, 0 } };
 
 //------------------------------------------------------------------------------------

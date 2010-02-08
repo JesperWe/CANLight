@@ -8,12 +8,22 @@
 class ecsEvent : public QGraphicsItem {
 
 public:
-	ecsEvent() {};
-	ecsEvent( int t ) { eventType = t; };
-	ecsEvent( int itemId, int t ) {
-		cGroupId = itemId;
+	ecsEvent() : QGraphicsItem(0) {
+		eventAction = NULL;
+		setFlag(QGraphicsItem::ItemIsSelectable, true);
+	};
+
+	ecsEvent( int t ) : QGraphicsItem(0) {
+		eventAction = NULL;
 		eventType = t;
-		this->setFlag(QGraphicsItem::ItemIsSelectable, true);
+		setFlag(QGraphicsItem::ItemIsSelectable, true);
+	};
+
+	ecsEvent( int itemId, int t ) : QGraphicsItem(0) {
+		eventAction = NULL;
+		eventType = t;
+		cGroupId = itemId;
+		setFlag(QGraphicsItem::ItemIsSelectable, true);
 	};
 
 	enum { Type = UserType + 2 };
@@ -21,8 +31,8 @@ public:
 
 	QRectF boundingRect() const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-	QPoint anchorIn();
-	QPoint anchorOut();
+	QPointF anchorIn();
+	QPointF anchorOut();
 
 	enum eventTypes_e {
 		None,

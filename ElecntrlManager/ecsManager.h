@@ -20,7 +20,8 @@ public:
 	static const float CtrlFunctionIconWidth = 30;
 	static const float CtrlButtonSize = 17;
 
-	static const float EventSize = 40;
+	static const float EventSpacing = 60;
+	static const float EventIconSize = 30;
 	static const float EventOffset_X = 120;
 	static const float EventOffset_Y = 60;
 

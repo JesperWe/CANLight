@@ -11,12 +11,17 @@ public:
 	static const int size = 50;
 	static const int polygon[4][2];
 
-	ecsAction();
-	ecsAction( int t ) { actionType = t; setAcceptDrops(true); };
-	ecsAction( int itemIndex, int t ) { cGroupSource = itemIndex; actionType = t; setAcceptDrops(true); };
+	ecsAction() : QGraphicsItem(0)  {
+		setAcceptDrops(true);
+		actionType = ecsAction::None;
+	};
+	ecsAction( int t ) : QGraphicsItem(0) {
+		setAcceptDrops(true);
+		actionType = t;
+	};
 
 	enum { Type = UserType + 3 };
-	int type() const { return Type; }
+	int type() const { return Type; };
 
 	void drawOutputTo( QPoint to, QGraphicsScene* scene );
 	void dragEnterEvent(QGraphicsSceneDragDropEvent *event);

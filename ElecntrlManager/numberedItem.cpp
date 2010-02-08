@@ -14,11 +14,8 @@ NumberedItem::NumberedItem( int newId ) : QGraphicsItem(0) {
 }
 
 bool NumberedItem::compareIdsAsc( const NumberedItem* a1, const NumberedItem* a2 ) { return a1->id < a2->id; }
-
 bool NumberedItem::compareIdsDesc( const NumberedItem* a1, const NumberedItem* a2 ) { return a1->id > a2->id; }
-
 bool NumberedItem::compareDscrAsc( const NumberedItem* a1, const NumberedItem* a2 ) { return a1->description < a2->description; }
-
 bool NumberedItem::compareDscrDesc( const NumberedItem* a1, const NumberedItem* a2 ) { return a1->description > a2->description; }
 
 QVariant NumberedItem::typeIcon() const {
@@ -38,12 +35,12 @@ float NumberedItem::calculateHeight()
 
 	if( itemType == NumberedItem::Appliance ) return myHeight;
 
-	myHeight = 55 + links.count()*16;
+	myHeight = 55 + links.count()*ecsManager::ApplianceLineSpacing;
 
 	// For controllers, try height based on number of events, use it if it is larger.
 
 	if( itemType == NumberedItem::Controller ) {
-		float myHeight2 = 40 + events.count()*60;
+		float myHeight2 = 40 + events.count()*ecsManager::EventSpacing;
 		if( myHeight2 > myHeight ) {
 			myHeight = myHeight2;
 		}

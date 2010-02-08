@@ -2,7 +2,7 @@
 #include "ecsManager.h"
 
 QRectF ecsEvent::boundingRect() const {
-	float iconDim = ecsManager::EventSize;
+	float iconDim = ecsManager::EventIconSize;
 	return QRectF( -0.7*iconDim,-0.7*iconDim,iconDim*1.4,iconDim*1.4 );
 }
 
@@ -10,7 +10,7 @@ QRectF ecsEvent::boundingRect() const {
 
 void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
 	QPixmap* icon;
-	float iconDim = ecsManager::EventSize;
+	float iconDim = ecsManager::EventIconSize;
 
 	switch( eventType ) {
 	case ecsEvent::SingleClick: { icon = new QPixmap(":/graphics/click-single.svg"); break; }
@@ -32,22 +32,26 @@ void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
 	painter->drawEllipse(-0.7*iconDim,-0.7*iconDim,iconDim*1.4,iconDim*1.4);
 	painter->drawPixmap(-iconDim/2,-iconDim/2,iconDim,iconDim,*icon);
+
+	if( eventAction ) {
+		painter->drawLine(
+				 anchorOut() ,
+				 eventAction->anchorIn()
+		);
+	}
 }
 
 //------------------------------------------------------------------------------------
 
-QPoint ecsEvent::anchorIn() {
-	return QPoint(
-			this->pos().x() - ecsManager::EventSize*0.7,
+QPointF ecsEvent::anchorIn() {
+	return QPointF(
+			this->pos().x() - ecsManager::EventIconSize*0.7,
 				this->pos().y()
 		   );
 }
 
 //------------------------------------------------------------------------------------
 
-QPoint ecsEvent::anchorOut() {
-	return QPoint(
-				this->pos().x() + ecsManager::EventSize*0.7,
-				this->pos().y()
-		   );
+QPointF ecsEvent::anchorOut() {
+	return QPointF( ecsManager::EventIconSize*0.7, 0 );
 }

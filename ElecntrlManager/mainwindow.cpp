@@ -163,23 +163,6 @@ void MainWindow::updateScene() {
 
 			event->setPos( x_pos, eventOffset );
 			event->setParentItem( controlGroup );
-
-			// Draw the action item if it exists.
-
-			if( event->eventAction->actionType != ecsAction::None ) {
-
-				x_pos += ecsManager::ActionOffset_X;
-				event->eventAction->setPos( x_pos, eventOffset );
-				scene->addItem( event->eventAction );
-
-				// Now create an item for the control groups this event is controlling.
-
-				foreach( NumberedItem* targetGroup, event->eventAction->targetGroups ) {
-					targetGroup->setPos( event->eventAction->pos() );
-					targetGroup->moveBy( ecsManager::TargetGroupOffset_X, 0 );
-					scene->addItem( targetGroup );
-				}
-			}
 		}
 	}
 	scene->update( scene->sceneRect() );
@@ -235,10 +218,7 @@ void MainWindow::_AddEvent( int eventType )
 	NumberedItem* group = qgraphicsitem_cast<NumberedItem *>(selection[0]);
 
 	thisEvent = new ecsEvent( group->id, eventType );
-	thisEvent->eventAction = new ecsAction();
-
 	group->events.append(  thisEvent  );
-
 	updateScene();
 }
 
@@ -264,8 +244,10 @@ void MainWindow::_AddAction( int actionType ) {
 	if( selection[0]->type() != ecsEvent::Type ) return;
 
 	ecsEvent* event = qgraphicsitem_cast<ecsEvent *>(selection[0]);
-	event->eventAction->actionType = actionType;
 
+	event->eventAction = new ecsAction( actionType );
+	event->eventAction->setParentItem( event );
+	event->eventAction->setX( ecsManager::ActionOffset_X );
 	updateScene();
 }
 
