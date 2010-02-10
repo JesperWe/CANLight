@@ -8,7 +8,7 @@ class ecsTableView : public QTableView
     Q_OBJECT
 
 private:
-    QMenu* numberedItemContextMenu;
+    QMenu* ecsControlGroupContextMenu;
 
 public:
     ecsTableView() : QTableView() {};

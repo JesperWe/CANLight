@@ -14,7 +14,7 @@ QString SystemDescription::loadedFileName;
 
 //-------------------------------------------------------------------------------------------------
 
-void SystemDescription::loadFile( QString fromFile, NumberedItemModel* appliances, NumberedItemModel* cGroups ) {
+void SystemDescription::loadFile( QString fromFile, ecsControlGroupModel* appliances, ecsControlGroupModel* cGroups ) {
 
 	QFile file( fromFile );
 	if (!file.open(QIODevice::ReadOnly) ) return;
@@ -49,7 +49,7 @@ void SystemDescription::loadFile( QString fromFile, NumberedItemModel* appliance
 
 //-------------------------------------------------------------------------------------------------
 
-void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances, NumberedItemModel* cGroups )
+void SystemDescription::saveFile( QString toFile, ecsControlGroupModel* appliances, ecsControlGroupModel* cGroups )
 {
 	QFile file( toFile );
 	if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate) ) return;
@@ -59,21 +59,21 @@ void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances,
 	out.writeStartDocument( "1.0" );
 	out.writeStartElement( "systemdescription" );
 
-	foreach( NumberedItem* appliance, appliances->numberedItems ) {
+	foreach( ecsControlGroup* appliance, appliances->ecsControlGroups ) {
 		out.writeStartElement( "appliance" );
 		out.writeAttribute( "id", QString::number(appliance->id) );
 		out.writeAttribute( "description", appliance->description );
 		out.writeEndElement();
 	}
 
-	foreach( NumberedItem* group, cGroups->numberedItems ) {
+	foreach( ecsControlGroup* group, cGroups->ecsControlGroups ) {
 		out.writeStartElement( "controlgroup" );
 		out.writeAttribute( "id", QString::number( group->id ) );
 		out.writeAttribute( "description", group->description );
 		out.writeAttribute( "type", QString::number( group->itemType) );
 
 		foreach( QGraphicsSimpleTextItem* link,  group->links ) {
-			NumberedItem* linkedapp = (NumberedItem*)(link->data(0).value<void*>());
+			ecsControlGroup* linkedapp = (ecsControlGroup*)(link->data(0).value<void*>());
 			out.writeStartElement( "appliance-function" );
 			out.writeAttribute( "id", QString::number( linkedapp->id ) );
 			out.writeAttribute( "function", QString::number( link->data(1).toInt() ) );
@@ -84,7 +84,7 @@ void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances,
 			out.writeStartElement( "controlevent" );
 			out.writeAttribute( "type", QString::number(e->eventType) );
 			out.writeAttribute( "action", QString::number(e->eventAction->actionType) );
-			foreach( NumberedItem* target, e->eventAction->targetGroups ) {
+			foreach( ecsControlGroup* target, e->eventAction->targetGroups ) {
 				out.writeStartElement( "targetgroup");
 				out.writeAttribute( "id", QString::number(target->id) );
 				out.writeEndElement();
@@ -99,7 +99,7 @@ void SystemDescription::saveFile( QString toFile, NumberedItemModel* appliances,
 
 //-------------------------------------------------------------------------------------------------
 
-SysDescrHandler::SysDescrHandler( NumberedItemModel* a, NumberedItemModel* cg ) {
+SysDescrHandler::SysDescrHandler( ecsControlGroupModel* a, ecsControlGroupModel* cg ) {
 	appliances = a;
 	cGroups = cg;
 }
@@ -159,11 +159,11 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 		cGroups->setData( index, attrs.value("description"), Qt::EditRole );
 		cGroups->setData( index, attrs.value("type"), Qt::UserRole );
 
-		currentGroup = cGroups->numberedItems.last();
+		currentGroup = cGroups->ecsControlGroups.last();
 	}
 
 	else if(name == "appliance-function") {
-		NumberedItem* app = appliances->findItem(attrs.value("id").toInt());
+		ecsControlGroup* app = appliances->findItem(attrs.value("id").toInt());
 		if( app ) {
 			link = currentGroup->appendLinkedAppliance( app );
 			link->setData( 1, attrs.value("function").toInt() );

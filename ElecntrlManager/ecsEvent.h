@@ -3,7 +3,7 @@
 
 #include <QtGui>
 #include "ecsAction.h"
-#include "numberedItem.h"
+#include "ecsControlGroup.h"
 
 class ecsEvent : public QGraphicsItem {
 
@@ -26,13 +26,14 @@ public:
 		setFlag(QGraphicsItem::ItemIsSelectable, true);
 	};
 
-	enum { Type = UserType + 2 };
+	enum { Type = UserType + ecsManager::Event };
 	int type() const { return Type; };
 
 	QRectF boundingRect() const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 	QPointF anchorIn();
 	QPointF anchorOut();
+	void zap();
 
 	enum eventTypes_e {
 		None,

@@ -1,21 +1,21 @@
-#ifndef NUMBEREDITEMMODEL_H
-#define NUMBEREDITEMMODEL_H
+#ifndef ecsControlGroupMODEL_H
+#define ecsControlGroupMODEL_H
 
 #include <QStringList>
 #include <QModelIndex>
 #include <QMimeData>
 #include <QAbstractTableModel>
 
-#include <numberedItem.h>
+#include <ecsControlGroup.h>
 
-class NumberedItemModel : public QAbstractTableModel
+class ecsControlGroupModel : public QAbstractTableModel
 {
 	Q_OBJECT
 
 public:
-	NumberedItemModel() {};
+	ecsControlGroupModel() {};
 
-	NumberedItemModel( QObject *parent = 0 )
+	ecsControlGroupModel( QObject *parent = 0 )
 		: QAbstractTableModel(parent) {};
 
 	int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -37,11 +37,11 @@ public:
 	QMimeData *mimeData(const QModelIndexList &indexes) const;
 
 	void updateComplete();
-	NumberedItem* findItem( int id );
+	ecsControlGroup* findItem( int id );
 	int findItemIndex( int id );
 	void clear();
 
-	QList<NumberedItem*> numberedItems;
+	QList<ecsControlGroup*> ecsControlGroups;
 	QString objectType;
 
 signals:
@@ -49,4 +49,4 @@ signals:
 };
 
 
-#endif // NUMBEREDITEMMODEL_H
+#endif // ecsControlGroupMODEL_H

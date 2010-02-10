@@ -1,16 +1,21 @@
 #include <QtGui>
 
 #include "mainwindow.h"
-#include "numberedItemModel.h"
-#include "numberedItem.h"
+#include "ecsControlGroupModel.h"
+#include "ecsControlGroup.h"
 #include "ecsAction.h"
 
-const int ecsAction::polygon[4][2] = { { 0, size/2 }, { size/2, 0 }, { 0, -size/2 }, { -size/2, 0 } };
+const int ecsAction::polygon[4][2] = {
+	{ 0, 34/2 },
+	{ 34/2, 0 },
+	{ 0, -34/2 },
+	{ -34/2, 0 }
+};
 
 //------------------------------------------------------------------------------------
 
 QRectF ecsAction::boundingRect() const {
-	return QRectF( -size/2,-size/2, size, size );
+	return QRectF( -34/2,-34/2, 34, 34 );
 }
 
 //------------------------------------------------------------------------------------
@@ -37,33 +42,27 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
 
 	painter->drawPolygon( QPolygon( 4, &ecsAction::polygon[0][0] ) );
-	painter->drawPixmap(-size*0.25,-size*0.25,size*0.5,size*0.5,*icon);
+	painter->drawPixmap(-34*0.25,-34*0.25,34*0.5,34*0.5,*icon);
+
+	foreach( ecsControlGroup* target, targetGroups ) {
+		target->setParentItem( this );
+		target->setPos( ecsManager::ActionOffset_X + target->boundingRect().width()/2, 0 );
+		target->setVisible( true );
+		if( ! target->scene() ) scene()->addItem( target );
+		painter->drawLine( anchorOut(), target->anchorIn() );
+	}
 }
 
 //------------------------------------------------------------------------------------
 
-QPoint ecsAction::anchorIn() {
-	return QPoint(
-				this->pos().x()-size/2,
-				this->pos().y()
-		   );
+QPointF ecsAction::anchorIn() {
+	return QPointF( this->pos().x()-34/2, this->pos().y()  );
 }
 
 //------------------------------------------------------------------------------------
 
-QPoint ecsAction::anchorOut() {
-	return QPoint(
-				this->pos().x()+size/2,
-				this->pos().y()
-		   );
-}
-
-//------------------------------------------------------------------------------------
-
-void ecsAction::drawOutputTo( QPoint to, QGraphicsScene* scene ) {
-	QGraphicsLineItem* line = new QGraphicsLineItem( anchorOut().x(), anchorOut().y(), to.x(), to.y(), 0, 0);
-	line->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
-	scene->addItem( line );
+QPointF ecsAction::anchorOut() {
+	return mapFromParent( QPointF( this->pos().x()+34/2, this->pos().y()  ) );
 }
 
 //------------------------------------------------------------------------------------
@@ -87,4 +86,16 @@ void ecsAction::dropEvent(QGraphicsSceneDragDropEvent *event)
 	prepareGeometryChange();
 	targetGroups.append( ((MainWindow*)qApp->activeWindow())->cGroupModel->findItem( cGroupId ) );
 	((MainWindow*)qApp->activeWindow())->updateScene();
+}
+
+//------------------------------------------------------------------------------------
+
+void ecsAction::zap() {
+	ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(parentItem());
+	event->eventAction = NULL;
+	scene()->removeItem( this );
+
+	foreach( ecsControlGroup* target, targetGroups ) {
+		scene()->removeItem( target );
+	}
 }

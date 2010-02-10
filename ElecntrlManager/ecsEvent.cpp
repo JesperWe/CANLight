@@ -55,3 +55,9 @@ QPointF ecsEvent::anchorIn() {
 QPointF ecsEvent::anchorOut() {
 	return QPointF( ecsManager::EventIconSize*0.7, 0 );
 }
+
+//------------------------------------------------------------------------------------
+
+void ecsEvent::zap() {
+
+}

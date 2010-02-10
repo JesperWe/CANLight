@@ -1,25 +1,25 @@
 QT += svg \
-    xml
+	xml
 TARGET = ElecntrlManager
 TEMPLATE = app
 SOURCES += ecsGraphicsView.cpp \
-    ecsTableView.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    systemdescription.cpp \
-    numberedItem.cpp \
-    numberedItemModel.cpp \
-    ecsEvent.cpp \
-    ecsAction.cpp
+	ecsTableView.cpp \
+	main.cpp \
+	mainwindow.cpp \
+	systemdescription.cpp \
+	ecsControlGroup.cpp \
+	ecsControlGroupModel.cpp \
+	ecsEvent.cpp \
+	ecsAction.cpp
 HEADERS += ecsGraphicsView.h \
-    ecsTableView.h \
-    mainwindow.h \
-    systemdescription.h \
-    numberedItem.h \
-    numberedItemModel.h \
-    ecsEvent.h \
-    ecsAction.h \
-    ecsManager.h
+	ecsTableView.h \
+	mainwindow.h \
+	systemdescription.h \
+	ecsControlGroup.h \
+	ecsControlGroupModel.h \
+	ecsEvent.h \
+	ecsAction.h \
+	ecsManager.h
 FORMS += mainwindow.ui \
-    about.ui
+	about.ui
 RESOURCES += resources.qrc

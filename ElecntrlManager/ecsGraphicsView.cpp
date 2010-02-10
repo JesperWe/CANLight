@@ -19,9 +19,8 @@ void ecsGraphicsView::keyPressEvent( QKeyEvent *event ) {
 	if( event->text() == "+" ) this->scale( 1.1, 1.1 );
 	else if( event->text() == "-" ) this->scale( 0.9, 0.9 );
 	else if( event->text() == "f" ) this->resetTransform();
-	else if( event->text() == "1" ) { emit keypress( event->text() ); }
-	else if( event->text() == "2" ) { emit keypress( event->text() ); }
-	else if( event->text() == "3" ) { emit keypress( event->text() ); }
-	else if( event->text() == "a" ) { emit keypress( event->text() ); }
-	else if( event->text() == "i" ) { emit keypress( event->text() ); }
+
+	else  {
+		emit keypress( event->key() );
+	}
 }

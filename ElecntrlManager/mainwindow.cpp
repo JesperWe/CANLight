@@ -8,7 +8,7 @@
 #include "ui_mainwindow.h"
 #include "ui_about.h"
 #include "systemdescription.h"
-#include "numberedItem.h"
+#include "ecsControlGroup.h"
 #include "ecsManager.h"
 #include "ecsEvent.h"
 #include "ecsAction.h"
@@ -19,8 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
-	qApp->setProperty( "headerFont", QVariant( QFont( "Helvetica", 11, QFont::Bold )));
-	qApp->setProperty( "contentFont", QVariant( QFont( "Helvetica", 9 )));
+	qApp->setProperty( "headerFont", QVariant( QFont( "Helvetica", ecsManager::GroupNameFontSize, QFont::Bold )));
+	qApp->setProperty( "contentFont", QVariant( QFont( "Helvetica", 8 )));
 	qApp->setProperty( "buttonFont", QVariant( QFont( "Helvetica", 7, QFont::Bold )));
 	qApp->setProperty( "SelectionColor", QVariant( QColor( 0, 50, 255, 60 )));
 	qApp->setProperty( "EventColor", QVariant( QColor( 255, 210, 60, 170 )));
@@ -41,12 +41,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	this->ui->graphicsView->setScene(scene);
 	this->ui->graphicsView->show();
 
-	applianceModel = new NumberedItemModel(this);
+	applianceModel = new ecsControlGroupModel(this);
 	applianceModel->insertColumn(0);
 	applianceModel->insertColumn(0);
 	applianceModel->objectType = "x-application/ecs-appliance-id";
 
-	cGroupModel = new NumberedItemModel(this);
+	cGroupModel = new ecsControlGroupModel(this);
 	cGroupModel->insertColumn(0);
 	cGroupModel->insertColumn(0);
 	cGroupModel->objectType = "x-application/ecs-controlgroup-id";
@@ -64,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	this->ui->cGroupView->verticalHeader()->hide();
 
 	connect( this->ui->cGroupView->model(), SIGNAL( modified() ), this, SLOT(on_modifiedData()) );
-	connect( this->ui->graphicsView, SIGNAL(keypress(QString)), this, SLOT(on_keypress(QString)) );
+	connect( this->ui->graphicsView, SIGNAL(keypress(int)), this, SLOT(on_keypress(int)) );
 }
 
 MainWindow::~MainWindow()
@@ -128,7 +128,7 @@ float MainWindow::calculateEventOffset( bool & first, float eventOffset ) {
 //--------------------------------------------------------------------
 
 void MainWindow::updateScene() {
-	NumberedItem* controlGroup;
+	ecsControlGroup* control;
 	float  midpoint, eventOffset, x_pos, accumulatedOffset;
 	bool first;
 	float evenCountOffset;
@@ -138,36 +138,38 @@ void MainWindow::updateScene() {
 	// groups occupied, and our own height.
 
 	accumulatedOffset = 0;
-	foreach ( controlGroup, cGroupModel->numberedItems ) {
+	foreach ( control, cGroupModel->ecsControlGroups ) {
 
-		if( controlGroup->itemType != NumberedItem::Controller ) {
-			controlGroup->setVisible( false );
+		if( control->itemType != ecsControlGroup::Controller ) {
+			control->setVisible( false );
 			continue;
 		}
 
-		controlGroup->setVisible( true );
-		controlGroup->setAcceptDrops(true);
-		controlGroup->setFlag( QGraphicsItem::ItemIsSelectable );
+		control->setVisible( true );
+		control->setAcceptDrops(true);
+		control->setFlag( QGraphicsItem::ItemIsSelectable );
 
 		// Spread child events in a nice centered fanout.
 
 		first = true;
 		evenCountOffset = 0;
-		if((controlGroup->events.count() % 2 == 0) && (controlGroup->events.count() > 0))
+		if((control->events.count() % 2 == 0) && (control->events.count() > 0))
 			evenCountOffset = ecsManager::EventOffset_Y/2;
 
-		foreach( ecsEvent* event, controlGroup->events ) {
+		foreach( ecsEvent* event, control->events ) {
 			eventOffset = calculateEventOffset( first, eventOffset );
-			x_pos = controlGroup->longestChildWidth + ecsManager::EventOffset_X;
+			x_pos = control->longestChildWidth + ecsManager::EventOffset_X;
 			event->setPos( x_pos, eventOffset - evenCountOffset );
 		}
 
-		groupRect = controlGroup->childrenBoundingRect().united( controlGroup->selectBox );
-		midpoint = accumulatedOffset + 0.5 * groupRect.height();
-		accumulatedOffset += groupRect.height();
-		controlGroup->setPos( 0, midpoint );
+		// Now push the control groups around so they don't overlap.
 
-		if( ! scene->items().contains( controlGroup) ) scene->addItem( controlGroup );
+		groupRect = control->childrenBoundingRect().united( control->selectBox );
+		midpoint = accumulatedOffset + 0.5 * (groupRect.height() + ecsManager::GroupSpacing);
+		accumulatedOffset += groupRect.height() + ecsManager::GroupSpacing;
+		control->setPos( 0, midpoint );
+
+		if( ! control->scene() ) scene->addItem( control );
 	}
 	scene->update( scene->sceneRect() );
 }
@@ -180,20 +182,6 @@ void MainWindow::on_actionExit_triggered()
 }
 
 //--------------------------------------------------------------------
-
-void MainWindow::on_action_something_triggered()
-{
-
-	QGraphicsSvgItem* key1 = new QGraphicsSvgItem(QLatin1String(":/kalle.svg"));
-
-	//key1->setElementId(QLatin1String("key1"));
-
-	scene->addItem( key1 );
-	key1->setScale( 1.5 );
-
-	key1->setFlag(QGraphicsItem::ItemIsMovable, true);
-	key1->setFlag(QGraphicsItem::ItemIsSelectable, true);
-}
 
 void MainWindow::on_actionAbout_Qt_triggered()
 {
@@ -221,9 +209,9 @@ void MainWindow::_AddEvent( int eventType )
 
 	QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
 	if( selection.count() != 1 ) return;
-	if( selection[0]->type() != NumberedItem::Type ) return;
+	if( selection[0]->type() != ecsControlGroup::Type ) return;
 
-	NumberedItem* group = qgraphicsitem_cast<NumberedItem *>(selection[0]);
+	ecsControlGroup* group = qgraphicsitem_cast<ecsControlGroup *>(selection[0]);
 
 	thisEvent = new ecsEvent( group->id, eventType );
 	group->events.append(  thisEvent  );
@@ -269,22 +257,42 @@ void MainWindow::on_actionSwitch_Color_triggered() { _AddAction( ecsAction::Chan
 
 //-------------------------------------------------------------------------------------------------
 
-void MainWindow::on_keypress(QString key) {
+void MainWindow::on_keypress( int key ) {
 	QList<QGraphicsItem*> selection;
 	QGraphicsSimpleTextItem* link;
 
 	selection = this->ui->graphicsView->scene()->selectedItems();
 	if( selection.count() != 1 ) return;
+
+	if( key == Qt::Key_Delete ) {
+		switch( selection[0]->type() ) {
+		case ecsControlGroup::Type: {
+				ecsControlGroup* group = qgraphicsitem_cast<ecsControlGroup *>(selection[0]);
+				group->zap();
+				break; }
+		case ecsEvent::Type: {
+				ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(selection[0]);
+				event->zap();
+				break; }
+		case ecsAction::Type: {
+				ecsAction* action = qgraphicsitem_cast<ecsAction*>(selection[0]);
+				action->zap();
+				break; }
+		}
+	}
+
 	if( selection[0]->type() != QGraphicsSimpleTextItem::Type ) return;
 
 	link = qgraphicsitem_cast<QGraphicsSimpleTextItem *>(selection[0]);
 
 	int func = 0;
-	if( key == "1" ) func = ecsEvent::Key0;
-	else if( key == "2" ) func = ecsEvent::Key1;
-	else if( key == "3" ) func = ecsEvent::Key2;
-	else if( key == "a" ) func = ecsEvent::AnalogSignal;
-	else if( key == "i" ) func = ecsEvent::ChangeNotifiation;
+	if( key == Qt::Key_1 ) func = ecsEvent::Key0;
+	else if( key == Qt::Key_2 ) func = ecsEvent::Key1;
+	else if( key == Qt::Key_3 ) func = ecsEvent::Key2;
+	else if( key == Qt::Key_A ) func = ecsEvent::AnalogSignal;
+	else if( key == Qt::Key_I ) func = ecsEvent::ChangeNotifiation;
+
+	else { return; } // Ignore unknow keypress.
 
 	link->setData( 1, func );
 	link->setSelected( false );

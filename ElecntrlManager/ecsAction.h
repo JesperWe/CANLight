@@ -2,28 +2,29 @@
 #define ECSACTION_H
 
 #include <QtGui>
-#include "numberedItem.h"
+#include "ecsControlGroup.h"
+#include "ecsManager.h"
 #include "ecsEvent.h"
 
 class ecsAction : public QGraphicsItem
 {
 public:
-	static const int size = 50;
 	static const int polygon[4][2];
 
 	ecsAction() : QGraphicsItem(0)  {
 		setAcceptDrops(true);
+		setFlag(QGraphicsItem::ItemIsSelectable, true);
 		actionType = ecsAction::None;
 	};
 	ecsAction( int t ) : QGraphicsItem(0) {
 		setAcceptDrops(true);
+		setFlag(QGraphicsItem::ItemIsSelectable, true);
 		actionType = t;
 	};
 
-	enum { Type = UserType + 3 };
+	enum { Type = UserType + ecsManager::Action };
 	int type() const { return Type; };
 
-	void drawOutputTo( QPoint to, QGraphicsScene* scene );
 	void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
 	void dropEvent(QGraphicsSceneDragDropEvent *event);
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
@@ -44,10 +45,11 @@ public:
 	int eventIndex;
 
 	QRectF boundingRect() const;
-	QPoint anchorIn();
-	QPoint anchorOut();
+	QPointF anchorIn();
+	QPointF anchorOut();
+	void zap();
 
-	QList<NumberedItem*> targetGroups;
+	QList<ecsControlGroup*> targetGroups;
 
 };
 

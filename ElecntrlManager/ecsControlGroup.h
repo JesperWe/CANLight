@@ -1,20 +1,19 @@
-#ifndef NUMBEREDITEM_H
-#define NUMBEREDITEM_H
+#ifndef ecsControlGroup_H
+#define ecsControlGroup_H
 
 #include <QtGui>
 #include "ecsManager.h"
 
-class NumberedItemModel;
+class ecsControlGroupModel;
 class ecsAction;
 class ecsEvent;
 
-class NumberedItem :  public QObject, public QGraphicsItem
+class ecsControlGroup :  public QGraphicsItem
 {
-	Q_OBJECT
 
 public:
 
-	enum { Type = UserType + 1 };
+	enum { Type = UserType + ecsManager::ControlGroup };
 	int type() const { return Type; };
 
 	enum itemTypes_e {
@@ -28,27 +27,27 @@ public:
 	//--------------------------------------------------------------------------------------
 	// Constructors
 
-	NumberedItem() : QGraphicsItem(0) {
+	ecsControlGroup() : QGraphicsItem(0) {
 		id = 0;
 		description = "N/A";
-		itemType = NumberedItem::Controller;
+		itemType = ecsControlGroup::Controller;
 		longestChildWidth = ecsManager::GroupChildMinimumWidth;
 		offset = 0;
 	}
 
-	NumberedItem( int newId );
+	ecsControlGroup( int newId );
 
 	//--------------------------------------------------------------------------------------
 
-	static bool compareIdsAsc( const NumberedItem* a1, const NumberedItem* a2 );
-	static bool compareIdsDesc( const NumberedItem* a1, const NumberedItem* a2 );
-	static bool compareDscrAsc( const NumberedItem* a1, const NumberedItem* a2 );
-	static bool compareDscrDesc( const NumberedItem* a1, const NumberedItem* a2 );
+	static bool compareIdsAsc( const ecsControlGroup* a1, const ecsControlGroup* a2 );
+	static bool compareIdsDesc( const ecsControlGroup* a1, const ecsControlGroup* a2 );
+	static bool compareDscrAsc( const ecsControlGroup* a1, const ecsControlGroup* a2 );
+	static bool compareDscrDesc( const ecsControlGroup* a1, const ecsControlGroup* a2 );
 
 	void recalcBoxSize();
 	QRectF boundingRect() const { return selectBox; };
 	QString displayText();
-	QGraphicsSimpleTextItem* appendLinkedAppliance( NumberedItem* appliance );
+	QGraphicsSimpleTextItem* appendLinkedAppliance( ecsControlGroup* appliance );
 
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
@@ -57,7 +56,7 @@ public:
 
 	void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
 	void dropEvent(QGraphicsSceneDragDropEvent *event);
-
+	void zap();
 	QVariant typeIcon() const;
 
 	//--------------------------------------------------------------------------------------
@@ -72,9 +71,6 @@ public:
 	QList<QGraphicsSimpleTextItem*> links; // data[0] is pointer to appliance item. data[1] is ctrlFunction.
 	QList<ecsEvent*> events;
 
-signals:
-	void modified();
-
 };
 
-#endif // NUMBEREDITEM_H
+#endif // ecsControlGroup_H

@@ -1,17 +1,17 @@
 #include <QIcon>
 
-#include "numberedItem.h"
-#include "numberedItemModel.h"
+#include "ecsControlGroup.h"
+#include "ecsControlGroupModel.h"
 
-int NumberedItemModel::rowCount(const QModelIndex &parent) const
+int ecsControlGroupModel::rowCount(const QModelIndex &parent) const
 {
 	Q_UNUSED(parent);
-	return numberedItems.count();
+	return ecsControlGroups.count();
 }
 
 //---------------------------------------------------------------------------
 
-int NumberedItemModel::columnCount(const QModelIndex &parent) const
+int ecsControlGroupModel::columnCount(const QModelIndex &parent) const
 {
 	Q_UNUSED(parent);
 	return 2;
@@ -19,18 +19,18 @@ int NumberedItemModel::columnCount(const QModelIndex &parent) const
 
 //---------------------------------------------------------------------------
 
-QVariant NumberedItemModel::data(const QModelIndex &index, int role) const
+QVariant ecsControlGroupModel::data(const QModelIndex &index, int role) const
 {
 	if (!index.isValid())
 		return QVariant();
 
-	if (index.row() >= numberedItems.size())
+	if (index.row() >= ecsControlGroups.size())
 		return QVariant();
 
 	if (role == Qt::DisplayRole || role == Qt::EditRole) {
 		switch( index.column() ) {
-		case 0: { return QString::number( numberedItems[ index.row() ]->id ); }
-		case 1: { return numberedItems[ index.row() ]->description; }
+		case 0: { return QString::number( ecsControlGroups[ index.row() ]->id ); }
+		case 1: { return ecsControlGroups[ index.row() ]->description; }
 		case 2: { return QVariant(); }
 		}
 	}
@@ -41,7 +41,7 @@ QVariant NumberedItemModel::data(const QModelIndex &index, int role) const
 			return QIcon(":/graphics/appliance.svg");
 		}
 		else {
-			return numberedItems.at(index.row())->typeIcon();
+			return ecsControlGroups.at(index.row())->typeIcon();
 		}
 	}
 
@@ -65,7 +65,7 @@ QVariant NumberedItemModel::data(const QModelIndex &index, int role) const
 
 //---------------------------------------------------------------------------
 
-QVariant NumberedItemModel::headerData(int section, Qt::Orientation orientation,
+QVariant ecsControlGroupModel::headerData(int section, Qt::Orientation orientation,
 									int role) const
 {
 	QString header;
@@ -99,7 +99,7 @@ QVariant NumberedItemModel::headerData(int section, Qt::Orientation orientation,
 
 //---------------------------------------------------------------------------
 
-Qt::ItemFlags NumberedItemModel::flags(const QModelIndex &index) const
+Qt::ItemFlags ecsControlGroupModel::flags(const QModelIndex &index) const
 {
 	Qt::ItemFlags flags = 0;
 
@@ -114,7 +114,7 @@ Qt::ItemFlags NumberedItemModel::flags(const QModelIndex &index) const
 
 //---------------------------------------------------------------------------
 
-QModelIndex NumberedItemModel:: insertRow() {
+QModelIndex ecsControlGroupModel:: insertRow() {
 	int row = rowCount();
 	insertRows( row, 1, QModelIndex() );
 	return index( row, 0, QModelIndex() );
@@ -122,15 +122,15 @@ QModelIndex NumberedItemModel:: insertRow() {
 
 //---------------------------------------------------------------------------
 
-bool NumberedItemModel::setData(const QModelIndex &index,
+bool ecsControlGroupModel::setData(const QModelIndex &index,
 							 const QVariant &value, int role)
 {
 	if( ! index.isValid() ) return false;
 
 	if( role == Qt::EditRole) {
 		switch( index.column() ) {
-		case 0: { numberedItems[index.row()]->id = value.toInt(); break; }
-		case 1: { numberedItems[index.row()]->description = value.toString(); break; }
+		case 0: { ecsControlGroups[index.row()]->id = value.toInt(); break; }
+		case 1: { ecsControlGroups[index.row()]->description = value.toString(); break; }
 		}
 
 		emit dataChanged(index, index);
@@ -143,10 +143,10 @@ bool NumberedItemModel::setData(const QModelIndex &index,
 
 		// v == -1 means toggle type.
 
-		if( v == -1 && numberedItems[index.row()]->itemType == NumberedItem::Controller )  	v = NumberedItem::Activity;
-		if( v == -1 && numberedItems[index.row()]->itemType == NumberedItem::Activity )  	v = NumberedItem::Controller;
+		if( v == -1 && ecsControlGroups[index.row()]->itemType == ecsControlGroup::Controller )  	v = ecsControlGroup::Activity;
+		if( v == -1 && ecsControlGroups[index.row()]->itemType == ecsControlGroup::Activity )  	v = ecsControlGroup::Controller;
 
-		numberedItems[index.row()]->itemType = v;
+		ecsControlGroups[index.row()]->itemType = v;
 		emit dataChanged(index, index);
 		emit modified();
 		return true;
@@ -157,23 +157,23 @@ bool NumberedItemModel::setData(const QModelIndex &index,
 
 //---------------------------------------------------------------------------
 
-bool NumberedItemModel::insertRows(int position, int rows, const QModelIndex &parent)
+bool ecsControlGroupModel::insertRows(int position, int rows, const QModelIndex &parent)
 {
 	Q_UNUSED(parent);
-	NumberedItem* newItem;
+	ecsControlGroup* newItem;
 	int maxId = 0;
 
-	for( int i=0; i<numberedItems.count(); i++ )  {
-		if( numberedItems[i]->id > maxId ) maxId = numberedItems[i]->id;
+	for( int i=0; i<ecsControlGroups.count(); i++ )  {
+		if( ecsControlGroups[i]->id > maxId ) maxId = ecsControlGroups[i]->id;
 	}
 
 	beginInsertRows( QModelIndex(), position, position+rows-1 );
 
 	for( int row = 0; row < rows; ++row ) {
-		newItem = new NumberedItem();
+		newItem = new ecsControlGroup();
 		newItem->id = ++maxId;
 		newItem->recalcBoxSize();
-		numberedItems.append(  newItem );
+		ecsControlGroups.append(  newItem );
 	}
 
 	endInsertRows();
@@ -183,13 +183,13 @@ bool NumberedItemModel::insertRows(int position, int rows, const QModelIndex &pa
 
 //---------------------------------------------------------------------------
 
-bool NumberedItemModel::removeRows(int position, int rows, const QModelIndex &parent)
+bool ecsControlGroupModel::removeRows(int position, int rows, const QModelIndex &parent)
 {
 	Q_UNUSED(parent);
 
 	beginRemoveRows(QModelIndex(), position, position+rows-1);
 	for (int row = 0; row < rows; ++row) {
-		numberedItems.removeAt(position);
+		ecsControlGroups.removeAt(position);
 	}
 	endRemoveRows();
 	emit modified();
@@ -198,19 +198,19 @@ bool NumberedItemModel::removeRows(int position, int rows, const QModelIndex &pa
 
 //---------------------------------------------------------------------------
 
-void NumberedItemModel::sort( int column, Qt::SortOrder order ) {
+void ecsControlGroupModel::sort( int column, Qt::SortOrder order ) {
 	beginResetModel();
 	if( order == Qt::AscendingOrder ) {
 		switch( column ) {
-		case 0: qSort(numberedItems.begin(), numberedItems.end(), NumberedItem::compareIdsAsc ); break;
-		case 1: qSort(numberedItems.begin(), numberedItems.end(), NumberedItem::compareDscrAsc ); break;
+		case 0: qSort(ecsControlGroups.begin(), ecsControlGroups.end(), ecsControlGroup::compareIdsAsc ); break;
+		case 1: qSort(ecsControlGroups.begin(), ecsControlGroups.end(), ecsControlGroup::compareDscrAsc ); break;
 		}
 	}
 
 	if( order == Qt::DescendingOrder ) {
 		switch( column ) {
-		case 0: qSort(numberedItems.begin(), numberedItems.end(), NumberedItem::compareIdsDesc ); break;
-		case 1: qSort(numberedItems.begin(), numberedItems.end(), NumberedItem::compareDscrDesc ); break;
+		case 0: qSort(ecsControlGroups.begin(), ecsControlGroups.end(), ecsControlGroup::compareIdsDesc ); break;
+		case 1: qSort(ecsControlGroups.begin(), ecsControlGroups.end(), ecsControlGroup::compareDscrDesc ); break;
 		}
 	}
 	endResetModel();
@@ -219,7 +219,7 @@ void NumberedItemModel::sort( int column, Qt::SortOrder order ) {
 
 //---------------------------------------------------------------------------
 
-QMimeData *NumberedItemModel::mimeData(const QModelIndexList &indexes) const
+QMimeData *ecsControlGroupModel::mimeData(const QModelIndexList &indexes) const
 {
 	QMimeData *mimeData = new QMimeData();
 
@@ -229,36 +229,36 @@ QMimeData *NumberedItemModel::mimeData(const QModelIndexList &indexes) const
 
 //---------------------------------------------------------------------------
 
-void NumberedItemModel::updateComplete()
+void ecsControlGroupModel::updateComplete()
 {
 	emit modified();
 }
 
 //---------------------------------------------------------------------------
 
-NumberedItem* NumberedItemModel::findItem( int id )
+ecsControlGroup* ecsControlGroupModel::findItem( int id )
 {
-	for( int i = 0; i < numberedItems.count(); i++ ) {
-		if( numberedItems[i]->id == id ) return numberedItems[i];
+	for( int i = 0; i < ecsControlGroups.count(); i++ ) {
+		if( ecsControlGroups[i]->id == id ) return ecsControlGroups[i];
 	}
 	return NULL;
 }
 
 //---------------------------------------------------------------------------
 
-int NumberedItemModel::findItemIndex( int id )
+int ecsControlGroupModel::findItemIndex( int id )
 {
-	for( int i = 0; i < numberedItems.count(); i++ ) {
-		if( numberedItems[i]->id == id ) return i;
+	for( int i = 0; i < ecsControlGroups.count(); i++ ) {
+		if( ecsControlGroups[i]->id == id ) return i;
 	}
 	return NULL;
 }
 
 //---------------------------------------------------------------------------
 
-void NumberedItemModel::clear()
+void ecsControlGroupModel::clear()
 {
 	beginResetModel();
-	numberedItems.clear();
+	ecsControlGroups.clear();
 	endResetModel();
 }

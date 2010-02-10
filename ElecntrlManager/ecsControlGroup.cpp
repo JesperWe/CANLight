@@ -1,47 +1,47 @@
 #include <QIcon>
 
 #include "ecsManager.h"
-#include "numberedItem.h"
-#include "numberedItemModel.h"
+#include "ecsControlGroup.h"
+#include "ecsControlGroupModel.h"
 #include "mainwindow.h"
 #include "ecsEvent.h"
 
-NumberedItem::NumberedItem( int newId ) : QGraphicsItem(0) {
+ecsControlGroup::ecsControlGroup( int newId ) : QGraphicsItem(0) {
 	id = newId;
 	setFlag( QGraphicsItem::ItemIsSelectable, true );
 	longestChildWidth = ecsManager::GroupChildMinimumWidth;
 	qDebug() << "Create " << newId;
 }
 
-bool NumberedItem::compareIdsAsc( const NumberedItem* a1, const NumberedItem* a2 ) { return a1->id < a2->id; }
-bool NumberedItem::compareIdsDesc( const NumberedItem* a1, const NumberedItem* a2 ) { return a1->id > a2->id; }
-bool NumberedItem::compareDscrAsc( const NumberedItem* a1, const NumberedItem* a2 ) { return a1->description < a2->description; }
-bool NumberedItem::compareDscrDesc( const NumberedItem* a1, const NumberedItem* a2 ) { return a1->description > a2->description; }
+bool ecsControlGroup::compareIdsAsc( const ecsControlGroup* a1, const ecsControlGroup* a2 ) { return a1->id < a2->id; }
+bool ecsControlGroup::compareIdsDesc( const ecsControlGroup* a1, const ecsControlGroup* a2 ) { return a1->id > a2->id; }
+bool ecsControlGroup::compareDscrAsc( const ecsControlGroup* a1, const ecsControlGroup* a2 ) { return a1->description < a2->description; }
+bool ecsControlGroup::compareDscrDesc( const ecsControlGroup* a1, const ecsControlGroup* a2 ) { return a1->description > a2->description; }
 
-QVariant NumberedItem::typeIcon() const {
+QVariant ecsControlGroup::typeIcon() const {
 	switch( itemType ) {
-	case NumberedItem::Controller: { return QIcon(":/graphics/finger.svg"); }
-	case NumberedItem::Activity: { return QIcon(":/graphics/flash.svg"); }
-	case NumberedItem::Appliance: { return QIcon(":/graphics/appliance.svg"); }
+	case ecsControlGroup::Controller: { return QIcon(":/graphics/finger.svg"); }
+	case ecsControlGroup::Activity: { return QIcon(":/graphics/flash.svg"); }
+	case ecsControlGroup::Appliance: { return QIcon(":/graphics/appliance.svg"); }
 	}
 	return QVariant();
 }
 
 //------------------------------------------------------------------------------------
 
-QPoint NumberedItem::anchorIn() {
-		return QPoint( boxSize.x(), boxSize.y() + boxSize.height()/2 );
+QPoint ecsControlGroup::anchorIn() {
+		return QPoint( pos().x() + boxSize.x(), pos().y() + boxSize.y() + boxSize.height()/2 );
 }
 
 //------------------------------------------------------------------------------------
 
-QPoint NumberedItem::anchorOut() {
+QPoint ecsControlGroup::anchorOut() {
 		return QPoint( boxSize.x() + boxSize.width(), boxSize.y() + boxSize.height()/2 );
 }
 
 //------------------------------------------------------------------------------------
 
-void NumberedItem::recalcBoxSize()
+void ecsControlGroup::recalcBoxSize()
 {
 	float boxWidth, rw, rh, rx, ry;
 	qreal penWidth = qApp->property( "cGroupPen" ).value<QPen>().width();
@@ -54,10 +54,14 @@ void NumberedItem::recalcBoxSize()
 
 	 boxWidth = longestChildWidth + ecsManager::CtrlFunctionIconWidth + 10;
 
+
 	rw = boxWidth + penWidth;
 	rh = 10 + penWidth + ( links.count() * ecsManager::ApplianceLineSpacing );
 	rx = -rw / 2;
 	ry = -rh / 2;
+
+	// Make shure we center vertically around box + displayText
+	ry = ry + (ecsManager::GroupNameFontSize + ecsManager::GroupNameOffset)/2;
 
 	boxSize.setRect( rx, ry, rw, rh );
 
@@ -71,13 +75,13 @@ void NumberedItem::recalcBoxSize()
 
 //------------------------------------------------------------------------------------
 
-QString NumberedItem::displayText() {
+QString ecsControlGroup::displayText() {
 	return QString::number( id ) + " - " + description;
 }
 
 //------------------------------------------------------------------------------------
 
-void NumberedItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+void ecsControlGroup::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 					   QWidget *widget)
 {
 	recalcBoxSize();
@@ -93,7 +97,11 @@ void NumberedItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 	painter->setFont( qApp->property( "headerFont" ).value<QFont>() );
 
 	painter->drawRoundedRect(boxSize.x(), boxSize.y(), boxSize.width(), boxSize.height(), 6, 6);
-	painter->drawText( boxSize.x(), boxSize.y()-6, displayText() );
+	painter->drawText(
+			boxSize.x(),
+			boxSize.y()-ecsManager::GroupNameOffset,
+			displayText()
+		);
 
 	QPixmap* icon = new QPixmap(":/graphics/button.svg");
 
@@ -157,13 +165,13 @@ void NumberedItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 
 //------------------------------------------------------------------------------------
 
-void NumberedItem::dragEnterEvent( QGraphicsSceneDragDropEvent *event ) {
+void ecsControlGroup::dragEnterEvent( QGraphicsSceneDragDropEvent *event ) {
 	event->setAccepted(event->mimeData()->hasFormat("x-application/ecs-appliance-id"));
 }
 
 //------------------------------------------------------------------------------------
 
-QGraphicsSimpleTextItem* NumberedItem::appendLinkedAppliance( NumberedItem* appliance ) {
+QGraphicsSimpleTextItem* ecsControlGroup::appendLinkedAppliance( ecsControlGroup* appliance ) {
 	QGraphicsSimpleTextItem* link;
 	float y_pos;
 
@@ -184,16 +192,14 @@ QGraphicsSimpleTextItem* NumberedItem::appendLinkedAppliance( NumberedItem* appl
 		y_pos += ecsManager::ApplianceLineSpacing;
 	}
 
-	emit modified();
-
 	return link;
 }
 
 //------------------------------------------------------------------------------------
 
-void NumberedItem::dropEvent( QGraphicsSceneDragDropEvent *event ) {
-	NumberedItemModel* appsModel;
-	NumberedItem* appliance;
+void ecsControlGroup::dropEvent( QGraphicsSceneDragDropEvent *event ) {
+	ecsControlGroupModel* appsModel;
+	ecsControlGroup* appliance;
 
 	const QMimeData* data = event->mimeData();
 
@@ -207,4 +213,10 @@ void NumberedItem::dropEvent( QGraphicsSceneDragDropEvent *event ) {
 
 	prepareGeometryChange();
 	appendLinkedAppliance( appliance );
+}
+
+//------------------------------------------------------------------------------------
+
+void ecsControlGroup::zap() {
+
 }

@@ -12,16 +12,16 @@ class ecsGraphicsView : public QGraphicsView
 Q_OBJECT
 
 public:
-    ecsGraphicsView( QWidget* parent ) : QGraphicsView( parent )
-        { setFocusPolicy( Qt::StrongFocus ); };
+	ecsGraphicsView( QWidget* parent ) : QGraphicsView( parent )
+		{ setFocusPolicy( Qt::StrongFocus ); };
 
-    void keyPressEvent( QKeyEvent *event );
+	void keyPressEvent( QKeyEvent *event );
 
 protected:
-    void wheelEvent( QWheelEvent *event );
-    void scaleView( qreal scaleFactor );
+	void wheelEvent( QWheelEvent *event );
+	void scaleView( qreal scaleFactor );
 
 signals:
-    void keypress( QString key );
+	void keypress( int key );
 };
 #endif // ECSGRAPHICSVIEW_H

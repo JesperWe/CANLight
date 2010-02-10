@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QGraphicsView>
-#include "numberedItemModel.h"
+#include "ecsControlGroupModel.h"
 
 namespace Ui {
 	class MainWindow;
@@ -15,8 +15,8 @@ public:
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
 	void updateScene();
-	NumberedItemModel* applianceModel;
-	NumberedItemModel* cGroupModel;
+	ecsControlGroupModel* applianceModel;
+	ecsControlGroupModel* cGroupModel;
 
 protected:
 	void changeEvent(QEvent *e);
@@ -43,15 +43,14 @@ private slots:
 	void on_actionSave_triggered();
 	void on_actionSave_As_triggered();
 	void on_actionAbout_Qt_triggered();
-	void on_action_something_triggered();
 	void on_actionExit_triggered();
 	void on_actionOpen_triggered();
 	void on_actionAbout_triggered();
 
-	void on_keypress( QString key );
 
 public slots:
 	void on_modifiedData();
+	void on_keypress( int key );
 };
 
 #endif // MAINWINDOW_H

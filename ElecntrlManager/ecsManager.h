@@ -15,22 +15,26 @@ public:
 		Action
 	};
 
-	static const float GraphicsDebug  = true;
+	static const float GraphicsDebug  = false;
+
+	static const float GroupNameFontSize = 9;
+	static const float GroupNameOffset = 4;
+	static const float GroupSpacing = 5;
 
 	static const float GroupChildMinimumWidth = 60;
-	static const float ApplianceLineSpacing = 20;
-	static const float CtrlFunctionIconWidth = 30;
-	static const float CtrlButtonSize = 17;
+	static const float ApplianceLineSpacing = 17;
+	static const float CtrlFunctionIconWidth = 20;
+	static const float CtrlButtonSize = 15;
 
-	static const float EventSpacing = 60;
-	static const float EventIconSize = 30;
-	static const float EventOffset_X = 120;
-	static const float EventOffset_Y = 60;
+	static const float EventSpacing = 40;
+	static const float EventIconSize = 24;
+	static const float EventOffset_X = 80;
+	static const float EventOffset_Y = 40;
 
-	static const float ActionSize = 60;
-	static const float ActionOffset_X = 100;
+	static const float ActionIconSize = 40;
+	static const float ActionOffset_X = 80;
 
-	static const float TargetGroupOffset_X = 150;
+	static const float TargetGroupOffset_X = 100;
 };
 
 #endif // ECSMANAGER_H
