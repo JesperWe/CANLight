@@ -278,12 +278,16 @@ void MainWindow::on_keypress( int key ) {
 				ecsAction* action = qgraphicsitem_cast<ecsAction*>(selection[0]);
 				action->zap();
 				break; }
+		case QGraphicsSimpleTextItem::Type: {
+				QGraphicsSimpleTextItem* linkedApp = qgraphicsitem_cast<QGraphicsSimpleTextItem*>(selection[0]);
+				ecsControlGroup* group = (ecsControlGroup*) linkedApp->parentItem();
+				group->links.removeAt( group->links.indexOf( linkedApp ) );
+				linkedApp->scene()->removeItem( linkedApp );
+				group->recalcLinkPositions();;
+				updateScene();
+				break; }
 		}
 	}
-
-	if( selection[0]->type() != QGraphicsSimpleTextItem::Type ) return;
-
-	link = qgraphicsitem_cast<QGraphicsSimpleTextItem *>(selection[0]);
 
 	int func = 0;
 	if( key == Qt::Key_1 ) func = ecsEvent::Key0;

@@ -171,9 +171,21 @@ void ecsControlGroup::dragEnterEvent( QGraphicsSceneDragDropEvent *event ) {
 
 //------------------------------------------------------------------------------------
 
+void ecsControlGroup::recalcLinkPositions() {
+	float y_pos;
+
+	recalcBoxSize();
+	y_pos = 0;
+	foreach ( QGraphicsItem* child, links ) {
+		child->setPos( boxSize.x() + 6, boxSize.y() + 4 + y_pos );
+		y_pos += ecsManager::ApplianceLineSpacing;
+	}
+}
+
+//------------------------------------------------------------------------------------
+
 QGraphicsSimpleTextItem* ecsControlGroup::appendLinkedAppliance( ecsControlGroup* appliance ) {
 	QGraphicsSimpleTextItem* link;
-	float y_pos;
 
 	link = new QGraphicsSimpleTextItem( appliance->displayText() );
 	link->setData( 0, QVariant::fromValue( (void*) appliance ) );
@@ -184,14 +196,7 @@ QGraphicsSimpleTextItem* ecsControlGroup::appendLinkedAppliance( ecsControlGroup
 	link->setFlag(QGraphicsItem::ItemIsSelectable, true);
 
 	links.append( link );
-
-	recalcBoxSize();
-	y_pos = 0;
-	foreach ( QGraphicsItem* child, links ) {
-		child->setPos( boxSize.x() + 6, boxSize.y() + 4 + y_pos );
-		y_pos += ecsManager::ApplianceLineSpacing;
-	}
-
+	recalcLinkPositions();
 	return link;
 }
 

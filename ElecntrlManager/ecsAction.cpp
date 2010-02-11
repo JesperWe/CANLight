@@ -93,9 +93,11 @@ void ecsAction::dropEvent(QGraphicsSceneDragDropEvent *event)
 void ecsAction::zap() {
 	ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(parentItem());
 	event->eventAction = NULL;
-	scene()->removeItem( this );
 
 	foreach( ecsControlGroup* target, targetGroups ) {
 		scene()->removeItem( target );
 	}
+
+	scene()->removeItem( this );
+
 }

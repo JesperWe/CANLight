@@ -59,5 +59,8 @@ QPointF ecsEvent::anchorOut() {
 //------------------------------------------------------------------------------------
 
 void ecsEvent::zap() {
-
+	if( eventAction ) eventAction->zap();
+	ecsControlGroup* parent = (ecsControlGroup*)parentItem();
+	parent->events.removeAt( parent->events.indexOf( this  ) );
+	scene()->removeItem( this );
 }

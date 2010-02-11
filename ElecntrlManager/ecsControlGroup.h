@@ -53,7 +53,7 @@ public:
 
 	QPoint anchorIn();
 	QPoint anchorOut();
-
+	void recalcLinkPositions();
 	void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
 	void dropEvent(QGraphicsSceneDragDropEvent *event);
 	void zap();
