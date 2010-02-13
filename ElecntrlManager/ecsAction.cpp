@@ -22,6 +22,10 @@ QRectF ecsAction::boundingRect() const {
 
 void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
 	QPixmap* icon;
+	bool  placeBelow, first;
+	float yPos;
+	QRectF targetRect;
+	static int counter = 0;
 
 	switch( actionType ) {
 	case ecsAction::SwitchON:    { icon = new QPixmap(":/graphics/bulb-lit.svg"); break; }
@@ -44,12 +48,32 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	painter->drawPolygon( QPolygon( 4, &ecsAction::polygon[0][0] ) );
 	painter->drawPixmap(-34*0.25,-34*0.25,34*0.5,34*0.5,*icon);
 
+	placeBelow = false;
+	first = true;
+	targetRect.setCoords( 0, 0, 0, 0 );
+
 	foreach( ecsControlGroupGraphic* target, targetGroups ) {
-		target->setParentItem( this );
-		target->setPos( ecsManager::ActionOffset_X + target->boundingRect().width()/2, 0 );
-		target->setVisible( true );
 		if( ! target->scene() ) scene()->addItem( target );
+
+		if( first ) {
+			yPos = 0;
+			first = false;
+		}
+		else {
+			if( placeBelow ) {
+				yPos = targetRect.bottom() + target->boundingRect().height()/2;
+			}
+			else {
+				yPos = targetRect.top() - target->boundingRect().height()/2;
+			}
+		}
+		target->setParentItem( this );
+		qDebug() << counter++ << " target pos " << ecsManager::ActionOffset_X + target->boundingRect().width()/2 << "," << yPos;
+		target->setPos( ecsManager::ActionOffset_X + target->boundingRect().width()/2, yPos );
+		targetRect = targetRect.united( target->boundingRect() );
 		painter->drawLine( anchorOut(), target->anchorIn() );
+
+		placeBelow = ! placeBelow;
 	}
 }
 

@@ -25,7 +25,9 @@ void ecsControlGroupGraphic::recalcBoxSize()
 	qreal penWidth = qApp->property( "cGroupPen" ).value<QPen>().width();
 
 	longestChildWidth = ecsManager::GroupChildMinimumWidth;
-	foreach( QGraphicsSimpleTextItem* link, srcGroup->links ) {
+	foreach( QGraphicsItem* link, childItems() ) {
+		if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
+
 		if( link->boundingRect().width() > longestChildWidth )
 			longestChildWidth = link->boundingRect().width();
 	}
@@ -53,10 +55,13 @@ void ecsControlGroupGraphic::recalcBoxSize()
 
 //------------------------------------------------------------------------------------
 
-void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-					   QWidget *widget)
+void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+	QPointF textPos;
+
 	recalcBoxSize();
+	updateLinkTexts();
+	recalcLinkPositions();
 
 	if( isSelected() ) {
 		painter->setPen( Qt::NoPen );
@@ -80,36 +85,38 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 	float buttonSize = ecsManager::CtrlButtonSize;
 
 	foreach( QGraphicsItem* link, childItems() ) {
-		QPointF pos = link->pos();
-		pos.setX( pos.x() + link->boundingRect().width() + 10 );
+		if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
+		textPos = link->pos();
+		textPos.setX( textPos.x() + link->boundingRect().width() + 10 );
 
-		int func = link->data(1).toInt();
+		ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
+		int func = srcGroup->functions[ linkedApp->id ];
 
 		if( func != ecsEvent::Unknown ) {
 			painter->setFont( qApp->property( "buttonFont" ).value<QFont>() );
 
 			switch( func ) {
 			case ecsEvent::Key0: {
-					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *icon );
-					painter->drawText( pos.x(), pos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "1", 0 );
+					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *icon );
+					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "1", 0 );
 					break; }
 			case ecsEvent::Key1: {
-					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *icon );
-					painter->drawText( pos.x(), pos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "2", 0 );
+					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *icon );
+					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "2", 0 );
 					break; }
 			case ecsEvent::Key2: {
-					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *icon );
-					painter->drawText( pos.x(), pos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
+					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *icon );
+					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
 					break; }
 			case ecsEvent::AnalogSignal: {
 					QPixmap* sym = new QPixmap(":/graphics/signal.svg");
 					painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
-					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *sym );
+					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *sym );
 					break; }
 			case ecsEvent::ChangeNotifiation: {
 					QPixmap* sym = new QPixmap(":/graphics/connections.svg");
 					painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
-					painter->drawPixmap( pos.x(), pos.y(), buttonSize, buttonSize, *sym );
+					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *sym );
 					break; }
 			}
 		}
@@ -146,9 +153,9 @@ void ecsControlGroupGraphic::dragEnterEvent( QGraphicsSceneDragDropEvent *event 
 void ecsControlGroupGraphic::recalcLinkPositions() {
 	float y_pos;
 
-	recalcBoxSize();
 	y_pos = 0;
-	foreach ( QGraphicsItem* child, srcGroup->links ) {
+	foreach ( QGraphicsItem* child, childItems() ) {
+		if( child->type() != QGraphicsSimpleTextItem::Type ) continue;
 		child->setPos( boxSize.x() + 6, boxSize.y() + 4 + y_pos );
 		y_pos += ecsManager::ApplianceLineSpacing;
 	}
@@ -170,6 +177,34 @@ void ecsControlGroupGraphic::dropEvent( QGraphicsSceneDragDropEvent *event ) {
 	appsModel = ((MainWindow*)(qApp->activeWindow()))->applianceModel;
 	appliance = appsModel->findItem( applianceId );
 
+	// For now we do not support adding multiple functions from the same appliance to a control group.
+	if( srcGroup->functions.contains( appliance->id ) ) return;
+
 	prepareGeometryChange();
-	srcGroup->appendLinkedAppliance( appliance );
+	srcGroup->links.append( appliance );
+	srcGroup->functions[applianceId] = ecsEvent::None;
+}
+
+//------------------------------------------------------------------------------------
+
+void ecsControlGroupGraphic::updateLinkTexts() {
+	QGraphicsSimpleTextItem* linkText;
+
+	foreach( ecsControlGroup* appliance, srcGroup->links ) {
+		if( linkTexts.contains( appliance->id ) ) {
+			linkText = linkTexts[ appliance->id ];
+		}
+		else {
+			linkText = new QGraphicsSimpleTextItem( appliance->displayText() );
+			linkText->setZValue( 2 );
+			linkText->setFont( qApp->property( "contentFont" ).value<QFont>() );
+			linkText->setFlag( QGraphicsItem::ItemIsSelectable, true );
+			linkText->setParentItem( this );
+
+			linkTexts[ appliance->id ] = linkText;
+		}
+
+		linkText->setData( 0, QVariant::fromValue( (void*) appliance ) );
+		linkText->setText( appliance->displayText() );
+	}
 }

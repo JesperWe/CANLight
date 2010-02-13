@@ -75,11 +75,10 @@ void SystemDescription::saveFile( QString toFile, ecsControlGroupModel* applianc
 		out.writeAttribute( "description", group->description );
 		out.writeAttribute( "type", QString::number( group->itemType) );
 
-		foreach( QGraphicsSimpleTextItem* link,  group->links ) {
-			ecsControlGroup* linkedapp = (ecsControlGroup*)(link->data(0).value<void*>());
+		foreach( ecsControlGroup* linkedapp,  group->links ) {
 			out.writeStartElement( "appliance-function" );
 			out.writeAttribute( "id", QString::number( linkedapp->id ) );
-			out.writeAttribute( "function", QString::number( link->data(1).toInt() ) );
+			out.writeAttribute( "function", QString::number( group->functions[linkedapp->id] ) );
 			out.writeEndElement();
 		}
 
@@ -146,7 +145,6 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 {
 	QModelIndex index;
 	QString attrVal;
-	QGraphicsSimpleTextItem* link;
 
 	if( name == "appliance" ) {
 		index = appliances->insertRow();
@@ -162,14 +160,14 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 		cGroups->setData( index, attrs.value("description"), Qt::EditRole );
 		cGroups->setData( index, attrs.value("type"), Qt::UserRole );
 
-		currentProxy = cGroups->ecsControlGroups.last()->graphic;
+		currentGraphic = cGroups->ecsControlGroups.last()->graphic;
 	}
 
 	else if(name == "appliance-function") {
 		ecsControlGroup* app = appliances->findItem(attrs.value("id").toInt());
 		if( app ) {
-			link = currentProxy->srcGroup->appendLinkedAppliance( app );
-			link->setData( 1, attrs.value("function").toInt() );
+			currentGraphic->srcGroup->links.append( app );
+			currentGraphic->srcGroup->functions[ app->id ] = attrs.value("function").toInt();
 		}
 	}
 
@@ -177,10 +175,10 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 		attrVal = attrs.value("type");
 		if( attrVal != "" ) {
 			currentEvent = new ecsEvent( attrVal.toInt() );
-			currentEvent->setParentItem( currentProxy );
-			currentEvent->cGroupId = currentProxy->srcGroup->id;
+			currentEvent->setParentItem( currentGraphic );
+			currentEvent->cGroupId = currentGraphic->srcGroup->id;
 
-			currentProxy->srcGroup->events.append( currentEvent );
+			currentGraphic->srcGroup->events.append( currentEvent );
 		}
 		attrVal = attrs.value("action");
 		if( attrVal != "" ) {

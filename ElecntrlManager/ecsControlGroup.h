@@ -29,7 +29,6 @@ public:
 
 	QString displayText();
 	QVariant typeIcon() const;
-	QGraphicsSimpleTextItem* appendLinkedAppliance( ecsControlGroup* appliance );
 	void toggleItemType();
 
 	//--------------------------------------------------------------------------------------
@@ -38,10 +37,10 @@ public:
 	QString    description;
 	int             itemType;
 
-	QList<QGraphicsSimpleTextItem*> links; // data[0] is pointer to appliance item. data[1] is ctrlFunction.
+	QList<ecsControlGroup*> links;
+	QHash<int, int> functions;
 	QList<ecsEvent*> events;
 	ecsControlGroupGraphic* graphic;
-
 };
 
 #endif // ecsControlGroup_H

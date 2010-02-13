@@ -28,7 +28,7 @@ public:
 private:
 	ecsControlGroupModel* appliances;
 	ecsControlGroupModel* cGroups;
-	ecsControlGroupGraphic* currentProxy;
+	ecsControlGroupGraphic* currentGraphic;
 	ecsEvent* currentEvent;
 };
 

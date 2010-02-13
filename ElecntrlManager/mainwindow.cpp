@@ -129,7 +129,7 @@ float MainWindow::calculateEventOffset( bool & first, float eventOffset ) {
 
 void MainWindow::updateScene() {
 	ecsControlGroup* control;
-	ecsControlGroupGraphic* proxy;
+	ecsControlGroupGraphic* groupGraphic;
 	float  midpoint, eventOffset, x_pos, accumulatedOffset;
 	bool first;
 	float evenCountOffset;
@@ -147,12 +147,8 @@ void MainWindow::updateScene() {
 			continue;
 		}
 
-		proxy = control->graphic;
-		if( ! proxy->scene() ) scene->addItem( proxy );
-
-		proxy->setVisible( true );
-		proxy->setAcceptDrops(true);
-		proxy->setFlag( QGraphicsItem::ItemIsSelectable );
+		groupGraphic = control->graphic;
+		if( ! groupGraphic->scene() ) scene->addItem( groupGraphic );
 
 		// Spread child events in a nice centered fanout.
 
@@ -163,18 +159,18 @@ void MainWindow::updateScene() {
 
 		foreach( ecsEvent* event, control->events ) {
 			eventOffset = calculateEventOffset( first, eventOffset );
-			x_pos = proxy->longestChildWidth + ecsManager::EventOffset_X;
+			x_pos = groupGraphic->longestChildWidth + ecsManager::EventOffset_X;
 			event->setPos( x_pos, eventOffset - evenCountOffset );
 		}
 
 		// Now push the control groups around so they don't overlap.
 
-		groupRect = proxy->childrenBoundingRect().united( proxy->selectBox );
+		groupRect = groupGraphic->childrenBoundingRect().united( groupGraphic->selectBox );
 		midpoint = accumulatedOffset + 0.5 * (groupRect.height() + ecsManager::GroupSpacing);
 		accumulatedOffset += groupRect.height() + ecsManager::GroupSpacing;
-		proxy->setPos( 0, midpoint );
+		groupGraphic->setPos( 0, midpoint );
 
-		if( ! proxy->scene() ) scene->addItem( proxy );
+		if( ! groupGraphic->scene() ) scene->addItem( groupGraphic );
 	}
 	scene->update( scene->sceneRect() );
 }
@@ -280,11 +276,11 @@ void MainWindow::on_keypress( int key ) {
 				action->zap();
 				break; }
 		case QGraphicsSimpleTextItem::Type: {
-				QGraphicsSimpleTextItem* linkedApp = qgraphicsitem_cast<QGraphicsSimpleTextItem*>(selection[0]);
-				ecsControlGroupGraphic* group = (ecsControlGroupGraphic*) linkedApp->parentItem();
-				group->srcGroup->links.removeAt( group->srcGroup->links.indexOf( linkedApp ) );
-				linkedApp->scene()->removeItem( linkedApp );
-				group->recalcLinkPositions();;
+				link = qgraphicsitem_cast<QGraphicsSimpleTextItem*>(selection[0]);
+				ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
+				ecsControlGroupGraphic* groupGraphic = (ecsControlGroupGraphic*)(link->parentItem());
+				groupGraphic->srcGroup->links.removeAt( groupGraphic->srcGroup->links.indexOf( linkedApp ) );
+				groupGraphic->recalcLinkPositions();;
 				updateScene();
 				break; }
 		}
@@ -304,6 +300,8 @@ void MainWindow::on_keypress( int key ) {
 	default:  { return; } // Ignore unknow keypress.
 	}
 
-	link->setData( 1, func );
+	ecsControlGroup* linkedapp = (ecsControlGroup*)(link->data(0).value<void*>());
+	ecsControlGroupGraphic* groupGraphic = (ecsControlGroupGraphic*)(link->parentItem());
+	groupGraphic->srcGroup->functions[ linkedapp->id ] = func;
 	link->setSelected( false );
 }

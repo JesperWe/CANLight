@@ -39,22 +39,6 @@ QString ecsControlGroup::displayText() {
 	return QString::number( id ) + " - " + description;
 }
 
-QGraphicsSimpleTextItem* ecsControlGroup::appendLinkedAppliance( ecsControlGroup* appliance ) {
-	QGraphicsSimpleTextItem* link;
-
-	link = new QGraphicsSimpleTextItem( appliance->displayText() );
-	link->setData( 0, QVariant::fromValue( (void*) appliance ) );
-	link->setData( 1, ecsEvent::None );
-	link->setParentItem( graphic );
-	link->setZValue( 2 );
-	link->setFont( qApp->property( "contentFont" ).value<QFont>() );
-	link->setFlag( QGraphicsItem::ItemIsSelectable, true );
-
-	links.append( link );
-	graphic->recalcLinkPositions();
-	return link;
-}
-
 //------------------------------------------------------------------------------------
 
 void ecsControlGroup::toggleItemType() {

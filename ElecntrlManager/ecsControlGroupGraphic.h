@@ -19,26 +19,24 @@ public:
 	enum { Type = UserType + ecsManager::ControlGroupProxy };
 	int type() const { return Type; };
 
-	enum itemTypes_e {
-		Unknown,
-		Controller,
-		Activity,
-		Appliance,
-		noItemTypes
-	};
-
 	//--------------------------------------------------------------------------------------
 	// Constructors
 
 	ecsControlGroupGraphic() : QGraphicsItem(0) {
 		longestChildWidth = ecsManager::GroupChildMinimumWidth;
 		offset = 0;
+		setVisible( true );
+		setAcceptDrops(true);
+		setFlag( QGraphicsItem::ItemIsSelectable );
 	}
 
 	ecsControlGroupGraphic( ecsControlGroup* mySrcGroup ) : QGraphicsItem(0) {
 		srcGroup = mySrcGroup;
 		longestChildWidth = ecsManager::GroupChildMinimumWidth;
 		offset = 0;
+		setVisible( true );
+		setAcceptDrops(true);
+		setFlag( QGraphicsItem::ItemIsSelectable );
 	}
 
 	//--------------------------------------------------------------------------------------
@@ -53,6 +51,7 @@ public:
 	void recalcLinkPositions();
 	void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
 	void dropEvent(QGraphicsSceneDragDropEvent *event);
+	void updateLinkTexts();
 
 	//--------------------------------------------------------------------------------------
 
@@ -60,6 +59,7 @@ public:
 	float          longestChildWidth;
 
 	QRectF boxSize, selectBox;
+	QHash<int, QGraphicsSimpleTextItem*> linkTexts;
 
 	ecsControlGroup* srcGroup;
 };
