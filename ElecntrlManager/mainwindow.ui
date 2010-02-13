@@ -198,6 +198,7 @@
     <addaction name="actionDouble_Click"/>
     <addaction name="actionPress_Hold"/>
     <addaction name="actionRelease"/>
+    <addaction name="actionSignal_Change"/>
    </widget>
    <widget class="QMenu" name="menuActions">
     <property name="title">
@@ -262,6 +263,7 @@
    <addaction name="actionDouble_Click"/>
    <addaction name="actionPress_Hold"/>
    <addaction name="actionRelease"/>
+   <addaction name="actionSignal_Change"/>
   </widget>
   <widget class="QToolBar" name="toolBar_Actions">
    <property name="windowTitle">
@@ -431,6 +433,16 @@
   <action name="actionNew">
    <property name="text">
     <string>New</string>
+   </property>
+  </action>
+  <action name="actionSignal_Change">
+   <property name="icon">
+    <iconset>
+     <normalon>:/graphics/signal.svg</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Signal Change</string>
    </property>
   </action>
  </widget>

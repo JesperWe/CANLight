@@ -31,7 +31,8 @@ private:
 	float calculateEventOffset( bool & first, float eventOffset );
 
 private slots:
-	void on_actionSwitch_Color_triggered();
+	void on_actionSignal_Change_triggered();
+ void on_actionSwitch_Color_triggered();
 	void on_actionStop_Fade_triggered();
 	void on_actionStart_Fade_triggered();
 	void on_actionSwitch_Off_triggered();

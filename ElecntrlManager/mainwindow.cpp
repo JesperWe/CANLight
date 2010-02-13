@@ -143,11 +143,20 @@ void MainWindow::updateScene() {
 	srcGroupCounter = 0;
 	foreach ( control, cGroupModel->ecsControlGroups ) {
 
+		// Only show graphics for groups that are control sources or targeted by an action.
+
 		if( control->itemType != ecsControlGroup::Controller ) {
+			if( ! control->graphic->parentItem() && control->graphic->scene() ) {
+				control->graphic->scene()->removeItem( control->graphic );
+			}
 			continue;
 		}
 
 		groupGraphic = control->graphic;
+		groupGraphic->updateLinkTexts();
+		groupGraphic->recalcLinkPositions();
+		groupGraphic->recalcBoxSize();
+
 		if( ! groupGraphic->scene() ) scene->addItem( groupGraphic );
 
 		// Spread child events in a nice centered fanout.
@@ -224,6 +233,8 @@ void MainWindow::on_actionSingle_Click_triggered() { _AddEvent( ecsEvent::Single
 void MainWindow::on_actionDouble_Click_triggered() { _AddEvent( ecsEvent::DoubleClick ); }
 void MainWindow::on_actionPress_Hold_triggered() { _AddEvent( ecsEvent::PressHold ); }
 void MainWindow::on_actionRelease_triggered() { _AddEvent( ecsEvent::Release ); }
+void MainWindow::on_actionSignal_Change_triggered() { _AddEvent( ecsEvent::SignalChange ); }
+
 
 //-------------------------------------------------------------------------------------------------
 

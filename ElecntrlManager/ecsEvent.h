@@ -41,6 +41,7 @@ public:
 		DoubleClick,
 		PressHold,
 		Release,
+		SignalChange,
 		noEventTypes
 	};
 

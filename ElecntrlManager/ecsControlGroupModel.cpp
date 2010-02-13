@@ -171,7 +171,6 @@ bool ecsControlGroupModel::insertRows(int position, int rows, const QModelIndex 
 		newItem = new ecsControlGroup();
 		newItem->id = ++maxId;
 		newItem->graphic = new ecsControlGroupGraphic( newItem );
-		newItem->graphic->recalcBoxSize();
 		ecsControlGroups.append(  newItem );
 	}
 

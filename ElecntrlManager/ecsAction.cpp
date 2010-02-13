@@ -65,8 +65,6 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	bool  placeBelow, first;
 	float yPos;
 	QRectF targetRect;
-	static int counter = 0;
-
 
 	painter->setBrush( QColor( 255, 125, 135, 255 ) );
 	if( isSelected() ) {

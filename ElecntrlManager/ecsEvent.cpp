@@ -17,6 +17,7 @@ void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 	case ecsEvent::DoubleClick: { icon = new QPixmap(":/graphics/click-double.svg"); break; }
 	case ecsEvent::PressHold: { icon = new QPixmap(":/graphics/click-hold.svg"); break; }
 	case ecsEvent::Release: { icon = new QPixmap(":/graphics/click-release.svg"); break; }
+	case ecsEvent::SignalChange: { icon = new QPixmap(":/graphics/signal.svg"); break; }
 	default: { return; }
 	}
 
