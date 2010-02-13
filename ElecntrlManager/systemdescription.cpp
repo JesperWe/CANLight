@@ -87,11 +87,17 @@ void SystemDescription::saveFile( QString toFile, ecsControlGroupModel* applianc
 			out.writeStartElement( "controlevent" );
 			out.writeAttribute( "type", QString::number(e->eventType) );
 			out.writeAttribute( "action", QString::number(e->eventAction->actionType) );
+
 			foreach( ecsControlGroupGraphic* target, e->eventAction->targetGroups ) {
 				out.writeStartElement( "targetgroup");
 				out.writeAttribute( "id", QString::number(target->srcGroup->id) );
+
+				if( target->parentItem() == e->eventAction )
+					out.writeAttribute( "parented", "1" );
+
 				out.writeEndElement();
 			}
+
 			out.writeEndElement();
 		}
 		out.writeEndElement();
@@ -193,6 +199,8 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 		attrVal = attrs.value("id");
 		if( attrVal != "" ) {
 			currentEvent->eventAction->targetGroups.append( cGroups->findItem( attrVal.toInt() )->graphic );
+			if( attrs.value("parented") != "" )
+				currentEvent->eventAction->targetGroups.last()->setParentItem(currentEvent->eventAction);
 		}
 
 	}

@@ -24,6 +24,7 @@ QRectF ecsAction::boundingRect() const {
 
 void ecsAction::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+	dragToPos  = anchorOut();
 	update();
 	QGraphicsItem::mousePressEvent(event);
 }
@@ -37,8 +38,25 @@ void ecsAction::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void ecsAction::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
 	// Did we drag to any target?
+	QGraphicsItem* targetItem;
+
+	targetItem = scene()->itemAt( mapToScene( dragToPos ) );
+
+	if( targetItem ) {
+		ecsControlGroupGraphic* target = qgraphicsitem_cast<ecsControlGroupGraphic *>( targetItem );
+
+		// Try parent if we hit a text.
+		if( ! target )
+			target = qgraphicsitem_cast<ecsControlGroupGraphic *>( targetItem->parentItem() );
+
+		if( target && ! targetGroups.contains(target) )
+			targetGroups.append( target );
+	}
+
+	if( ! boundingRect().contains(dragToPos) )
+		setSelected(false );
+
 	update();
-	QGraphicsItem::mouseReleaseEvent(event);
 }
 
 //------------------------------------------------------------------------------------
@@ -74,29 +92,38 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	placeBelow = false;
 	first = true;
 	targetRect.setCoords( 0, 0, 0, 0 );
-
 	foreach( ecsControlGroupGraphic* target, targetGroups ) {
-		if( ! target->scene() ) scene()->addItem( target );
 
-		if( first ) {
-			yPos = 0;
-			first = false;
-		}
-		else {
-			if( placeBelow ) {
-				yPos = targetRect.bottom() + target->boundingRect().height()/2;
+		// Become owner of orphaned targets.
+		if( ! target->parentItem() )
+			target->setParentItem( this );
+
+		// Only paint target grops that are our children.
+		if( target->parentItem() == this ) {
+			if( ! target->scene() ) scene()->addItem( target );
+
+			if( first ) {
+				yPos = 0;
+				first = false;
 			}
 			else {
-				yPos = targetRect.top() - target->boundingRect().height()/2;
+				if( placeBelow ) {
+					yPos = targetRect.bottom() + target->boundingRect().height()/2;
+				}
+				else {
+					yPos = targetRect.top() - target->boundingRect().height()/2;
+				}
 			}
+			target->setParentItem( this );
+			target->setPos( ecsManager::ActionOffset_X + target->boundingRect().width()/2, yPos );
+			targetRect = targetRect.united( target->boundingRect() );
+			placeBelow = ! placeBelow;
 		}
-		target->setParentItem( this );
-		qDebug() << counter++ << " target pos " << ecsManager::ActionOffset_X + target->boundingRect().width()/2 << "," << yPos;
-		target->setPos( ecsManager::ActionOffset_X + target->boundingRect().width()/2, yPos );
-		targetRect = targetRect.united( target->boundingRect() );
-		painter->drawLine( anchorOut(), target->anchorIn() );
 
-		placeBelow = ! placeBelow;
+		// Connection lines may go to groups that are children of other actions.
+
+		painter->drawLine( anchorOut(), mapFromItem( target->parentItem(), target->anchorIn() ) );
+
 	}
 }
 
@@ -145,7 +172,9 @@ void ecsAction::zap() {
 	event->eventAction = NULL;
 
 	foreach( ecsControlGroupGraphic* target, targetGroups ) {
-		scene()->removeItem( target );
+		if( target->parentItem() == this )
+			target->setParentItem( NULL );
+			scene()->removeItem( target );
 	}
 
 	scene()->removeItem( this );
