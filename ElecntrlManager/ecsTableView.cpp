@@ -1,4 +1,6 @@
 #include <QtGui>
+
+#include "ecsManager.h"
 #include "ecsTableView.h"
 #include "ecsControlGroupGraphic.h"
 #include "ecsControlGroupModel.h"

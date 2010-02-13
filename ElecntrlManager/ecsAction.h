@@ -2,19 +2,26 @@
 #define ECSACTION_H
 
 #include <QtGui>
-#include "ecsControlGroupGraphic.h"
+
 #include "ecsManager.h"
+#include "ecsControlGroupGraphic.h"
 #include "ecsEvent.h"
 
 class ecsAction : public QGraphicsItem
 {
+protected:
+	void mousePressEvent(QGraphicsSceneMouseEvent *event);
+	void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+	void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+	QPointF dragToPos;
+
 public:
 	static const int polygon[4][2];
 
 	ecsAction() : QGraphicsItem(0)  {
 		setAcceptDrops(true);
 		setFlag(QGraphicsItem::ItemIsSelectable, true);
-		actionType = ecsAction::None;
+		actionType = ecsManager::NoAction;
 	};
 	ecsAction( int t ) : QGraphicsItem(0) {
 		setAcceptDrops(true);
@@ -28,17 +35,6 @@ public:
 	void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
 	void dropEvent(QGraphicsSceneDragDropEvent *event);
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-
-	enum actionType_e {
-		None,
-		SwitchON,
-		SwitchOFF,
-		ToggleOnOff,
-		FadeStart,
-		FadeStop,
-		ChangeColor,
-		noActionTypes
-	};
 
 	int actionType;
 	int cGroupSource;

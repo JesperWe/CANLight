@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QXmlStreamWriter>
 
+#include "ecsManager.h"
 #include "systemdescription.h"
 #include "ecsEvent.h"
 #include "ecsControlGroup.h"

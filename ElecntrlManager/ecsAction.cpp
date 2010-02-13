@@ -1,5 +1,7 @@
 #include <QtGui>
 
+#include "ecsManager.h"
+#include "ecsManagerApp.h"
 #include "mainwindow.h"
 #include "ecsControlGroupModel.h"
 #include "ecsControlGroup.h"
@@ -20,21 +22,33 @@ QRectF ecsAction::boundingRect() const {
 
 //------------------------------------------------------------------------------------
 
+void ecsAction::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+	update();
+	QGraphicsItem::mousePressEvent(event);
+}
+
+void ecsAction::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+	dragToPos = event->lastPos();
+	update();
+}
+
+void ecsAction::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+	// Did we drag to any target?
+	update();
+	QGraphicsItem::mouseReleaseEvent(event);
+}
+
+//------------------------------------------------------------------------------------
+
 void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-	QPixmap* icon;
 	bool  placeBelow, first;
 	float yPos;
 	QRectF targetRect;
 	static int counter = 0;
 
-	switch( actionType ) {
-	case ecsAction::SwitchON:    { icon = new QPixmap(":/graphics/bulb-lit.svg"); break; }
-	case ecsAction::SwitchOFF:   { icon = new QPixmap(":/graphics/bulb.svg"); break; }
-	case ecsAction::ToggleOnOff: { icon = new QPixmap(":/graphics/onoff.svg"); break; }
-	case ecsAction::FadeStart:   { icon = new QPixmap(":/graphics/fade-start.svg"); break; }
-	case ecsAction::FadeStop:    { icon = new QPixmap(":/graphics/fade-stop.svg"); break; }
-	case ecsAction::ChangeColor: { icon = new QPixmap(":/graphics/connections.svg"); break; }
-	}
 
 	painter->setBrush( QColor( 255, 125, 135, 255 ) );
 	if( isSelected() ) {
@@ -46,7 +60,16 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
 
 	painter->drawPolygon( QPolygon( 4, &ecsAction::polygon[0][0] ) );
-	painter->drawPixmap(-34*0.25,-34*0.25,34*0.5,34*0.5,*icon);
+	painter->drawPixmap( -34*0.25,-34*0.25,34*0.5,34*0.5, ecsManagerApp::inst()->icons[actionType] );
+
+	// Now draw a rubberband if the user is dragging.
+
+	if( scene()->mouseGrabberItem() == this ) {
+		QLineF line( anchorOut(), dragToPos );
+		if ( line.length() > 1.0 ) painter->drawLine( line );
+	}
+
+	// Target groups
 
 	placeBelow = false;
 	first = true;

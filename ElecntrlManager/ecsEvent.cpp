@@ -1,5 +1,5 @@
-#include "ecsEvent.h"
 #include "ecsManager.h"
+#include "ecsEvent.h"
 
 QRectF ecsEvent::boundingRect() const {
 	float iconDim = ecsManager::EventIconSize;

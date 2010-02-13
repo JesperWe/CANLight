@@ -4,12 +4,12 @@
 #include <QPen>
 #include <QGraphicsView>
 
+#include "ecsManager.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "ui_about.h"
 #include "systemdescription.h"
 #include "ecsControlGroup.h"
-#include "ecsManager.h"
 #include "ecsEvent.h"
 #include "ecsAction.h"
 
@@ -249,12 +249,12 @@ void MainWindow::_AddAction( int actionType ) {
 	updateScene();
 }
 
-void MainWindow::on_actionToggle_On_Off_triggered() { _AddAction( ecsAction::ToggleOnOff ); }
-void MainWindow::on_actionSwitch_On_triggered() { _AddAction( ecsAction::SwitchON ); }
-void MainWindow::on_actionSwitch_Off_triggered() { _AddAction( ecsAction::SwitchOFF ); }
-void MainWindow::on_actionStart_Fade_triggered() { _AddAction( ecsAction::FadeStart ); }
-void MainWindow::on_actionStop_Fade_triggered() { _AddAction( ecsAction::FadeStop ); }
-void MainWindow::on_actionSwitch_Color_triggered() { _AddAction( ecsAction::ChangeColor ); }
+void MainWindow::on_actionToggle_On_Off_triggered() { _AddAction( ecsManager::ToggleOnOff ); }
+void MainWindow::on_actionSwitch_On_triggered() { _AddAction( ecsManager::SwitchON ); }
+void MainWindow::on_actionSwitch_Off_triggered() { _AddAction( ecsManager::SwitchOFF ); }
+void MainWindow::on_actionStart_Fade_triggered() { _AddAction( ecsManager::FadeStart ); }
+void MainWindow::on_actionStop_Fade_triggered() { _AddAction( ecsManager::FadeStop ); }
+void MainWindow::on_actionSwitch_Color_triggered() { _AddAction( ecsManager::ChangeColor ); }
 
 //-------------------------------------------------------------------------------------------------
 

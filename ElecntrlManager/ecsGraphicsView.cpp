@@ -1,3 +1,4 @@
+#include "ecsManager.h"
 #include "ecsGraphicsView.h"
 
 void ecsGraphicsView::wheelEvent( QWheelEvent *event )

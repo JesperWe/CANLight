@@ -8,6 +8,7 @@ class ecsAction;
 class ecsEvent;
 
 #include <QtGui>
+
 #include "ecsManager.h"
 #include "ecsControlGroup.h"
 

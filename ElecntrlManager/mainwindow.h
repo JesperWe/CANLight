@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QGraphicsView>
+
 #include "ecsControlGroupGraphic.h"
 #include "ecsControlGroupModel.h"
 

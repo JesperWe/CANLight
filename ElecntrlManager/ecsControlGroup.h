@@ -2,7 +2,6 @@
 #define ecsControlGroup_H
 
 #include <QtGui>
-#include "ecsManager.h"
 #include "ecsControlGroupGraphic.h"
 
 class ecsControlGroup

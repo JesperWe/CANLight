@@ -1,5 +1,6 @@
 #include <QIcon>
 
+#include "ecsManager.h"
 #include "ecsControlGroup.h"
 #include "ecsControlGroupGraphic.h"
 #include "ecsControlGroupModel.h"

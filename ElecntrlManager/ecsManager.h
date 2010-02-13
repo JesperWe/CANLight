@@ -2,6 +2,7 @@
 #define ECSMANAGER_H
 
 #include <QtGUI>
+#include <QPixmap>
 
 class ecsManager {
 
@@ -14,6 +15,17 @@ public:
 		Appliance,
 		Event,
 		Action
+	};
+
+	enum actionType_e {
+		NoAction,
+		SwitchON,
+		SwitchOFF,
+		ToggleOnOff,
+		FadeStart,
+		FadeStop,
+		ChangeColor,
+		noActionTypes
 	};
 
 	static const float GraphicsDebug  = false;
