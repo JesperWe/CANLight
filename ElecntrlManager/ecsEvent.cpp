@@ -60,7 +60,7 @@ QPointF ecsEvent::anchorOut() {
 
 void ecsEvent::zap() {
 	if( eventAction ) eventAction->zap();
-	ecsControlGroup* parent = (ecsControlGroup*)parentItem();
-	parent->events.removeAt( parent->events.indexOf( this  ) );
+	ecsControlGroupGraphic* parent = (ecsControlGroupGraphic*)parentItem();
+	parent->srcGroup->events.removeAt( parent->srcGroup->events.indexOf( this  ) );
 	scene()->removeItem( this );
 }

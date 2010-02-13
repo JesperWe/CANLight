@@ -5,6 +5,7 @@
 #include <QList>
 #include <QXmlSimpleReader>
 
+#include "ecsControlGroupGraphic.h"
 #include "ecsControlGroupModel.h"
 
 class SystemDescription {
@@ -27,7 +28,7 @@ public:
 private:
 	ecsControlGroupModel* appliances;
 	ecsControlGroupModel* cGroups;
-	ecsControlGroup* currentGroup;
+	ecsControlGroupGraphic* currentProxy;
 	ecsEvent* currentEvent;
 };
 

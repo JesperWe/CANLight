@@ -7,6 +7,9 @@
 
 #include "systemdescription.h"
 #include "ecsEvent.h"
+#include "ecsControlGroup.h"
+#include "ecsControlGroupGraphic.h"
+#include "ecsEvent.h"
 
 SystemDescription::SystemDescription() {}
 
@@ -84,9 +87,9 @@ void SystemDescription::saveFile( QString toFile, ecsControlGroupModel* applianc
 			out.writeStartElement( "controlevent" );
 			out.writeAttribute( "type", QString::number(e->eventType) );
 			out.writeAttribute( "action", QString::number(e->eventAction->actionType) );
-			foreach( ecsControlGroup* target, e->eventAction->targetGroups ) {
+			foreach( ecsControlGroupGraphic* target, e->eventAction->targetGroups ) {
 				out.writeStartElement( "targetgroup");
-				out.writeAttribute( "id", QString::number(target->id) );
+				out.writeAttribute( "id", QString::number(target->srcGroup->id) );
 				out.writeEndElement();
 			}
 			out.writeEndElement();
@@ -159,13 +162,13 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 		cGroups->setData( index, attrs.value("description"), Qt::EditRole );
 		cGroups->setData( index, attrs.value("type"), Qt::UserRole );
 
-		currentGroup = cGroups->ecsControlGroups.last();
+		currentProxy = cGroups->ecsControlGroups.last()->graphic;
 	}
 
 	else if(name == "appliance-function") {
 		ecsControlGroup* app = appliances->findItem(attrs.value("id").toInt());
 		if( app ) {
-			link = currentGroup->appendLinkedAppliance( app );
+			link = currentProxy->srcGroup->appendLinkedAppliance( app );
 			link->setData( 1, attrs.value("function").toInt() );
 		}
 	}
@@ -174,10 +177,10 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 		attrVal = attrs.value("type");
 		if( attrVal != "" ) {
 			currentEvent = new ecsEvent( attrVal.toInt() );
-			currentEvent->setParentItem( currentGroup );
-			currentEvent->cGroupId = currentGroup->id;
+			currentEvent->setParentItem( currentProxy );
+			currentEvent->cGroupId = currentProxy->srcGroup->id;
 
-			currentGroup->events.append( currentEvent );
+			currentProxy->srcGroup->events.append( currentEvent );
 		}
 		attrVal = attrs.value("action");
 		if( attrVal != "" ) {
@@ -190,7 +193,7 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 	else if(name == "targetgroup") {
 		attrVal = attrs.value("id");
 		if( attrVal != "" ) {
-			currentEvent->eventAction->targetGroups.append( cGroups->findItem( attrVal.toInt() ) );
+			currentEvent->eventAction->targetGroups.append( cGroups->findItem( attrVal.toInt() )->graphic );
 		}
 
 	}

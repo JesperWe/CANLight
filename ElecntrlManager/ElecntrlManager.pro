@@ -10,7 +10,8 @@ SOURCES += ecsGraphicsView.cpp \
 	ecsControlGroup.cpp \
 	ecsControlGroupModel.cpp \
 	ecsEvent.cpp \
-	ecsAction.cpp
+	ecsAction.cpp \
+	ecsControlGroupGraphic.cpp
 HEADERS += ecsGraphicsView.h \
 	ecsTableView.h \
 	mainwindow.h \
@@ -19,7 +20,8 @@ HEADERS += ecsGraphicsView.h \
 	ecsControlGroupModel.h \
 	ecsEvent.h \
 	ecsAction.h \
-	ecsManager.h
+	ecsManager.h \
+	ecsControlGroupGraphic.h
 FORMS += mainwindow.ui \
 	about.ui
 RESOURCES += resources.qrc

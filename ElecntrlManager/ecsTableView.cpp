@@ -1,7 +1,8 @@
 #include <QtGui>
 #include "ecsTableView.h"
-#include "ecsEvent.h"
+#include "ecsControlGroupGraphic.h"
 #include "ecsControlGroupModel.h"
+#include "ecsEvent.h"
 
 ecsTableView::ecsTableView( QWidget* parent ) : QTableView( parent ) {
 

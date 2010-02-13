@@ -2,7 +2,7 @@
 #define ECSACTION_H
 
 #include <QtGui>
-#include "ecsControlGroup.h"
+#include "ecsControlGroupGraphic.h"
 #include "ecsManager.h"
 #include "ecsEvent.h"
 
@@ -49,7 +49,7 @@ public:
 	QPointF anchorOut();
 	void zap();
 
-	QList<ecsControlGroup*> targetGroups;
+	QList<ecsControlGroupGraphic*> targetGroups;
 
 };
 

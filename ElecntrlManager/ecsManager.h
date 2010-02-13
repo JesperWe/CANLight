@@ -10,6 +10,7 @@ public:
 	enum ecsManager_GraphisItemTypes_e {
 		Unknown,
 		ControlGroup,
+		ControlGroupProxy,
 		Appliance,
 		Event,
 		Action

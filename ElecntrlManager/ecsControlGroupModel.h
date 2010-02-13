@@ -1,5 +1,5 @@
-#ifndef ecsControlGroupMODEL_H
-#define ecsControlGroupMODEL_H
+#ifndef ecsControlGroupModel_H
+#define ecsControlGroupModel_H
 
 #include <QStringList>
 #include <QModelIndex>
@@ -7,6 +7,7 @@
 #include <QAbstractTableModel>
 
 #include <ecsControlGroup.h>
+#include <ecsControlGroupGraphic.h>
 
 class ecsControlGroupModel : public QAbstractTableModel
 {
@@ -42,6 +43,7 @@ public:
 	void clear();
 
 	QList<ecsControlGroup*> ecsControlGroups;
+
 	QString objectType;
 
 signals:
@@ -49,4 +51,4 @@ signals:
 };
 
 
-#endif // ecsControlGroupMODEL_H
+#endif // ecsControlGroupModel_H

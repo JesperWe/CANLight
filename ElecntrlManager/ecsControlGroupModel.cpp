@@ -1,6 +1,7 @@
 #include <QIcon>
 
 #include "ecsControlGroup.h"
+#include "ecsControlGroupGraphic.h"
 #include "ecsControlGroupModel.h"
 
 int ecsControlGroupModel::rowCount(const QModelIndex &parent) const
@@ -139,14 +140,10 @@ bool ecsControlGroupModel::setData(const QModelIndex &index,
 	}
 
 	if( role == Qt::UserRole) {
-		int v = value.toInt();
 
-		// v == -1 means toggle type.
+		if( value.toInt() == -1) ecsControlGroups[index.row()]->toggleItemType();
+		else ecsControlGroups[index.row()]->itemType = value.toInt();
 
-		if( v == -1 && ecsControlGroups[index.row()]->itemType == ecsControlGroup::Controller )  	v = ecsControlGroup::Activity;
-		if( v == -1 && ecsControlGroups[index.row()]->itemType == ecsControlGroup::Activity )  	v = ecsControlGroup::Controller;
-
-		ecsControlGroups[index.row()]->itemType = v;
 		emit dataChanged(index, index);
 		emit modified();
 		return true;
@@ -172,7 +169,8 @@ bool ecsControlGroupModel::insertRows(int position, int rows, const QModelIndex 
 	for( int row = 0; row < rows; ++row ) {
 		newItem = new ecsControlGroup();
 		newItem->id = ++maxId;
-		newItem->recalcBoxSize();
+		newItem->graphic = new ecsControlGroupGraphic( newItem );
+		newItem->graphic->recalcBoxSize();
 		ecsControlGroups.append(  newItem );
 	}
 

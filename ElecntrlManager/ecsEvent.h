@@ -3,7 +3,7 @@
 
 #include <QtGui>
 #include "ecsAction.h"
-#include "ecsControlGroup.h"
+#include "ecsControlGroupGraphic.h"
 
 class ecsEvent : public QGraphicsItem {
 

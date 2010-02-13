@@ -44,7 +44,7 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	painter->drawPolygon( QPolygon( 4, &ecsAction::polygon[0][0] ) );
 	painter->drawPixmap(-34*0.25,-34*0.25,34*0.5,34*0.5,*icon);
 
-	foreach( ecsControlGroup* target, targetGroups ) {
+	foreach( ecsControlGroupGraphic* target, targetGroups ) {
 		target->setParentItem( this );
 		target->setPos( ecsManager::ActionOffset_X + target->boundingRect().width()/2, 0 );
 		target->setVisible( true );
@@ -76,6 +76,8 @@ void ecsAction::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 
 void ecsAction::dropEvent(QGraphicsSceneDragDropEvent *event)
 {
+	ecsControlGroupGraphic* targetGroup;
+
 	const QMimeData* data = event->mimeData();
 
 	if( ! data->hasFormat("x-application/ecs-controlgroup-id") ) return;
@@ -84,7 +86,8 @@ void ecsAction::dropEvent(QGraphicsSceneDragDropEvent *event)
 	int cGroupId = idString.toInt();
 
 	prepareGeometryChange();
-	targetGroups.append( ((MainWindow*)qApp->activeWindow())->cGroupModel->findItem( cGroupId ) );
+	targetGroup = new ecsControlGroupGraphic( ((MainWindow*)qApp->activeWindow())->cGroupModel->findItem( cGroupId ) );
+	targetGroups.append( targetGroup );
 	((MainWindow*)qApp->activeWindow())->updateScene();
 }
 
@@ -94,7 +97,7 @@ void ecsAction::zap() {
 	ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(parentItem());
 	event->eventAction = NULL;
 
-	foreach( ecsControlGroup* target, targetGroups ) {
+	foreach( ecsControlGroupGraphic* target, targetGroups ) {
 		scene()->removeItem( target );
 	}
 
