@@ -29,6 +29,7 @@ public:
 	QString displayText();
 	QVariant typeIcon() const;
 	void toggleItemType();
+	void zap();
 
 	//--------------------------------------------------------------------------------------
 

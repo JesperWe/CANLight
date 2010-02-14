@@ -174,7 +174,5 @@ void ecsAction::zap() {
 			target->setParentItem( NULL );
 			scene()->removeItem( target );
 	}
-
 	scene()->removeItem( this );
-
 }

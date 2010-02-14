@@ -8,7 +8,6 @@
     <appliance id="6" description="Aft Cabin Port Ceiling Light 2"/>
     <appliance id="7" description="Steering Stbd Switch 1"/>
     <appliance id="8" description="Navtable Switch 1"/>
-    <appliance id="0" description=""/>
     <controlgroup id="1" description="System Backlight" type="1"/>
     <controlgroup id="2" description="Aft Cabin Port Light" type="2">
         <appliance-function id="6" function="1"/>
@@ -39,5 +38,6 @@
         <appliance-function id="3" function="4"/>
         <appliance-function id="7" function="4"/>
         <appliance-function id="8" function="4"/>
+        <controlevent type="5" action="7"/>
     </controlgroup>
 </systemdescription>

@@ -20,7 +20,7 @@
    <string>JM60 Electric Control System</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resources.qrc">
+   <iconset>
     <normaloff>:/graphics/connections.svg</normaloff>:/graphics/connections.svg</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
@@ -281,6 +281,7 @@
    <addaction name="actionStop_Fade"/>
    <addaction name="actionSwitch_On"/>
    <addaction name="actionSwitch_Off"/>
+   <addaction name="actionRun_Actuator"/>
   </widget>
   <action name="actionAbout">
    <property name="text">
@@ -342,7 +343,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/click-single.svg</normaloff>:/graphics/click-single.svg</iconset>
    </property>
    <property name="text">
@@ -351,7 +352,7 @@
   </action>
   <action name="actionDouble_Click">
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/click-double.svg</normaloff>:/graphics/click-double.svg</iconset>
    </property>
    <property name="text">
@@ -360,7 +361,7 @@
   </action>
   <action name="actionPress_Hold">
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/click-hold.svg</normaloff>:/graphics/click-hold.svg</iconset>
    </property>
    <property name="text">
@@ -369,7 +370,7 @@
   </action>
   <action name="actionRelease">
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/click-release.svg</normaloff>:/graphics/click-release.svg</iconset>
    </property>
    <property name="text">
@@ -378,7 +379,7 @@
   </action>
   <action name="actionToggle_On_Off">
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/onoff.svg</normaloff>:/graphics/onoff.svg</iconset>
    </property>
    <property name="text">
@@ -387,7 +388,7 @@
   </action>
   <action name="actionSwitch_On">
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/bulb-lit.svg</normaloff>:/graphics/bulb-lit.svg</iconset>
    </property>
    <property name="text">
@@ -396,7 +397,7 @@
   </action>
   <action name="actionSwitch_Off">
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/bulb.svg</normaloff>:/graphics/bulb.svg</iconset>
    </property>
    <property name="text">
@@ -405,7 +406,7 @@
   </action>
   <action name="actionStart_Fade">
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/fade-start.svg</normaloff>:/graphics/fade-start.svg</iconset>
    </property>
    <property name="text">
@@ -414,7 +415,7 @@
   </action>
   <action name="actionStop_Fade">
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/fade-stop.svg</normaloff>:/graphics/fade-stop.svg</iconset>
    </property>
    <property name="text">
@@ -423,7 +424,7 @@
   </action>
   <action name="actionSwitch_Color">
    <property name="icon">
-    <iconset resource="resources.qrc">
+    <iconset>
      <normaloff>:/graphics/connections.svg</normaloff>:/graphics/connections.svg</iconset>
    </property>
    <property name="text">
@@ -445,6 +446,16 @@
     <string>Signal Change</string>
    </property>
   </action>
+  <action name="actionRun_Actuator">
+   <property name="icon">
+    <iconset>
+     <normalon>:/graphics/actuator.svg</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Run Actuator</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -459,8 +470,6 @@
    <header>ecsTableView.h</header>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="resources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

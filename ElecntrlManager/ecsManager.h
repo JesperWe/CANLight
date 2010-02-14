@@ -11,7 +11,7 @@ public:
 	enum ecsManager_GraphisItemTypes_e {
 		Unknown,
 		ControlGroup,
-		ControlGroupProxy,
+		ControlGroupGraphic,
 		Appliance,
 		Event,
 		Action
@@ -25,6 +25,7 @@ public:
 		FadeStart,
 		FadeStop,
 		ChangeColor,
+		Actuator,
 		noActionTypes
 	};
 

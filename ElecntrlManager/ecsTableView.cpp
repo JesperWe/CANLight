@@ -16,8 +16,12 @@ ecsTableView::ecsTableView( QWidget* parent ) : QTableView( parent ) {
 	QAction* changeItemAction = new QAction( tr("Toggle Controller/Activity"), this );
 	ecsControlGroupContextMenu->addAction( changeItemAction );
 
+	QAction* deleteItemAction = new QAction( tr("Delete Item"), this );
+	ecsControlGroupContextMenu->addAction( deleteItemAction );
+
 	connect( addnewItemAction, SIGNAL(triggered()), this, SLOT(on_addItemAction()) );
 	connect( changeItemAction, SIGNAL(triggered()), this, SLOT(on_changeItemAction()) );
+	connect( deleteItemAction, SIGNAL(triggered()), this, SLOT(on_deleteItemAction()) );
 
 	connect( this, SIGNAL( customContextMenuRequested( QPoint )),
 			this, SLOT( on_customContextMenuRequested( QPoint )));
@@ -44,6 +48,11 @@ void ecsTableView::on_addItemAction() {
 }
 
 void ecsTableView::on_changeItemAction() {
-	model()->setData( this->selectedIndexes()[0], -1, Qt::UserRole ); // XXX Handle multiple seletion.
+	model()->setData( selectedIndexes()[0], -1, Qt::UserRole ); // XXX Handle multiple seletion.
+	ecsControlGroupContextMenu->hide();
+}
+
+void ecsTableView::on_deleteItemAction() {
+	model()->removeRows( selectedIndexes()[0].row(), 1, QModelIndex() );
 	ecsControlGroupContextMenu->hide();
 }

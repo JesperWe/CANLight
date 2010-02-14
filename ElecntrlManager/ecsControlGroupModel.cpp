@@ -187,6 +187,7 @@ bool ecsControlGroupModel::removeRows(int position, int rows, const QModelIndex 
 
 	beginRemoveRows(QModelIndex(), position, position+rows-1);
 	for (int row = 0; row < rows; ++row) {
+		ecsControlGroups[position]->zap();
 		ecsControlGroups.removeAt(position);
 	}
 	endRemoveRows();

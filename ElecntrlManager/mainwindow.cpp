@@ -98,6 +98,7 @@ void MainWindow::on_actionOpen_triggered()
 	QString fileName;
 	fileName = QFileDialog::getOpenFileName(this,
 		tr("Open System Description File"), "", tr("Electric System Files (*.esf)"));
+	on_actionNew_triggered();
 	SystemDescription::loadFile( fileName, applianceModel, cGroupModel );
 	updateScene();
 }
@@ -266,6 +267,7 @@ void MainWindow::on_actionSwitch_Off_triggered() { _AddAction( ecsManager::Switc
 void MainWindow::on_actionStart_Fade_triggered() { _AddAction( ecsManager::FadeStart ); }
 void MainWindow::on_actionStop_Fade_triggered() { _AddAction( ecsManager::FadeStop ); }
 void MainWindow::on_actionSwitch_Color_triggered() { _AddAction( ecsManager::ChangeColor ); }
+void MainWindow::on_actionRun_Actuator_triggered() { _AddAction( ecsManager::Actuator ); }
 
 //-------------------------------------------------------------------------------------------------
 

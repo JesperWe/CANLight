@@ -5,22 +5,23 @@
 
 class ecsTableView : public QTableView
 {
-    Q_OBJECT
+	Q_OBJECT
 
 private:
-    QMenu* ecsControlGroupContextMenu;
+	QMenu* ecsControlGroupContextMenu;
 
 public:
-    ecsTableView() : QTableView() {};
-    ecsTableView( QWidget* parent );
+	ecsTableView() : QTableView() {};
+	ecsTableView( QWidget* parent );
 
 signals:
-    void modified();
+	void modified();
 
 private slots:
-    void on_customContextMenuRequested( QPoint pos );
-    void on_addItemAction();
-    void on_changeItemAction();
+	void on_customContextMenuRequested( QPoint pos );
+	void on_addItemAction();
+	void on_changeItemAction();
+	void on_deleteItemAction();
 };
 
 #endif // ECSTABLEVIEW_H

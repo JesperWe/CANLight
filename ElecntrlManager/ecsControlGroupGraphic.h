@@ -17,7 +17,7 @@ class ecsControlGroupGraphic :  public QGraphicsItem
 
 public:
 
-	enum { Type = UserType + ecsManager::ControlGroupProxy };
+	enum { Type = UserType + ecsManager::ControlGroupGraphic };
 	int type() const { return Type; };
 
 	//--------------------------------------------------------------------------------------

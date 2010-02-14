@@ -56,3 +56,36 @@ void ecsControlGroup::toggleItemType() {
 		}
 	}
 }
+
+//------------------------------------------------------------------------------------
+
+void ecsControlGroup::zap() {
+
+	if( itemType == ecsControlGroup::Activity &&  graphic->scene() ) {
+		foreach( QGraphicsItem* item, graphic->scene()->items() ) {
+			if( ecsAction* action = qgraphicsitem_cast<ecsAction *>( item ) ) {
+				foreach( ecsControlGroupGraphic* target, action->targetGroups ) {
+					if( target->srcGroup == this ) {
+						action->targetGroups.removeAt( action->targetGroups.indexOf( target ) );
+					}
+				}
+			}
+		}
+	}
+
+	foreach( QGraphicsItem* child, graphic->childItems() ) {
+
+		if( ecsEvent* event = qgraphicsitem_cast<ecsEvent *>( child ) ) event->zap();
+
+		else {
+			child->scene()->removeItem( child );
+			delete child;
+		}
+	}
+
+	if( graphic->scene() ) {
+		graphic->scene()->removeItem( graphic );
+	}
+
+	delete graphic;
+}
