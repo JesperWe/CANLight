@@ -279,7 +279,9 @@ void MainWindow::on_keypress( int key ) {
 	selection = this->ui->graphicsView->scene()->selectedItems();
 	if( selection.count() != 1 ) return;
 
-	if( key == Qt::Key_Delete ) {
+	switch( key ) {
+
+	case Qt::Key_Delete: {
 		switch( selection[0]->type() ) {
 		case ecsEvent::Type: {
 				ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(selection[0]);
@@ -300,6 +302,12 @@ void MainWindow::on_keypress( int key ) {
 				updateScene();
 				break; }
 		}
+		break;
+	}
+
+	case Qt::Key_Control | Qt::Key_S: {
+		on_actionSave_triggered();
+	}
 	}
 
 	if( selection[0]->type() != QGraphicsSimpleTextItem::Type ) return;
@@ -308,11 +316,15 @@ void MainWindow::on_keypress( int key ) {
 
 	int func = 0;
 	switch( key ) {
-	case Qt::Key_1: { func = ecsEvent::Key0; break; }
-	case Qt::Key_2: { func = ecsEvent::Key1; break; }
-	case Qt::Key_3: { func = ecsEvent::Key2; break; }
-	case Qt::Key_A: { func = ecsEvent::AnalogSignal; break; }
-	case Qt::Key_I: { func = ecsEvent::ChangeNotifiation; break; }
+	case Qt::Key_1: { func = ecsManager::Key0; break; }
+	case Qt::Key_2: { func = ecsManager::Key1; break; }
+	case Qt::Key_3: { func = ecsManager::Key2; break; }
+	case Qt::Key_A: { func = ecsManager::AnalogSignal; break; }
+	case Qt::Key_I: { func = ecsManager::ChangeNotifiation; break; }
+	case Qt::Key_R: { func = ecsManager::LightRed; break; }
+	case Qt::Key_W: { func = ecsManager::LightWhite; break; }
+	case Qt::Key_L: { func = ecsManager::LightAll; break; }
+	case Qt::Key_O: { func = ecsManager::ActuatorOut; break; }
 	default:  { return; } // Ignore unknow keypress.
 	}
 

@@ -78,7 +78,7 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
 
 	painter->drawPolygon( QPolygon( 4, &ecsAction::polygon[0][0] ) );
-	painter->drawPixmap( -34*0.25,-34*0.25,34*0.5,34*0.5, ecsManagerApp::inst()->icons[actionType] );
+	painter->drawPixmap( -34*0.25,-34*0.25,34*0.5,34*0.5, ecsManagerApp::inst()->actionIcons[actionType] );
 
 	// Now draw a rubberband if the user is dragging.
 

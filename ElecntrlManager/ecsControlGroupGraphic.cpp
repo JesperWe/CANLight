@@ -1,6 +1,7 @@
 #include <QIcon>
 
 #include "ecsManager.h"
+#include "ecsManagerApp.h"
 #include "ecsControlGroup.h"
 #include "ecsControlGroupGraphic.h"
 #include "ecsControlGroupModel.h"
@@ -80,8 +81,6 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 			srcGroup->displayText()
 		);
 
-	QPixmap* icon = new QPixmap(":/graphics/button.svg");
-
 	float buttonSize = ecsManager::CtrlButtonSize;
 
 	foreach( QGraphicsItem* link, childItems() ) {
@@ -92,31 +91,25 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 		ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
 		int func = srcGroup->functions[ linkedApp->id ];
 
-		if( func != ecsEvent::Unknown ) {
+		if( func != ecsManager::UnknownSource ) {
 			painter->setFont( qApp->property( "buttonFont" ).value<QFont>() );
 
+			painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
+			painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, ecsManagerApp::inst()->eventSourceIcons[ func ] );
+
 			switch( func ) {
-			case ecsEvent::Key0: {
-					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *icon );
+			case ecsManager::Key0: {
 					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "1", 0 );
 					break; }
-			case ecsEvent::Key1: {
-					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *icon );
+			case ecsManager::Key1: {
 					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "2", 0 );
 					break; }
-			case ecsEvent::Key2: {
-					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *icon );
+			case ecsManager::Key2: {
 					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
 					break; }
-			case ecsEvent::AnalogSignal: {
-					QPixmap* sym = new QPixmap(":/graphics/signal.svg");
-					painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
-					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *sym );
+			case ecsManager::AnalogSignal: {
 					break; }
-			case ecsEvent::ChangeNotifiation: {
-					QPixmap* sym = new QPixmap(":/graphics/connections.svg");
-					painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
-					painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, *sym );
+			case ecsManager::ChangeNotifiation: {
 					break; }
 			}
 		}

@@ -7,7 +7,8 @@
 class ecsManagerApp
 {
 public:
-	QHash<int, QPixmap> icons;
+	QHash<int, QPixmap> actionIcons;
+	QHash<int, QPixmap> eventSourceIcons;
 
 	// Singelton pattern
 

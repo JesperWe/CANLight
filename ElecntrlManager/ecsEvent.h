@@ -48,16 +48,6 @@ public:
 		noEventTypes
 	};
 
-	enum eventSources_e {
-		Unknown,
-		Key0,
-		Key1,
-		Key2,
-		AnalogSignal,
-		ChangeNotifiation,
-		noEventSources
-	};
-
 	int eventType;
 	ecsAction* eventAction;
 	int cGroupId;

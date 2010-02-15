@@ -35,5 +35,8 @@
         <file>graphics/flash.svg</file>
         <file>graphics/appliance.svg</file>
         <file>graphics/actuator.svg</file>
+        <file>graphics/light-white.svg</file>
+        <file>graphics/light-both.svg</file>
+        <file>graphics/light-red.svg</file>
     </qresource>
 </RCC>

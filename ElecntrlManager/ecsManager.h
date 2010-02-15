@@ -9,7 +9,7 @@ class ecsManager {
 public:
 
 	enum ecsManager_GraphisItemTypes_e {
-		Unknown,
+		UnknownItemType,
 		ControlGroup,
 		ControlGroupGraphic,
 		Appliance,
@@ -27,6 +27,20 @@ public:
 		ChangeColor,
 		Actuator,
 		noActionTypes
+	};
+
+	enum eventSources_e {
+		UnknownSource,
+		Key0,
+		Key1,
+		Key2,
+		AnalogSignal,
+		ChangeNotifiation,
+		LightRed,
+		LightWhite,
+		LightAll,
+		ActuatorOut,
+		noEventSources
 	};
 
 	static const float GraphicsDebug  = false;
