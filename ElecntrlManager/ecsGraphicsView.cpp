@@ -3,8 +3,11 @@
 
 void ecsGraphicsView::wheelEvent( QWheelEvent *event )
 {
-	scaleView(pow((double)2, -event->delta() / 240.0));
+	float scaleFactor = pow((double)2, -event->delta() / 240.0);
+	scaleView( scaleFactor );
+	if( scaleFactor > 0 ) 	centerOn( event->pos() );
 }
+
 
 void ecsGraphicsView::scaleView(qreal scaleFactor)
 {

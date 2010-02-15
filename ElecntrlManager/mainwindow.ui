@@ -20,7 +20,7 @@
    <string>JM60 Electric Control System</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="resources.qrc">
     <normaloff>:/graphics/connections.svg</normaloff>:/graphics/connections.svg</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
@@ -145,6 +145,9 @@
       </property>
       <property name="renderHints">
        <set>QPainter::Antialiasing|QPainter::HighQualityAntialiasing|QPainter::TextAntialiasing</set>
+      </property>
+      <property name="dragMode">
+       <enum>QGraphicsView::ScrollHandDrag</enum>
       </property>
       <property name="viewportUpdateMode">
        <enum>QGraphicsView::FullViewportUpdate</enum>
@@ -343,7 +346,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/click-single.svg</normaloff>:/graphics/click-single.svg</iconset>
    </property>
    <property name="text">
@@ -352,7 +355,7 @@
   </action>
   <action name="actionDouble_Click">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/click-double.svg</normaloff>:/graphics/click-double.svg</iconset>
    </property>
    <property name="text">
@@ -361,7 +364,7 @@
   </action>
   <action name="actionPress_Hold">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/click-hold.svg</normaloff>:/graphics/click-hold.svg</iconset>
    </property>
    <property name="text">
@@ -370,7 +373,7 @@
   </action>
   <action name="actionRelease">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/click-release.svg</normaloff>:/graphics/click-release.svg</iconset>
    </property>
    <property name="text">
@@ -379,7 +382,7 @@
   </action>
   <action name="actionToggle_On_Off">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/onoff.svg</normaloff>:/graphics/onoff.svg</iconset>
    </property>
    <property name="text">
@@ -388,7 +391,7 @@
   </action>
   <action name="actionSwitch_On">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/bulb-lit.svg</normaloff>:/graphics/bulb-lit.svg</iconset>
    </property>
    <property name="text">
@@ -397,7 +400,7 @@
   </action>
   <action name="actionSwitch_Off">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/bulb.svg</normaloff>:/graphics/bulb.svg</iconset>
    </property>
    <property name="text">
@@ -406,7 +409,7 @@
   </action>
   <action name="actionStart_Fade">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/fade-start.svg</normaloff>:/graphics/fade-start.svg</iconset>
    </property>
    <property name="text">
@@ -415,7 +418,7 @@
   </action>
   <action name="actionStop_Fade">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/fade-stop.svg</normaloff>:/graphics/fade-stop.svg</iconset>
    </property>
    <property name="text">
@@ -424,7 +427,7 @@
   </action>
   <action name="actionSwitch_Color">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/connections.svg</normaloff>:/graphics/connections.svg</iconset>
    </property>
    <property name="text">
@@ -470,6 +473,8 @@
    <header>ecsTableView.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

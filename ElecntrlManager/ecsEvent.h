@@ -11,12 +11,14 @@ public:
 	ecsEvent() : QGraphicsItem(0) {
 		eventAction = NULL;
 		setFlag(QGraphicsItem::ItemIsSelectable, true);
+		qDebug() << "Create Event (default)";
 	};
 
 	ecsEvent( int t ) : QGraphicsItem(0) {
 		eventAction = NULL;
 		eventType = t;
 		setFlag(QGraphicsItem::ItemIsSelectable, true);
+		qDebug() << "Create Event type=" << t;
 	};
 
 	ecsEvent( int itemId, int t ) : QGraphicsItem(0) {
@@ -24,6 +26,7 @@ public:
 		eventType = t;
 		cGroupId = itemId;
 		setFlag(QGraphicsItem::ItemIsSelectable, true);
+		qDebug() << "Create Event id=" << itemId << " type=" << t;
 	};
 
 	enum { Type = UserType + ecsManager::Event };

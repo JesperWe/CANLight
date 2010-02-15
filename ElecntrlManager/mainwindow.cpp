@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 
 	qApp->setProperty( "headerFont", QVariant( QFont( "Helvetica", ecsManager::GroupNameFontSize, QFont::Bold )));
-	qApp->setProperty( "contentFont", QVariant( QFont( "Helvetica", 8 )));
+	qApp->setProperty( "contentFont", QVariant( QFont( "Helvetica", 9 )));
 	qApp->setProperty( "buttonFont", QVariant( QFont( "Helvetica", 7, QFont::Bold )));
 	qApp->setProperty( "SelectionColor", QVariant( QColor( 0, 50, 255, 60 )));
 	qApp->setProperty( "EventColor", QVariant( QColor( 255, 210, 60, 170 )));
@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	this->ui->graphicsView->setScene(scene);
 	this->ui->graphicsView->show();
+	this->ui->graphicsView->setCursor( Qt::ArrowCursor );
 
 	applianceModel = new ecsControlGroupModel(this);
 	applianceModel->insertColumn(0);
@@ -286,7 +287,9 @@ void MainWindow::on_keypress( int key ) {
 				break; }
 		case ecsAction::Type: {
 				ecsAction* action = qgraphicsitem_cast<ecsAction*>(selection[0]);
+				ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(action->parentItem());
 				action->zap();
+				event->eventAction = NULL;
 				break; }
 		case QGraphicsSimpleTextItem::Type: {
 				link = qgraphicsitem_cast<QGraphicsSimpleTextItem*>(selection[0]);

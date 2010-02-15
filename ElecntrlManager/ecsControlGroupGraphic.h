@@ -29,6 +29,7 @@ public:
 		setVisible( true );
 		setAcceptDrops(true);
 		setFlag( QGraphicsItem::ItemIsSelectable );
+		qDebug() << "Create ControlGroupGraphic (default)";
 	}
 
 	ecsControlGroupGraphic( ecsControlGroup* mySrcGroup ) : QGraphicsItem(0) {
@@ -38,6 +39,8 @@ public:
 		setVisible( true );
 		setAcceptDrops(true);
 		setFlag( QGraphicsItem::ItemIsSelectable );
+		qDebug() << "Create ControlGroupGraphic srcGroup=" << mySrcGroup;
+
 	}
 
 	//--------------------------------------------------------------------------------------

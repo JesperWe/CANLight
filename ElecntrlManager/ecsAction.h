@@ -22,11 +22,13 @@ public:
 		setAcceptDrops(true);
 		setFlag(QGraphicsItem::ItemIsSelectable, true);
 		actionType = ecsManager::NoAction;
+		qDebug() << "Create Action (default)";
 	};
 	ecsAction( int t ) : QGraphicsItem(0) {
 		setAcceptDrops(true);
 		setFlag(QGraphicsItem::ItemIsSelectable, true);
 		actionType = t;
+		qDebug() << "Create Action type=" << t;
 	};
 
 	enum { Type = UserType + ecsManager::Action };

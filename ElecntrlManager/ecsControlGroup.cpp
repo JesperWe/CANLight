@@ -14,7 +14,8 @@ ecsControlGroup::ecsControlGroup()  {
 	id = 0;
 	description = "N/A";
 	itemType = ecsControlGroup::Controller;
-	graphic = new ecsControlGroupGraphic();
+	qDebug() << "Create ControlGroup (default)";
+	graphic = new ecsControlGroupGraphic( this );
 }
 
 //--------------------------------------------------------------------------------------
@@ -42,19 +43,27 @@ QString ecsControlGroup::displayText() {
 //------------------------------------------------------------------------------------
 
 void ecsControlGroup::toggleItemType() {
+
 	switch( itemType ) {
+
 	case ecsControlGroup::Controller: {
 			itemType = ecsControlGroup::Activity;
-			graphic->scene()->removeItem( graphic );
-			delete graphic;
+			if( graphic->scene() )
+				graphic->scene()->removeItem( graphic );
+			foreach( ecsEvent* event, events ) {
+				event->zap();
+			}
+			events.clear();
 			break;
 		}
+
 	case ecsControlGroup::Activity: {
 			itemType = ecsControlGroup::Controller;
 			graphic = new ecsControlGroupGraphic( this );
 			break;
 		}
 	}
+
 }
 
 //------------------------------------------------------------------------------------

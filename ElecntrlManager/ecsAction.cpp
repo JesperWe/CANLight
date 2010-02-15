@@ -24,6 +24,8 @@ QRectF ecsAction::boundingRect() const {
 
 void ecsAction::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+	scene()->views()[0]->setCursor( Qt::ArrowCursor );
+
 	dragToPos  = anchorOut();
 	update();
 	QGraphicsItem::mousePressEvent(event);
@@ -166,13 +168,12 @@ void ecsAction::dropEvent(QGraphicsSceneDragDropEvent *event)
 //------------------------------------------------------------------------------------
 
 void ecsAction::zap() {
-	ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(parentItem());
-	event->eventAction = NULL;
-
 	foreach( ecsControlGroupGraphic* target, targetGroups ) {
 		if( target->parentItem() == this )
 			target->setParentItem( NULL );
+		if( scene() )
 			scene()->removeItem( target );
 	}
-	scene()->removeItem( this );
+	if( scene() )
+		scene()->removeItem( this );
 }
