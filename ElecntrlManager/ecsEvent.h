@@ -38,16 +38,6 @@ public:
 	QPointF anchorOut();
 	void zap();
 
-	enum eventTypes_e {
-		None,
-		SingleClick,
-		DoubleClick,
-		PressHold,
-		Release,
-		SignalChange,
-		noEventTypes
-	};
-
 	int eventType;
 	ecsAction* eventAction;
 	int cGroupId;

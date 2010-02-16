@@ -17,6 +17,15 @@ public:
 		Action
 	};
 
+	enum eventTypes_e {
+		NoEventType,
+		SingleClick,
+		DoubleClick,
+		PressHold,
+		Release,
+		SignalChange
+	};
+
 	enum actionType_e {
 		NoAction,
 		SwitchON,
@@ -25,8 +34,7 @@ public:
 		FadeStart,
 		FadeStop,
 		ChangeColor,
-		Actuator,
-		noActionTypes
+		Actuator
 	};
 
 	enum eventSources_e {
@@ -39,8 +47,7 @@ public:
 		LightRed,
 		LightWhite,
 		LightAll,
-		ActuatorOut,
-		noEventSources
+		ActuatorOut
 	};
 
 	static const float GraphicsDebug  = false;

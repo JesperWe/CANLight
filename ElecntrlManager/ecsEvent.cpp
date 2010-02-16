@@ -1,4 +1,5 @@
 #include "ecsManager.h"
+#include "ecsManagerApp.h"
 #include "ecsEvent.h"
 
 QRectF ecsEvent::boundingRect() const {
@@ -9,17 +10,7 @@ QRectF ecsEvent::boundingRect() const {
 //------------------------------------------------------------------------------------
 
 void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-	QPixmap* icon;
 	float iconDim = ecsManager::EventIconSize;
-
-	switch( eventType ) {
-	case ecsEvent::SingleClick: { icon = new QPixmap(":/graphics/click-single.svg"); break; }
-	case ecsEvent::DoubleClick: { icon = new QPixmap(":/graphics/click-double.svg"); break; }
-	case ecsEvent::PressHold: { icon = new QPixmap(":/graphics/click-hold.svg"); break; }
-	case ecsEvent::Release: { icon = new QPixmap(":/graphics/click-release.svg"); break; }
-	case ecsEvent::SignalChange: { icon = new QPixmap(":/graphics/signal.svg"); break; }
-	default: { return; }
-	}
 
 	if( isSelected() ) {
 		painter->setBrush( qApp->property( "SelectionColor" ).value<QColor>() );
@@ -28,11 +19,9 @@ void ecsEvent::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 	}
 
 	painter->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
-
 	painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
-
-	painter->drawEllipse(-0.7*iconDim,-0.7*iconDim,iconDim*1.4,iconDim*1.4);
-	painter->drawPixmap(-iconDim/2,-iconDim/2,iconDim,iconDim,*icon);
+	painter->drawEllipse( -0.7*iconDim, -0.7*iconDim, iconDim*1.4, iconDim*1.4);
+	painter->drawPixmap(-iconDim/2, -iconDim/2, iconDim, iconDim, ecsManagerApp::inst()->eventIcons[eventType]);
 
 	if( eventAction ) {
 		painter->drawLine(

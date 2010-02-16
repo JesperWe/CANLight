@@ -231,11 +231,11 @@ void MainWindow::_AddEvent( int eventType )
 	updateScene();
 }
 
-void MainWindow::on_actionSingle_Click_triggered() { _AddEvent( ecsEvent::SingleClick ); }
-void MainWindow::on_actionDouble_Click_triggered() { _AddEvent( ecsEvent::DoubleClick ); }
-void MainWindow::on_actionPress_Hold_triggered() { _AddEvent( ecsEvent::PressHold ); }
-void MainWindow::on_actionRelease_triggered() { _AddEvent( ecsEvent::Release ); }
-void MainWindow::on_actionSignal_Change_triggered() { _AddEvent( ecsEvent::SignalChange ); }
+void MainWindow::on_actionSingle_Click_triggered() { _AddEvent( ecsManager::SingleClick ); }
+void MainWindow::on_actionDouble_Click_triggered() { _AddEvent( ecsManager::DoubleClick ); }
+void MainWindow::on_actionPress_Hold_triggered() { _AddEvent( ecsManager::PressHold ); }
+void MainWindow::on_actionRelease_triggered() { _AddEvent( ecsManager::Release ); }
+void MainWindow::on_actionSignal_Change_triggered() { _AddEvent( ecsManager::SignalChange ); }
 
 
 //-------------------------------------------------------------------------------------------------

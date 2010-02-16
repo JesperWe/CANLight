@@ -10,29 +10,30 @@ class ecsGraphicsView : public QGraphicsView
 Q_OBJECT
 
 private:
-    void setupUI();
+	void setupUI();
 
 public:
-    ecsGraphicsView() {
-        setupUI();
-    }
+	ecsGraphicsView() {
+		setupUI();
+	}
 
-    ecsGraphicsView( QWidget* parent ) : QGraphicsView( parent ) {
-        setFocusPolicy( Qt::StrongFocus );
-        setupUI();
-    };
+	ecsGraphicsView( QWidget* parent ) : QGraphicsView( parent ) {
+		setFocusPolicy( Qt::StrongFocus );
+		setupUI();
+	};
 
-    void keyPressEvent( QKeyEvent *event );
+	void keyPressEvent( QKeyEvent *event );
 
 protected:
-    void wheelEvent( QWheelEvent *event );
-    void scaleView( qreal scaleFactor );
-    void contextMenuEvent( QContextMenuEvent *widgetevent );
-    QMenu* ecsGraphicsActionMenu;
-    void unselectAll();
+	void wheelEvent( QWheelEvent *event );
+	void scaleView( qreal scaleFactor );
+	void contextMenuEvent( QContextMenuEvent *widgetevent );
+	QMenu* ecsGraphicsActionMenu;
+	QMenu* ecsGraphicsEventMenu;
+	void unselectAll();
 
 
 signals:
-    void keypress( int key );
+	void keypress( int key );
 };
 #endif // ECSGRAPHICSVIEW_H

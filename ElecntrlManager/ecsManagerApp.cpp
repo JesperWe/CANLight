@@ -19,6 +19,13 @@ ecsManagerApp::ecsManagerApp() {
 	eventSourceIcons[ ecsManager::LightWhite ] = QPixmap(":/graphics/light-white.svg");
 	eventSourceIcons[ ecsManager::LightAll ] = QPixmap(":/graphics/light-both.svg");
 	eventSourceIcons[ ecsManager::ActuatorOut ] = QPixmap(":/graphics/cogs.svg");
+
+	eventIcons[ ecsManager::SingleClick ] = QPixmap(":/graphics/click-single.svg");
+	eventIcons[ ecsManager::DoubleClick ] = QPixmap(":/graphics/click-double.svg");
+	eventIcons[ ecsManager::PressHold ] = QPixmap(":/graphics/click-hold.svg");
+	eventIcons[ ecsManager::Release ] = QPixmap(":/graphics/click-release.svg");
+	eventIcons[ ecsManager::SignalChange ] = QPixmap(":/graphics/signal.svg");
+
 };
 
 ecsManagerApp* ecsManagerApp::inst() {

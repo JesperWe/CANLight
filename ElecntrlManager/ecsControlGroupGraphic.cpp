@@ -175,7 +175,7 @@ void ecsControlGroupGraphic::dropEvent( QGraphicsSceneDragDropEvent *event ) {
 
 	prepareGeometryChange();
 	srcGroup->links.append( appliance );
-	srcGroup->functions[applianceId] = ecsEvent::None;
+	srcGroup->functions[applianceId] = ecsManager::NoEventType;
 }
 
 //------------------------------------------------------------------------------------
