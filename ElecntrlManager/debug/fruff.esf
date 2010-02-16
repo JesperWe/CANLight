@@ -20,13 +20,13 @@
         <controlevent type="2" action="3">
             <targetgroup id="2" parented="1"/>
         </controlevent>
-        <controlevent type="1" action="3">
+        <controlevent type="1" action="4">
             <targetgroup id="2"/>
         </controlevent>
         <controlevent type="3" action="3">
             <targetgroup id="2"/>
         </controlevent>
-        <controlevent type="4" action="6">
+        <controlevent type="4" action="1">
             <targetgroup id="2"/>
         </controlevent>
     </controlgroup>
