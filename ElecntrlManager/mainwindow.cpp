@@ -333,3 +333,8 @@ void MainWindow::on_keypress( int key ) {
 	groupGraphic->srcGroup->functions[ linkedapp->id ] = func;
 	link->setSelected( false );
 }
+
+void MainWindow::on_actionUpload_to_Yacht_triggered()
+{
+
+}

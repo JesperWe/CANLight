@@ -23,7 +23,9 @@ HEADERS += ecsGraphicsView.h \
     ecsAction.h \
     ecsManager.h \
     ecsControlGroupGraphic.h \
-    ecsManagerApp.h
+    ecsManagerApp.h \
+    CANUSB/include/lawicel_can.h \
+    CANUSB/include/Ftd2xx.h
 FORMS += mainwindow.ui \
     about.ui
 RESOURCES += resources.qrc
