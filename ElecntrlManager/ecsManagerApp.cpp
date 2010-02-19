@@ -26,6 +26,12 @@ ecsManagerApp::ecsManagerApp() {
 	eventIcons[ ecsManager::Release ] = QPixmap(":/graphics/click-release.svg");
 	eventIcons[ ecsManager::SignalChange ] = QPixmap(":/graphics/signal.svg");
 
+	statusIcons[ ecsManager::StatusRed ] = QPixmap(":/graphics/icon-red.svg");
+	statusIcons[ ecsManager::StatusYellow ] = QPixmap(":/graphics/icon-yellow.svg");
+	statusIcons[ ecsManager::StatusBlue ] = QPixmap(":/graphics/icon-blue.svg");
+	statusIcons[ ecsManager::StatusGreen ] = QPixmap(":/graphics/icon-green.svg");
+	statusIcons[ ecsManager::StatusActive ] = QPixmap(":/graphics/icon-active.svg");
+
 };
 
 ecsManagerApp* ecsManagerApp::inst() {

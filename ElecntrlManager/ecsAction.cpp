@@ -162,6 +162,8 @@ void ecsAction::dropEvent(QGraphicsSceneDragDropEvent *event)
 	prepareGeometryChange();
 	targetGroup = new ecsControlGroupGraphic( ((MainWindow*)qApp->activeWindow())->cGroupModel->findItem( cGroupId ) );
 	targetGroups.append( targetGroup );
+
+	qApp->activeWindow()->setWindowModified( true );
 	((MainWindow*)qApp->activeWindow())->updateScene();
 }
 

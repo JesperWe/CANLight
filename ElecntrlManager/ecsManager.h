@@ -50,6 +50,14 @@ public:
 		ActuatorOut
 	};
 
+	enum statuses_e  {
+		StatusRed,
+		StatusYellow,
+		StatusBlue,
+		StatusGreen,
+		StatusActive
+	};
+
 	static const float GraphicsDebug  = false;
 
 	static const float GroupNameFontSize = 9;

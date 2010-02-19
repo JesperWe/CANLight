@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+	<!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
+	<!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">
+	<!ENTITY ns_graphs "http://ns.adobe.com/Graphs/1.0/">
+]>
+<svg version="1.1"
+	 id="svg4785" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" sodipodi:docname="arrow8.svg" inkscape:version="0.47 r22583"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 x="0px" y="0px" width="100px" height="100px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve">
+<defs>
+	
+	
+		<inkscape:perspective  id="perspective4793" inkscape:vp_z="744.09448 : 526.18109 : 1" inkscape:vp_y="0 : 1000 : 0" inkscape:vp_x="0 : 526.18109 : 1" sodipodi:type="inkscape:persp3d" inkscape:persp3d-origin="372.04724 : 350.78739 : 1">
+		</inkscape:perspective>
+	
+		<inkscape:perspective  id="perspective4780" inkscape:vp_z="1 : 0.5 : 1" inkscape:vp_y="0 : 1000 : 0" inkscape:vp_x="0 : 0.5 : 1" sodipodi:type="inkscape:persp3d" inkscape:persp3d-origin="0.5 : 0.33333333 : 1">
+		</inkscape:perspective>
+</defs>
+<sodipodi:namedview  id="base" inkscape:cy="68.014238" inkscape:cx="78.634618" inkscape:zoom="1.979899" borderopacity="1.0" bordercolor="#666666" showgrid="false" pagecolor="#ffffff" inkscape:window-y="44" inkscape:window-x="44" inkscape:window-height="757" inkscape:window-width="712" inkscape:current-layer="layer1" inkscape:document-units="px" inkscape:pageshadow="2" inkscape:pageopacity="0.0" inkscape:window-maximized="0" inkscape:showpageshadow="false">
+	</sodipodi:namedview>
+<g>
+	
+		<linearGradient id="path3307_1_" gradientUnits="userSpaceOnUse" x1="-80.7869" y1="5209.4922" x2="-80.7869" y2="5531.668" gradientTransform="matrix(0.1026 0 0 0.096 61.6087 -490.6509)">
+		<stop  offset="0" style="stop-color:#FFFFFF;stop-opacity:0.7962"/>
+		<stop  offset="1" style="stop-color:#FFFFFF;stop-opacity:0.1306"/>
+		<a:midPointStop  offset="0" style="stop-color:#FFFFFF;stop-opacity:0.7962"/>
+		<a:midPointStop  offset="0.5" style="stop-color:#FFFFFF;stop-opacity:0.7962"/>
+		<a:midPointStop  offset="1" style="stop-color:#FFFFFF;stop-opacity:0.1306"/>
+	</linearGradient>
+	
+		<path id="path3307" sodipodi:cx="282.85715" sodipodi:cy="289.50504" sodipodi:rx="54.285713" sodipodi:ry="40" sodipodi:type="arc" inkscape:export-filename="/home/heiko/Austausch/inkscape_dot16px.png" inkscape:export-ydpi="72" inkscape:export-xdpi="72" fill="url(#path3307_1_)" d="
+		M87.355,26.023c0,12.96-15.237,23.468-34.039,23.468c-18.795,0-34.032-10.508-34.032-23.468c0-12.961,15.237-23.466,34.032-23.466
+		C72.118,2.557,87.355,13.062,87.355,26.023z"/>
+	
+		<radialGradient id="path3309_1_" cx="-82.3201" cy="7896.2002" r="614.4726" gradientTransform="matrix(0.0796 0 0 0.0697 56.7863 -481.785)" gradientUnits="userSpaceOnUse">
+		<stop  offset="0" style="stop-color:#ABFF5B;stop-opacity:0.621"/>
+		<stop  offset="0.1904" style="stop-color:#44E0CE;stop-opacity:0.7137"/>
+		<stop  offset="0.6455" style="stop-color:#2D57C2;stop-opacity:0.8078"/>
+		<stop  offset="1" style="stop-color:#003585"/>
+		<a:midPointStop  offset="0" style="stop-color:#ABFF5B;stop-opacity:0.621"/>
+		<a:midPointStop  offset="0.5" style="stop-color:#ABFF5B;stop-opacity:0.621"/>
+		<a:midPointStop  offset="0.1904" style="stop-color:#44E0CE;stop-opacity:0.7137"/>
+		<a:midPointStop  offset="0.5" style="stop-color:#44E0CE;stop-opacity:0.7137"/>
+		<a:midPointStop  offset="0.6455" style="stop-color:#2D57C2;stop-opacity:0.8078"/>
+		<a:midPointStop  offset="0.5" style="stop-color:#2D57C2;stop-opacity:0.8078"/>
+		<a:midPointStop  offset="1" style="stop-color:#003585"/>
+	</radialGradient>
+	
+		<path id="path3309" sodipodi:cx="275.71429" sodipodi:cy="333.79074" sodipodi:rx="98.571426" sodipodi:ry="98.571426" sodipodi:type="arc" inkscape:export-filename="/home/heiko/Austausch/inkscape_dot16px.png" inkscape:export-ydpi="72" inkscape:export-xdpi="72" fill="url(#path3309_1_)" stroke="#000000" stroke-width="3.8339" d="
+		M98.194,50.255c0.012,26.489-21.45,47.97-47.94,47.981C23.766,98.247,2.279,76.782,2.273,50.294c0-0.012,0-0.027,0-0.039
+		C2.261,23.767,23.724,2.286,50.213,2.274C76.701,2.265,98.182,23.73,98.194,50.22C98.194,50.231,98.194,50.243,98.194,50.255z"/>
+	
+		<linearGradient id="path3311_1_" gradientUnits="userSpaceOnUse" x1="-105.6082" y1="5236.0088" x2="-105.6082" y2="5558.1812" gradientTransform="matrix(0.1026 0 0 0.096 61.1107 -490.1528)">
+		<stop  offset="0" style="stop-color:#FFFFFF;stop-opacity:0.7962"/>
+		<stop  offset="1" style="stop-color:#FFFFFF;stop-opacity:0.1306"/>
+		<a:midPointStop  offset="0" style="stop-color:#FFFFFF;stop-opacity:0.7962"/>
+		<a:midPointStop  offset="0.5" style="stop-color:#FFFFFF;stop-opacity:0.7962"/>
+		<a:midPointStop  offset="1" style="stop-color:#FFFFFF;stop-opacity:0.1306"/>
+	</linearGradient>
+	
+		<path id="path3311" sodipodi:cx="282.85715" sodipodi:cy="289.50504" sodipodi:rx="54.285713" sodipodi:ry="40" sodipodi:type="arc" inkscape:export-filename="/home/heiko/Austausch/inkscape_dot16px.png" inkscape:export-ydpi="72" inkscape:export-xdpi="72" fill="url(#path3311_1_)" d="
+		M84.311,29.066c0,12.961-15.237,23.469-34.032,23.469c-18.801,0-34.04-10.507-34.04-23.469c0-12.96,15.238-23.468,34.04-23.468
+		C69.074,5.598,84.311,16.106,84.311,29.066z"/>
+</g>
+</svg>

@@ -1,10 +1,8 @@
-#include <Qt>
-#include <QGraphicsSvgItem>
-#include <QFileDialog>
-#include <QPen>
-#include <QGraphicsView>
+#include <QtGui>
+#include <QtSvg>
 
 #include "ecsManager.h"
+#include "ecsManagerApp.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "ui_about.h"
@@ -18,6 +16,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+
+	readSettings();
 
 	qApp->setProperty( "headerFont", QVariant( QFont( "Helvetica", ecsManager::GroupNameFontSize, QFont::Bold )));
 	qApp->setProperty( "contentFont", QVariant( QFont( "Helvetica", 9 )));
@@ -66,11 +66,35 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	connect( this->ui->cGroupView->model(), SIGNAL( modified() ), this, SLOT(on_modifiedData()) );
 	connect( this->ui->graphicsView, SIGNAL(keypress(int)), this, SLOT(on_keypress(int)) );
+
+	ui->statusBar->showMessage( tr("Welcome, master!"), 4000 );
+
+	NMEAFrame = new QFrame();
+	horiz = new QHBoxLayout(NMEAFrame);
+	NMEAIcon = new QSvgWidget( ":/graphics/icon-blue.svg" );
+	NMEAIcon->setMaximumWidth( 14 );
+	NMEAIcon->setMaximumHeight( 20 );
+
+	NMEAStatusText = new QLabel( tr("Yacht Network: ?") );
+	NMEAStatusText->setMaximumHeight( 20 );
+	horiz->addWidget( NMEAIcon );
+	horiz->addWidget( NMEAStatusText );
+	horiz->setContentsMargins( 0, 0, 4, 0 );
+	horiz->setSpacing( 4 );
+	NMEAFrame->setLayout( horiz );
+	NMEAFrame->setMaximumHeight( 20 );
+	ui->statusBar->addPermanentWidget( NMEAFrame );
 }
 
 MainWindow::~MainWindow()
 {
 	delete ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+	writeSettings();
+	event->accept();
 }
 
 void MainWindow::changeEvent(QEvent *e)
@@ -83,6 +107,22 @@ void MainWindow::changeEvent(QEvent *e)
 	default:
 		break;
 	}
+}
+
+void MainWindow::readSettings()
+{
+	QSettings settings("Journeyman", "Electric Control System");
+	QPoint pos = settings.value("window-position", QPoint(20, 20)).toPoint();
+	QSize size = settings.value("window-size", QSize(800, 600)).toSize();
+	resize(size);
+	move(pos);
+}
+
+void MainWindow::writeSettings()
+{
+	QSettings settings("Journeyman", "Electric Control System");
+	settings.setValue("window-position", pos());
+	settings.setValue("window-size", size());
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -206,11 +246,13 @@ void MainWindow::on_actionSave_As_triggered()
 	fileName = QFileDialog::getSaveFileName(this,
 		tr("Save New System Description File"), "", tr("Electric System Files (*.esf)"));
 	SystemDescription::saveFile( fileName, applianceModel, cGroupModel );
+	setWindowModified( false );
 }
 
 void MainWindow::on_actionSave_triggered()
 {
 	SystemDescription::saveFile( SystemDescription::loadedFileName, applianceModel, cGroupModel );
+	setWindowModified( false );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -228,6 +270,7 @@ void MainWindow::_AddEvent( int eventType )
 	thisEvent = new ecsEvent( group->srcGroup->id, eventType );
 	group->srcGroup->events.append(  thisEvent  );
 	thisEvent->setParentItem( group );
+	setWindowModified( true );
 	updateScene();
 }
 
@@ -245,6 +288,7 @@ void MainWindow::on_actionNew_triggered()
 	scene->clear();
 	cGroupModel->clear();
 	applianceModel->clear();
+	setWindowModified( false );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -259,6 +303,7 @@ void MainWindow::_AddAction( int actionType ) {
 	event->eventAction = new ecsAction( actionType );
 	event->eventAction->setParentItem( event );
 	event->eventAction->setX( ecsManager::ActionOffset_X );
+	setWindowModified( true );
 	updateScene();
 }
 
@@ -286,19 +331,22 @@ void MainWindow::on_keypress( int key ) {
 		case ecsEvent::Type: {
 				ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(selection[0]);
 				event->zap();
+				setWindowModified( true );
 				break; }
 		case ecsAction::Type: {
 				ecsAction* action = qgraphicsitem_cast<ecsAction*>(selection[0]);
 				ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(action->parentItem());
 				action->zap();
 				event->eventAction = NULL;
+				setWindowModified( true );
 				break; }
 		case QGraphicsSimpleTextItem::Type: {
 				link = qgraphicsitem_cast<QGraphicsSimpleTextItem*>(selection[0]);
 				ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
 				ecsControlGroupGraphic* groupGraphic = (ecsControlGroupGraphic*)(link->parentItem());
 				groupGraphic->srcGroup->links.removeAt( groupGraphic->srcGroup->links.indexOf( linkedApp ) );
-				groupGraphic->recalcLinkPositions();;
+				groupGraphic->recalcLinkPositions();
+				setWindowModified( true );
 				updateScene();
 				break; }
 		}
@@ -332,6 +380,7 @@ void MainWindow::on_keypress( int key ) {
 	ecsControlGroupGraphic* groupGraphic = (ecsControlGroupGraphic*)(link->parentItem());
 	groupGraphic->srcGroup->functions[ linkedapp->id ] = func;
 	link->setSelected( false );
+	setWindowModified( true );
 }
 
 void MainWindow::on_actionUpload_to_Yacht_triggered()

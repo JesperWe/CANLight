@@ -39,5 +39,10 @@
         <file>graphics/light-both.svg</file>
         <file>graphics/light-red.svg</file>
         <file>graphics/yachtnet.svg</file>
+        <file>graphics/icon-yellow.svg</file>
+        <file>graphics/icon-active.svg</file>
+        <file>graphics/icon-blue.svg</file>
+        <file>graphics/icon-green.svg</file>
+        <file>graphics/icon-red.svg</file>
     </qresource>
 </RCC>

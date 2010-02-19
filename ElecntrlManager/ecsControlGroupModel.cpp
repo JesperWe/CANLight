@@ -146,6 +146,7 @@ bool ecsControlGroupModel::setData(const QModelIndex &index,
 		else ecsControlGroups[index.row()]->itemType = value.toInt();
 
 		emit dataChanged(index, index);
+		qApp->activeWindow()->setWindowModified( true );
 		emit modified();
 		return true;
 	}
@@ -175,6 +176,8 @@ bool ecsControlGroupModel::insertRows(int position, int rows, const QModelIndex 
 
 	endInsertRows();
 
+	qApp->activeWindow()->setWindowModified( true );
+
 	return true;
 }
 
@@ -190,6 +193,7 @@ bool ecsControlGroupModel::removeRows(int position, int rows, const QModelIndex 
 		ecsControlGroups.removeAt(position);
 	}
 	endRemoveRows();
+	qApp->activeWindow()->setWindowModified( true );
 	emit modified();
 	return true;
 }

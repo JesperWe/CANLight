@@ -10,6 +10,7 @@ public:
 	QHash<int, QPixmap> actionIcons;
 	QHash<int, QPixmap> eventIcons;
 	QHash<int, QPixmap> eventSourceIcons;
+	QHash<int, QPixmap> statusIcons;
 
 	// Singelton pattern
 
