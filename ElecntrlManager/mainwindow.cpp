@@ -116,6 +116,7 @@ void MainWindow::readSettings()
 	QSize size = settings.value("window-size", QSize(800, 600)).toSize();
 	resize(size);
 	move(pos);
+	ui->splitter->restoreState(settings.value("main-splitter-sizes").toByteArray());
 }
 
 void MainWindow::writeSettings()
@@ -123,6 +124,7 @@ void MainWindow::writeSettings()
 	QSettings settings("Journeyman", "Electric Control System");
 	settings.setValue("window-position", pos());
 	settings.setValue("window-size", size());
+	settings.setValue("main-splitter-sizes", ui->splitter->saveState());
 }
 
 void MainWindow::on_actionAbout_triggered()
