@@ -1,8 +1,8 @@
 /*
- * Revision $Revision$
- * By $Author$
- * Date $Date$
- * ID $ID$
+ * $Revision$
+ * $Author$
+ * $Date$
+ * $Id$
  */
 
 #include <cstdio>
