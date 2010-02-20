@@ -1,3 +1,9 @@
+/*
+ * Revision $Rev$
+ * By $Author$
+ * Date $Date$
+ */
+
 #ifndef ECSCANUSB_H
 #define ECSCANUSB_H
 
