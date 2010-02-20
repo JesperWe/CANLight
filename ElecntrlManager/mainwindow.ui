@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>JM60 Electric Control System</string>
+   <string>JM60 Electric Control System [*]</string>
   </property>
   <property name="windowIcon">
    <iconset resource="resources.qrc">
@@ -479,6 +479,9 @@
    </property>
   </action>
   <action name="actionOpen_Connection">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normalon>:/graphics/connect.svg</normalon>
@@ -489,6 +492,9 @@
    </property>
   </action>
   <action name="actionClose_Connection">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normalon>:/graphics/disconnect.svg</normalon>
@@ -499,6 +505,9 @@
    </property>
   </action>
   <action name="actionShow_Monitor">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normalon>:/graphics/eye.svg</normalon>
@@ -509,6 +518,9 @@
    </property>
   </action>
   <action name="actionUpload_to_Yacht">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset>
      <normalon>:/graphics/yachtnet.svg</normalon>

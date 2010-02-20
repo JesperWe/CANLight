@@ -137,44 +137,60 @@ void MainWindow::writeSettings()
 
 
 void MainWindow::updateCANStatus() {
+	bool canActive = false;
+
 	switch( canusb->status() ) {
 	case ecsCANUSB::DeviceError: {
 			NMEAIcon->load( QString(":/graphics/icon-red.svg") );
 			NMEAStatusText->setText( tr("USB CAN Interface Unknown Error") );
+			canActive = false;
 			break; }
 	case ecsCANUSB::DriverNotInstalled: {
 			NMEAIcon->load( QString(":/graphics/icon-red.svg") );
 			NMEAStatusText->setText( tr("USB CAN Driver Not Found") );
+			canActive = false;
 			break; }
 	case ecsCANUSB::DongleNotPresent: {
 			NMEAIcon->load( QString(":/graphics/icon-orange.svg") );
 			NMEAStatusText->setText( tr("USB Interface not plugged in.") );
+			canActive = false;
 			break; }
 	case ecsCANUSB::BusDisconnected: {
 			NMEAIcon->load( QString(":/graphics/icon-yellow.svg") );
 			NMEAStatusText->setText( tr("USB Interface not connected to yacht network.") );
+			canActive = false;
 			break; }
 	case ecsCANUSB::BusOpen: {
 			NMEAIcon->load( QString(":/graphics/icon-green.svg") );
 			NMEAStatusText->setText( tr("Connected.") );
+			canActive = true;
 			break; }
 	case ecsCANUSB::BusIdle: {
 			NMEAIcon->load( QString(":/graphics/icon-green.svg") );
 			NMEAStatusText->setText( tr("Connected.") );
+			canActive = true;
 			break; }
 	case ecsCANUSB::BusActive: {
 			NMEAIcon->load( QString(":/graphics/icon-active.svg") );
 			NMEAStatusText->setText( tr("Connected.") );
+			canActive = true;
 			break; }
 	case ecsCANUSB::ReceiveError: {
 			NMEAIcon->load( QString(":/graphics/icon-red.svg") );
 			NMEAStatusText->setText( tr("Receive Error.") );
+			canActive = true;
 			break; }
 	case ecsCANUSB::TransmitError: {
 			NMEAIcon->load( QString(":/graphics/icon-red.svg") );
 			NMEAStatusText->setText( tr("Transmit Error.") );
+			canActive = true;
 			break; }
 	}
+
+	ui->actionOpen_Connection->setEnabled( ! canActive );
+	ui->actionClose_Connection->setEnabled( canActive );
+	ui->actionShow_Monitor->setEnabled( canActive );
+	ui->actionUpload_to_Yacht->setEnabled( canActive );
 }
 
 //--------------------------------------------------------------------
