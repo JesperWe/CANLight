@@ -1,4 +1,10 @@
-#include <QtGui>
+/*
+ * Revision $Rev$
+ * By $Author$
+ * Date $Date$
+ */
+
+ #include <QtGui>
 
 #include "ecsManager.h"
 #include "ecsManagerApp.h"
@@ -124,6 +130,10 @@ void ecsAction::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
 		painter->drawLine( anchorOut(), mapFromItem( target->parentItem(), target->anchorIn() ) );
 
+		// Finally check that the target has a link back to our controller.
+
+		if( ! target->srcGroup->controllers.contains( this ) )
+			target->srcGroup->controllers.append( this );
 	}
 }
 
@@ -175,6 +185,9 @@ void ecsAction::zap() {
 			target->setParentItem( NULL );
 		if( scene() )
 			scene()->removeItem( target );
+
+		target->srcGroup->controllers.
+				removeAt( target->srcGroup->controllers.indexOf( this ) );
 	}
 	if( scene() )
 		scene()->removeItem( this );

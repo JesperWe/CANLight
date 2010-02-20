@@ -1,4 +1,10 @@
-#include <QtGui>
+/*
+ * Revision $Rev$
+ * By $Author$
+ * Date $Date$
+ */
+
+ #include <QtGui>
 #include <QtSvg>
 
 #include "ecsManager.h"
@@ -56,12 +62,14 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->appliancesView->setColumnWidth( 1, 120 );
 	ui->appliancesView->setColumnWidth( 2, 20 );
 	ui->appliancesView->verticalHeader()->hide();
+	ecsManagerApp::inst()->appliances = applianceModel;
 
 	ui->cGroupView->setModel( cGroupModel );
 	ui->cGroupView->setColumnWidth( 0, 45 );
 	ui->cGroupView->setColumnWidth( 1, 120 );
 	ui->cGroupView->setColumnWidth( 2, 20 );
 	ui->cGroupView->verticalHeader()->hide();
+	ecsManagerApp::inst()->cGroups = cGroupModel;
 
 	connect( ui->cGroupView->model(), SIGNAL( modified() ), this, SLOT(onModifiedData()) );
 	connect( ui->graphicsView, SIGNAL(keypress(int)), this, SLOT(onKeypress(int)) );
@@ -213,7 +221,7 @@ void MainWindow::on_actionOpen_triggered()
 	fileName = QFileDialog::getOpenFileName(this,
 		tr("Open System Description File"), "", tr("Electric System Files (*.esf)"));
 	on_actionNew_triggered();
-	SystemDescription::loadFile( fileName, applianceModel, cGroupModel );
+	SystemDescription::loadFile( fileName );
 	ui->statusBar->showMessage( tr("System Description Version Counter: ") + QString::number( ecsManagerApp::inst()->systemDescriptionVersion ) );
 	updateScene();
 }
@@ -319,13 +327,13 @@ void MainWindow::on_actionSave_As_triggered()
 	QString fileName;
 	fileName = QFileDialog::getSaveFileName(this,
 		tr("Save New System Description File"), "", tr("Electric System Files (*.esf)"));
-	SystemDescription::saveFile( fileName, applianceModel, cGroupModel );
+	SystemDescription::saveFile( fileName );
 	setWindowModified( false );
 }
 
 void MainWindow::on_actionSave_triggered()
 {
-	SystemDescription::saveFile( SystemDescription::loadedFileName, applianceModel, cGroupModel );
+	SystemDescription::saveFile( SystemDescription::loadedFileName );
 	setWindowModified( false );
 }
 
@@ -457,10 +465,13 @@ void MainWindow::onKeypress( int key ) {
 	setWindowModified( true );
 }
 
+//-------------------------------------------------------------------------------------------------
+
 void MainWindow::on_actionUpload_to_Yacht_triggered()
 {
-
 }
+
+//-------------------------------------------------------------------------------------------------
 
 void MainWindow::on_actionOpen_Connection_triggered()
 {

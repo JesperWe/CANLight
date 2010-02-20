@@ -1,4 +1,10 @@
-#ifndef SYSTEMDESCRIPTION_H
+/*
+ * Revision $Rev$
+ * By $Author$
+ * Date $Date$
+ */
+
+ #ifndef SYSTEMDESCRIPTION_H
 #define SYSTEMDESCRIPTION_H
 
 #include <QString>
@@ -13,21 +19,19 @@ class SystemDescription {
 public:
 	SystemDescription();
 	static QString loadedFileName;
-	static void loadFile( QString fromFile, ecsControlGroupModel* appliances, ecsControlGroupModel* cGroups  );
-	static void saveFile( QString toFile, ecsControlGroupModel* appliances, ecsControlGroupModel* cGroups );
+	static void loadFile( QString fromFile );
+	static void saveFile( QString toFile );
+	QByteArray* buildNMEAConfig();
 };
 
 class SysDescrHandler : public QXmlDefaultHandler {
 public:
-	SysDescrHandler( ecsControlGroupModel* appliances, ecsControlGroupModel* cGroups );
 	bool fatalError (const QXmlParseException & exception);
 	bool startDocument();
 	bool endElement( const QString&, const QString&, const QString &name );
 	bool startElement( const QString&, const QString&, const QString &name, const QXmlAttributes &attrs );
 
 private:
-	ecsControlGroupModel* appliances;
-	ecsControlGroupModel* cGroups;
 	ecsControlGroupGraphic* currentGraphic;
 	ecsEvent* currentEvent;
 };

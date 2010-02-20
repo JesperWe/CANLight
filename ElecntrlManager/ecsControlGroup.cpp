@@ -1,4 +1,10 @@
-#include <QIcon>
+/*
+ * Revision $Rev$
+ * By $Author$
+ * Date $Date$
+ */
+
+ #include <QIcon>
 
 #include "ecsManager.h"
 #include "ecsControlGroup.h"
@@ -53,7 +59,6 @@ void ecsControlGroup::toggleItemType() {
 			foreach( ecsEvent* event, events ) {
 				event->zap();
 			}
-			events.clear();
 			break;
 		}
 
@@ -63,7 +68,8 @@ void ecsControlGroup::toggleItemType() {
 			break;
 		}
 	}
-
+	events.clear();
+	controllers.clear();
 }
 
 //------------------------------------------------------------------------------------

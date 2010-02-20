@@ -1,8 +1,16 @@
-#ifndef ECSMANAGERAPP_H
+/*
+ * Revision $Rev$
+ * By $Author$
+ * Date $Date$
+ */
+
+ #ifndef ECSMANAGERAPP_H
 #define ECSMANAGERAPP_H
 
 #include <QHash>
 #include <QPixmap>
+
+#include "ecsControlGroupModel.h"
 
 class ecsManagerApp
 {
@@ -18,6 +26,8 @@ public:
 	static ecsManagerApp* inst();
 
 	int systemDescriptionVersion;
+	ecsControlGroupModel* appliances;
+	ecsControlGroupModel* cGroups;
 
 private:
 	ecsManagerApp* pInstance;

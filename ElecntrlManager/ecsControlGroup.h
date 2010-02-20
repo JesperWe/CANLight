@@ -1,4 +1,10 @@
-#ifndef ecsControlGroup_H
+/*
+ * Revision $Rev$
+ * By $Author$
+ * Date $Date$
+ */
+
+ #ifndef ecsControlGroup_H
 #define ecsControlGroup_H
 
 #include <QtGui>
@@ -41,6 +47,7 @@ public:
 	QHash<int, int> functions;
 	QList<ecsEvent*> events;
 	ecsControlGroupGraphic* graphic;
+	QList<ecsAction*> controllers;
 };
 
 #endif // ecsControlGroup_H
