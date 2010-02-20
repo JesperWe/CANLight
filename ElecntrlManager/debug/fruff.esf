@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<systemdescription>
+<systemdescription version="2">
     <appliance id="1" description="Aft Cabin Port Switch"/>
     <appliance id="2" description="Aft Cabin Stbd Switch"/>
     <appliance id="3" description="Steering Port Switch 1"/>

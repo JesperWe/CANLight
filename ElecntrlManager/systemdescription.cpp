@@ -6,6 +6,7 @@
 #include <QXmlStreamWriter>
 
 #include "ecsManager.h"
+#include "ecsManagerApp.h"
 #include "systemdescription.h"
 #include "ecsEvent.h"
 #include "ecsControlGroup.h"
@@ -62,6 +63,7 @@ void SystemDescription::saveFile( QString toFile, ecsControlGroupModel* applianc
 	out.setAutoFormatting( true );
 	out.writeStartDocument( "1.0" );
 	out.writeStartElement( "systemdescription" );
+	out.writeAttribute( "version", QString::number(ecsManagerApp::inst()->systemDescriptionVersion) );
 
 	foreach( ecsControlGroup* appliance, appliances->ecsControlGroups ) {
 		out.writeStartElement( "appliance" );
@@ -152,6 +154,12 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 {
 	QModelIndex index;
 	QString attrVal;
+
+	if( name == "systemdescription" ) {
+		int version = 0;
+		version = attrs.value( "version" ).toInt();
+		ecsManagerApp::inst()->systemDescriptionVersion = version + 1;
+	}
 
 	if( name == "appliance" ) {
 		index = appliances->insertRow();

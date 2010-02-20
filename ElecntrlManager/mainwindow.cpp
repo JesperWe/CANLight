@@ -26,12 +26,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	qApp->setProperty( "SelectionColor", QVariant( QColor( 0, 50, 255, 60 )));
 	qApp->setProperty( "EventColor", QVariant( QColor( 255, 210, 60, 170 )));
 
-	QLinearGradient cgb( 0, 0, 0, 50 );
-	cgb.setSpread( QGradient::ReflectSpread );
-	cgb.setColorAt( 0.0, QColor( 150, 150, 150 ) );
-	cgb.setColorAt( 0.4, QColor( 220, 220, 220 ) );
-	cgb.setColorAt( 0.42, QColor( 180, 180, 180 ) );
-	cgb.setColorAt( 1.0, QColor( 220, 220, 220 ) );
+	QLinearGradient cgb( 0, -30, 0, 70 );
+	//cgb.setSpread( QGradient::ReflectSpread );
+	cgb.setColorAt( 0.0, QColor( 140, 140, 140 ) );
+	cgb.setColorAt( 0.3, QColor( 235, 235, 235 ) );
+	cgb.setColorAt( 1.0, QColor( 140, 140, 140 ) );
 	qApp->setProperty( "cGroupBrush", QBrush(cgb) );
 
 	QPen cgp( Qt::black, 2 );
@@ -216,6 +215,7 @@ void MainWindow::on_actionOpen_triggered()
 		tr("Open System Description File"), "", tr("Electric System Files (*.esf)"));
 	on_actionNew_triggered();
 	SystemDescription::loadFile( fileName, applianceModel, cGroupModel );
+	ui->statusBar->showMessage( tr("System Description Version Counter: ") + QString::number( ecsManagerApp::inst()->systemDescriptionVersion ) );
 	updateScene();
 }
 

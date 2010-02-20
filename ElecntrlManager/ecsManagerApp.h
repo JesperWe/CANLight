@@ -17,6 +17,8 @@ public:
 	ecsManagerApp();
 	static ecsManagerApp* inst();
 
+	int systemDescriptionVersion;
+
 private:
 	ecsManagerApp* pInstance;
 };
