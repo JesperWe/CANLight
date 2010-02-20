@@ -1,3 +1,9 @@
+/*
+ * Revision $Rev$
+ * By $Author$
+ * Date $Date$
+ */
+
 #include <cstdio>
 
 #include "ecsCANUSB.h"

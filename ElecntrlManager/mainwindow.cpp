@@ -27,7 +27,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	qApp->setProperty( "EventColor", QVariant( QColor( 255, 210, 60, 170 )));
 
 	QLinearGradient cgb( 0, -30, 0, 70 );
-	//cgb.setSpread( QGradient::ReflectSpread );
 	cgb.setColorAt( 0.0, QColor( 140, 140, 140 ) );
 	cgb.setColorAt( 0.3, QColor( 235, 235, 235 ) );
 	cgb.setColorAt( 1.0, QColor( 140, 140, 140 ) );
