@@ -5,13 +5,19 @@
 // Version 0.1.8
 //
 
-#ifndef __LAWICELCANH__         
+#ifndef __LAWICELCANH__
 #define __LAWICELCANH__
 
 
 #ifdef __cplusplus
   extern "C" {
 #endif
+
+//---------------------------------------------------------------
+// Adapt from Visual C++ to MinGW:
+#include "windows.h"
+//---------------------------------------------------------------
+
 
 // Types
 typedef unsigned char _u8;
@@ -45,11 +51,11 @@ typedef unsigned char CANDATA;
 
 // CAN Frame
 typedef struct {
-    _u32 id;        // Message id
-    _u32 timestamp; // timestamp in milliseconds	
-    _u8  flags;     // [extended_id|1][RTR:1][reserver:6]
-    _u8  len;       // Frame size (0.8)
-    _u8  data[ 8 ]; // Databytes 0..7
+	_u32 id;        // Message id
+	_u32 timestamp; // timestamp in milliseconds
+	_u8  flags;     // [extended_id|1][RTR:1][reserver:6]
+	_u8  len;       // Frame size (0.8)
+	_u8  data[ 8 ]; // Databytes 0..7
 } CANMsg;
 
 
@@ -66,7 +72,7 @@ typedef struct structCANUsbStatistics {
 	_u32 cntReceiveFrames;			// # of receive frames
 	_u32 cntTransmitFrames;			// # of transmitted frames
 	_u32 cntReceiveData;			// # of received data bytes
-	_u32 cntTransmitData;			// # of transmitted data bytes	
+	_u32 cntTransmitData;			// # of transmitted data bytes
 	_u32 cntOverruns;				// # of overruns
 	_u32 cntBusWarnings;			// # of bys warnings
 	_u32 cntBusOff;					// # of bus off's
@@ -91,19 +97,19 @@ typedef struct structCANUsbStatistics {
 // Open flags
 #define CANUSB_FLAG_TIMESTAMP			  0x0001	// Timestamp messages
 #define CANUSB_FLAG_QUEUE_REPLACE		0x0002	// If input queue is full remove
-												                    // oldest message and insert new
-												                    // message.
+																	// oldest message and insert new
+																	// message.
 #define CANUSB_FLAG_BLOCK				    0x0004	// Block receive/transmit
 #define CANUSB_FLAG_SLOW				    0x0008	// Check ACK/NACK's
 #define CANUSB_FLAG_NO_LOCAL_SEND		0x0010	// Don't send transmited frames on
-												                    // other local channels for the same
-												                    // interface
+																	// other local channels for the same
+																	// interface
 
 
 
 // This is the define for the received callback method
 typedef void ( __stdcall * LPFNDLL_RECEIVE_CALLBACK) ( CANMsg *pMsg );
- 
+
 
 
 // Prototypes
@@ -124,7 +130,7 @@ typedef void ( __stdcall * LPFNDLL_RECEIVE_CALLBACK) ( CANMsg *pMsg );
 //
 // szBitrate
 // =========
-// "10" for 10kbps  
+// "10" for 10kbps
 // "20" for 20kbps
 // "50" for 50kbps
 // "100" for 100kbps
@@ -133,7 +139,7 @@ typedef void ( __stdcall * LPFNDLL_RECEIVE_CALLBACK) ( CANMsg *pMsg );
 // "800" for 800kbps
 // "1000" for 1Mbps
 //
-// or 
+// or
 //
 // btr0:btr1 pair  ex. "0x03:0x1c" or 3:28
 //
@@ -148,9 +154,9 @@ typedef void ( __stdcall * LPFNDLL_RECEIVE_CALLBACK) ( CANMsg *pMsg );
 // flags
 // =====
 // CANUSB_FLAG_TIMESTAMP - Timestamp will be set by adapter.
- 
-CANHANDLE WINAPI canusb_Open( LPCSTR szID, 
-								LPCSTR szBitrate, 
+
+CANHANDLE WINAPI canusb_Open( LPCSTR szID,
+								LPCSTR szBitrate,
 								_u32 acceptance_code,
 								_u32 acceptance_mask,
 								_u32 flags );
@@ -169,9 +175,9 @@ int WINAPI canusb_Close( CANHANDLE h );
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// canusb_Read 
+// canusb_Read
 //
-// Read message from channel with handle h. 
+// Read message from channel with handle h.
 //
 // Returns <= 0 on failure. >0 on success.
 //
@@ -192,9 +198,9 @@ int WINAPI canusb_Read( CANHANDLE h, CANMsg *msg );
 int WINAPI canusb_ReadEx( CANHANDLE h, CANMsgEx *msg, CANDATA *pData );
 
 ///////////////////////////////////////////////////////////////////////////////
-// canusb_ReadFirst 
+// canusb_ReadFirst
 //
-// Read message from channel with handle h and id "id" which satisfy flags. 
+// Read message from channel with handle h and id "id" which satisfy flags.
 //
 // Returns <= 0 on failure. >0 on success.
 //
@@ -215,10 +221,10 @@ int WINAPI canusb_ReadFirst( CANHANDLE h,
 // Returns <= 0 on failure. >0 on success.
 //
 
-int WINAPI canusb_ReadFirstEx( CANHANDLE h, 
-									_u32 id, 
-									_u32 flags, 
-									CANMsgEx *msg, 
+int WINAPI canusb_ReadFirstEx( CANHANDLE h,
+									_u32 id,
+									_u32 flags,
+									CANMsgEx *msg,
 									CANDATA *pData );
 
 
@@ -236,7 +242,7 @@ int WINAPI canusb_Write( CANHANDLE h, CANMsg *msg );
 ///////////////////////////////////////////////////////////////////////////////
 // canusb_WriteEx
 //
-// Write message to channel with handle h. 
+// Write message to channel with handle h.
 //
 // This is a version without a data-array in the structure to work with LabView
 //
@@ -250,7 +256,7 @@ int WINAPI canusb_WriteEx( CANHANDLE h, CANMsgEx *msg, CANDATA *pData );
 ///////////////////////////////////////////////////////////////////////////////
 // canusb_Status
 //
-// Get Adaper status for channel with handle h. 
+// Get Adaper status for channel with handle h.
 
 int WINAPI canusb_Status( CANHANDLE h );
 
@@ -259,11 +265,11 @@ int WINAPI canusb_Status( CANHANDLE h );
 ///////////////////////////////////////////////////////////////////////////////
 // canusb_VersionInfo
 //
-// Get hardware/fi4rmware and driver version for channel with handle h. 
+// Get hardware/fi4rmware and driver version for channel with handle h.
 //
 // Returns <= 0 on failure. >0 on success.
 //
-// 
+//
 
 int WINAPI canusb_VersionInfo( CANHANDLE h, LPSTR verinfo );
 
@@ -271,12 +277,12 @@ int WINAPI canusb_VersionInfo( CANHANDLE h, LPSTR verinfo );
 ///////////////////////////////////////////////////////////////////////////////
 // canusb_Flush
 //
-// Flush output buffer on channel with handle h. 
+// Flush output buffer on channel with handle h.
 //
 // Returns <= 0 on failure. >0 on success.
 //
-// If flushflags is set to FLUSH_DONTWAIT the queue is just emptied and 
-// there will be no wait for any frames in it to be sent 
+// If flushflags is set to FLUSH_DONTWAIT the queue is just emptied and
+// there will be no wait for any frames in it to be sent
 //
 
 int WINAPI canusb_Flush( CANHANDLE h, _u8 flushflags );
@@ -285,7 +291,7 @@ int WINAPI canusb_Flush( CANHANDLE h, _u8 flushflags );
 ///////////////////////////////////////////////////////////////////////////////
 // canusb_GetStatistics
 //
-// Get transmission statistics for channel with handle h. 
+// Get transmission statistics for channel with handle h.
 //
 // Returns <= 0 on failure. >0 on success.
 //
@@ -296,14 +302,14 @@ int WINAPI canusb_GetStatistics( CANHANDLE h, CANUsbStatistics *pStatistics );
 ///////////////////////////////////////////////////////////////////////////////
 // canusb_SetTimeouts
 //
-// Set timeouts used for blocking calls for channel with handle h. 
+// Set timeouts used for blocking calls for channel with handle h.
 //
 // Returns <= 0 on failure. >0 on success.
 //
 //
 
-int WINAPI canusb_SetTimeouts( CANHANDLE h, 
-								_u32 receiveTimeout, 
+int WINAPI canusb_SetTimeouts( CANHANDLE h,
+								_u32 receiveTimeout,
 								_u32 transmitTimeout );
 
 ///////////////////////////////////////////////////////////////////////////////

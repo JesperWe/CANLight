@@ -10,12 +10,13 @@
 #include "ecsControlGroup.h"
 #include "ecsEvent.h"
 #include "ecsAction.h"
+#include "ecsCANUSB.h"
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
 {
-	ui->setupUi(this);
+	ui->setupUi( this );
 
 	readSettings();
 
@@ -38,9 +39,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	scene = new QGraphicsScene;
 
-	this->ui->graphicsView->setScene(scene);
-	this->ui->graphicsView->show();
-	this->ui->graphicsView->setCursor( Qt::ArrowCursor );
+	ui->graphicsView->setScene(scene);
+	ui->graphicsView->show();
+	ui->graphicsView->setCursor( Qt::ArrowCursor );
 
 	applianceModel = new ecsControlGroupModel(this);
 	applianceModel->insertColumn(0);
@@ -52,20 +53,20 @@ MainWindow::MainWindow(QWidget *parent) :
 	cGroupModel->insertColumn(0);
 	cGroupModel->objectType = "x-application/ecs-controlgroup-id";
 
-	this->ui->appliancesView->setModel( applianceModel );
-	this->ui->appliancesView->setColumnWidth( 0, 45 );
-	this->ui->appliancesView->setColumnWidth( 1, 120 );
-	this->ui->appliancesView->setColumnWidth( 2, 20 );
-	this->ui->appliancesView->verticalHeader()->hide();
+	ui->appliancesView->setModel( applianceModel );
+	ui->appliancesView->setColumnWidth( 0, 45 );
+	ui->appliancesView->setColumnWidth( 1, 120 );
+	ui->appliancesView->setColumnWidth( 2, 20 );
+	ui->appliancesView->verticalHeader()->hide();
 
-	this->ui->cGroupView->setModel( cGroupModel );
-	this->ui->cGroupView->setColumnWidth( 0, 45 );
-	this->ui->cGroupView->setColumnWidth( 1, 120 );
-	this->ui->cGroupView->setColumnWidth( 2, 20 );
-	this->ui->cGroupView->verticalHeader()->hide();
+	ui->cGroupView->setModel( cGroupModel );
+	ui->cGroupView->setColumnWidth( 0, 45 );
+	ui->cGroupView->setColumnWidth( 1, 120 );
+	ui->cGroupView->setColumnWidth( 2, 20 );
+	ui->cGroupView->verticalHeader()->hide();
 
-	connect( this->ui->cGroupView->model(), SIGNAL( modified() ), this, SLOT(on_modifiedData()) );
-	connect( this->ui->graphicsView, SIGNAL(keypress(int)), this, SLOT(on_keypress(int)) );
+	connect( ui->cGroupView->model(), SIGNAL( modified() ), this, SLOT(onModifiedData()) );
+	connect( ui->graphicsView, SIGNAL(keypress(int)), this, SLOT(onKeypress(int)) );
 
 	ui->statusBar->showMessage( tr("Welcome, master!"), 4000 );
 
@@ -84,6 +85,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	NMEAFrame->setLayout( horiz );
 	NMEAFrame->setMaximumHeight( 20 );
 	ui->statusBar->addPermanentWidget( NMEAFrame );
+
+	// Now try the CANUSB Hardware.
+
+	canusb = new ecsCANUSB();
+	updateCANStatus();
 }
 
 MainWindow::~MainWindow()
@@ -127,12 +133,63 @@ void MainWindow::writeSettings()
 	settings.setValue("main-splitter-sizes", ui->splitter->saveState());
 }
 
+//--------------------------------------------------------------------
+
+
+void MainWindow::updateCANStatus() {
+	switch( canusb->status() ) {
+	case ecsCANUSB::DeviceError: {
+			NMEAIcon->load( QString(":/graphics/icon-red.svg") );
+			NMEAStatusText->setText( tr("USB CAN Interface Unknown Error") );
+			break; }
+	case ecsCANUSB::DriverNotInstalled: {
+			NMEAIcon->load( QString(":/graphics/icon-red.svg") );
+			NMEAStatusText->setText( tr("USB CAN Driver Not Found") );
+			break; }
+	case ecsCANUSB::DongleNotPresent: {
+			NMEAIcon->load( QString(":/graphics/icon-orange.svg") );
+			NMEAStatusText->setText( tr("USB Interface not plugged in.") );
+			break; }
+	case ecsCANUSB::BusDisconnected: {
+			NMEAIcon->load( QString(":/graphics/icon-yellow.svg") );
+			NMEAStatusText->setText( tr("USB Interface not connected to yacht network.") );
+			break; }
+	case ecsCANUSB::BusOpen: {
+			NMEAIcon->load( QString(":/graphics/icon-green.svg") );
+			NMEAStatusText->setText( tr("Connected.") );
+			break; }
+	case ecsCANUSB::BusIdle: {
+			NMEAIcon->load( QString(":/graphics/icon-green.svg") );
+			NMEAStatusText->setText( tr("Connected.") );
+			break; }
+	case ecsCANUSB::BusActive: {
+			NMEAIcon->load( QString(":/graphics/icon-active.svg") );
+			NMEAStatusText->setText( tr("Connected.") );
+			break; }
+	case ecsCANUSB::ReceiveError: {
+			NMEAIcon->load( QString(":/graphics/icon-red.svg") );
+			NMEAStatusText->setText( tr("Receive Error.") );
+			break; }
+	case ecsCANUSB::TransmitError: {
+			NMEAIcon->load( QString(":/graphics/icon-red.svg") );
+			NMEAStatusText->setText( tr("Transmit Error.") );
+			break; }
+	}
+}
+
+//--------------------------------------------------------------------
+
 void MainWindow::on_actionAbout_triggered()
 {
 	QDialog *aboutBox = new QDialog;
-	Ui::AboutBox ui;
-	ui.setupUi(aboutBox);
+	Ui::AboutBox aboutUi;
+	aboutUi.setupUi(aboutBox);
 	aboutBox->setAttribute( Qt::WA_DeleteOnClose, true );
+
+	if( canusb && canusb->info() ) {
+		aboutUi.CANUSBInfo->setText( canusb->info() );
+	}
+
 	aboutBox->show();
 }
 
@@ -146,7 +203,7 @@ void MainWindow::on_actionOpen_triggered()
 	updateScene();
 }
 
-void MainWindow::on_modifiedData()
+void MainWindow::onModifiedData()
 {
 	updateScene();
 }
@@ -319,7 +376,7 @@ void MainWindow::on_actionRun_Actuator_triggered() { _AddAction( ecsManager::Act
 
 //-------------------------------------------------------------------------------------------------
 
-void MainWindow::on_keypress( int key ) {
+void MainWindow::onKeypress( int key ) {
 	QList<QGraphicsItem*> selection;
 	QGraphicsSimpleTextItem* link;
 
@@ -388,4 +445,16 @@ void MainWindow::on_keypress( int key ) {
 void MainWindow::on_actionUpload_to_Yacht_triggered()
 {
 
+}
+
+void MainWindow::on_actionOpen_Connection_triggered()
+{
+	canusb->open();
+	updateCANStatus();
+}
+
+void MainWindow::on_actionClose_Connection_triggered()
+{
+	canusb->close();
+	updateCANStatus();
 }

@@ -44,5 +44,9 @@
         <file>graphics/icon-blue.svg</file>
         <file>graphics/icon-green.svg</file>
         <file>graphics/icon-red.svg</file>
+        <file>graphics/icon-orange.svg</file>
+        <file>graphics/eye.svg</file>
+        <file>graphics/connect.svg</file>
+        <file>graphics/disconnect.svg</file>
     </qresource>
 </RCC>

@@ -202,16 +202,6 @@
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>Edit</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
-     <string>View</string>
-    </property>
-   </widget>
    <widget class="QMenu" name="menuEvents">
     <property name="title">
      <string>Events</string>
@@ -233,9 +223,17 @@
     <addaction name="actionSwitch_On"/>
     <addaction name="actionSwitch_Off"/>
    </widget>
+   <widget class="QMenu" name="menuNetwork">
+    <property name="title">
+     <string>Network</string>
+    </property>
+    <addaction name="actionOpen_Connection"/>
+    <addaction name="actionShow_Monitor"/>
+    <addaction name="actionClose_Connection"/>
+    <addaction name="actionUpload_to_Yacht"/>
+   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
-   <addaction name="menuView"/>
+   <addaction name="menuNetwork"/>
    <addaction name="menuEvents"/>
    <addaction name="menuActions"/>
    <addaction name="menuHelp"/>
@@ -480,6 +478,36 @@
     <string>Run Actuator</string>
    </property>
   </action>
+  <action name="actionOpen_Connection">
+   <property name="icon">
+    <iconset>
+     <normalon>:/graphics/connect.svg</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Open Connection</string>
+   </property>
+  </action>
+  <action name="actionClose_Connection">
+   <property name="icon">
+    <iconset>
+     <normalon>:/graphics/disconnect.svg</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Close Connection</string>
+   </property>
+  </action>
+  <action name="actionShow_Monitor">
+   <property name="icon">
+    <iconset>
+     <normalon>:/graphics/eye.svg</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Show Monitor</string>
+   </property>
+  </action>
   <action name="actionUpload_to_Yacht">
    <property name="icon">
     <iconset>
@@ -487,7 +515,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Uploat to Yacht</string>
+    <string>Upload to Yacht</string>
    </property>
   </action>
  </widget>

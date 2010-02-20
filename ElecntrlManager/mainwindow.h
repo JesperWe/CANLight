@@ -1,11 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <QGraphicsView>
+#include <QtGui>
+#include <QtSvg>
 
 #include "ecsControlGroupGraphic.h"
 #include "ecsControlGroupModel.h"
+#include "ecsCANUSB.h"
 
 namespace Ui {
 	class MainWindow;
@@ -30,13 +31,19 @@ private:
 	void _AddEvent( int eventType );
 	void _AddAction( int actionType );
 	float calculateEventOffset( bool & first, float eventOffset );
+	void updateCANStatus();
 
 	Ui::MainWindow *ui;
 	QGraphicsScene *scene;
-	QWidget *NMEAStatusText, *NMEAFrame, *NMEAIcon;
+	QLabel *NMEAStatusText;
+	QFrame *NMEAFrame;
+	QSvgWidget *NMEAIcon;
 	QHBoxLayout *horiz;
+	ecsCANUSB* canusb;
 
 private slots:
+	void on_actionClose_Connection_triggered();
+	void on_actionOpen_Connection_triggered();
 	void on_actionUpload_to_Yacht_triggered();
 	void on_actionRun_Actuator_triggered();
 	void on_actionSignal_Change_triggered();
@@ -60,8 +67,8 @@ private slots:
 
 
 public slots:
-	void on_modifiedData();
-	void on_keypress( int key );
+	void onModifiedData();
+	void onKeypress( int key );
 };
 
 #endif // MAINWINDOW_H
