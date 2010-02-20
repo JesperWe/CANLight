@@ -10,9 +10,7 @@ ecsCANUSB::ecsCANUSB() {
 	canStatus = canusb_getFirstAdapter( &adapterSerial[0], 32 );
 	if( canStatus < 0 ) lastStatus = DriverNotInstalled;
 	else if( canStatus == 0 ) lastStatus = DongleNotPresent;
-
-	lastStatus = BusDisconnected;
-
+	else lastStatus = BusDisconnected;
 	return;
 }
 
