@@ -149,7 +149,6 @@ void MainWindow::writeSettings()
 
 //--------------------------------------------------------------------
 
-
 void MainWindow::updateCANStatus() {
 	bool canActive = false;
 
