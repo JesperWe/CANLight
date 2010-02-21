@@ -19,6 +19,10 @@
 //   group device func [ device func ] FE
 //   device func event [ event ] FE
 //   device func event [ event ] FE
+
+//  ^^^ change these to: event action device func [ device func ] FE
+// (Better fit with GUI data model?)
+
 //   FE
 //   group device func [ device func ] FE
 //   device func event [ event ] FE
