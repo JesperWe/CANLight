@@ -488,7 +488,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Open Connection</string>
+    <string>Connect Network</string>
    </property>
   </action>
   <action name="actionClose_Connection">
@@ -501,7 +501,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Close Connection</string>
+    <string>Disconnect</string>
    </property>
   </action>
   <action name="actionShow_Monitor">

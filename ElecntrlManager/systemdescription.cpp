@@ -121,31 +121,31 @@ void SystemDescription::saveFile( QString toFile )
 // Thus we need to shuffle the data around a bit to generate the binary config file before sending
 // it on the yacht network.
 
-QByteArray* SystemDescription::buildNMEAConfig() {
-	QByteArray myConfigFile, controllers;
+#define DELIMITER 0xFE
 
-	myConfigFile.clear();
-	myConfigFile[0] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion >> 8);
-	myConfigFile[1] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion % 0xFF);
+void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
+
+	configFile.clear();
+	configFile[0] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion >> 8);
+	configFile[1] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion % 0xFF);
 
 	// Start with finding all listening target appliances.
 
 	foreach( ecsControlGroup* cGroup, ecsManagerApp::inst()->cGroups->ecsControlGroups ) {
 		if( cGroup->itemType != ecsControlGroup::Activity ) continue;
 
-		myConfigFile.append( (uint8_t)( cGroup->id )); // Start new target group.
-		controllers.clear();
+		configFile.append( (uint8_t)( cGroup->id )); // Start new target group.
 
 		foreach( QGraphicsItem* link, cGroup->graphic->childItems() ) {
 			if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
 			ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
 			int func = cGroup->functions[ linkedApp->id ];
 
-			myConfigFile.append( (uint8_t)( linkedApp->id ));
-			myConfigFile.append( (uint8_t)( func ));
+			configFile.append( (uint8_t)( linkedApp->id ));
+			configFile.append( (uint8_t)( func ));
 		}
 
-		myConfigFile.append( 0xFE ); // End of group listeners.
+		configFile.append( DELIMITER ); // End of group listeners.
 
 		// Go through all actions that are controlling this group.
 
@@ -156,23 +156,26 @@ QByteArray* SystemDescription::buildNMEAConfig() {
 			ecsControlGroupGraphic* controller = qgraphicsitem_cast<ecsControlGroupGraphic*>(event->parentItem());
 			Q_ASSERT_X( controller != 0, "Create NMEA Config", "Event parent is not a Control Group." );
 
-			// All linked appliances in this controller group will be listened to.
+			// Two bytes for event and action type.
 
-			foreach( QGraphicsItem* controllerLink, controller->childItems() ) {
-				if( controllerLink->type() != QGraphicsSimpleTextItem::Type ) continue;
-				ecsControlGroup* controllerApp = (ecsControlGroup*)(controllerLink->data(0).value<void*>());
-				Q_ASSERT_X( controllerApp != 0, "Create NMEA Config", "Can't find linked Appliance of Controller Group." );
+			configFile.append( (uint8_t)( event->eventType ) );
+			configFile.append( (uint8_t)( action->actionType ) );
 
-				controllers.append( (uint8_t)( controllerApp->id ) );
-				controllers.append( (uint8_t)( controller->srcGroup->functions[controllerApp->id] ) );
+			// Two bytes for each linked appliances in this controller group.
 
-				controllers.append( (uint8_t)( event->eventType ) );
-				controllers.append( (uint8_t)( action->actionType ) );
+			foreach( QGraphicsItem* link, controller->childItems() ) {
+				if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
+				ecsControlGroup* linkedAppliance = (ecsControlGroup*)(link->data(0).value<void*>());
+				Q_ASSERT_X( linkedAppliance != 0, "Create NMEA Config", "Can't find linked Appliance of Controller Group." );
+
+				configFile.append( (uint8_t)( linkedAppliance->id ) );
+				configFile.append( (uint8_t)( controller->srcGroup->functions[linkedAppliance->id] ) );
 			}
+			configFile.append( DELIMITER ); // End of event/actions.
 		}
-		myConfigFile.append( 0xFE ); // End of controlling appliances.
+		configFile.append( DELIMITER ); // End of the whole group.
 	}
-	myConfigFile.append( 0xFE ); // End of the whole group.
+	configFile.append( DELIMITER ); // End of config file.
 }
 
 //-------------------------------------------------------------------------------------------------

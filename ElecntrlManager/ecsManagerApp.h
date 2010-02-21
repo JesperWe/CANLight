@@ -26,6 +26,7 @@ public:
 	static ecsManagerApp* inst();
 
 	int systemDescriptionVersion;
+	QPlainTextEdit* logWidget;
 	ecsControlGroupModel* appliances;
 	ecsControlGroupModel* cGroups;
 

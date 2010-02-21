@@ -10,6 +10,8 @@
 #include "lawicel_can.h"
 #include "Ftd2xx.h"
 
+#include <QtGui>
+
 class ecsCANUSB
 {
 public:
@@ -32,6 +34,8 @@ public:
 	int open();
 	int close();
 	char* info();
+	void registerReader();
+	void unregisterReader();
 
 private:
 	int lastStatus;

@@ -34,6 +34,7 @@ private:
 	void updateCANStatus();
 
 	Ui::MainWindow *ui;
+	QDialog* monitorDialog;
 	QGraphicsScene *scene;
 	QLabel *NMEAStatusText;
 	QFrame *NMEAFrame;
@@ -42,6 +43,7 @@ private:
 	ecsCANUSB* canusb;
 
 private slots:
+	void on_actionShow_Monitor_triggered();
 	void on_actionClose_Connection_triggered();
 	void on_actionOpen_Connection_triggered();
 	void on_actionUpload_to_Yacht_triggered();
@@ -65,6 +67,7 @@ private slots:
 	void on_actionOpen_triggered();
 	void on_actionAbout_triggered();
 
+	void on_MonitorDialogReject();
 
 public slots:
 	void onModifiedData();

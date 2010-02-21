@@ -12,6 +12,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "ui_about.h"
+#include "ui_NMEAMonitor.h"
 #include "systemdescription.h"
 #include "ecsControlGroup.h"
 #include "ecsEvent.h"
@@ -73,6 +74,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	connect( ui->cGroupView->model(), SIGNAL( modified() ), this, SLOT(onModifiedData()) );
 	connect( ui->graphicsView, SIGNAL(keypress(int)), this, SLOT(onKeypress(int)) );
+
+	monitorDialog = new QDialog;
+	Ui::NMEA2000Monitor monitorUi;
+	monitorUi.setupUi(monitorDialog);
+	ecsManagerApp::inst()->logWidget = monitorUi.logWidget;
+
+	connect( monitorDialog, SIGNAL(rejected()), this, SLOT(on_MonitorDialogReject()) );
 
 	ui->statusBar->showMessage( tr("Welcome, master!"), 4000 );
 
@@ -483,4 +491,17 @@ void MainWindow::on_actionClose_Connection_triggered()
 {
 	canusb->close();
 	updateCANStatus();
+}
+
+void MainWindow::on_actionShow_Monitor_triggered()
+{
+	canusb->registerReader();
+	monitorDialog->show();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void MainWindow::on_MonitorDialogReject()
+{
+	canusb->unregisterReader();
 }

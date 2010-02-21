@@ -6,8 +6,8 @@
  */
 
 #include <cstdio>
-
 #include "ecsCANUSB.h"
+#include "ecsManagerApp.h"
 
 ecsCANUSB::ecsCANUSB() {
 	int canStatus;
@@ -24,6 +24,7 @@ ecsCANUSB::ecsCANUSB() {
 
 int ecsCANUSB::status() {
 	return lastStatus;
+
 }
 
 int ecsCANUSB::open() {
@@ -62,4 +63,36 @@ char* ecsCANUSB::info() {
 	}
 
 	return adapterInfo;
+}
+
+// This is a "C" style callback function which cannot be part of the object context.
+void __stdcall readCallbackFn( CANMsg* msg ) {
+	int i;
+	QString line = "";
+	QString buf;
+
+	line += (msg->flags & CANMSG_EXTENDED)   ?   "E" : "S";
+	line += (msg->flags & CANMSG_RTR)   ?   "R" : " ";
+	line += buf.sprintf( " %08X time=%08X len=%d",
+			 (unsigned int)(msg->id),
+			 (unsigned int)(msg->timestamp),
+			 msg->len );
+
+	if( msg->len ) {
+		line += " [ ";
+		for ( i=0; i<msg->len; i++ ) {
+			line += buf.sprintf( "%02X ", msg->data[ i ] );
+		}
+		line += "]";
+	}
+
+	ecsManagerApp::inst()->logWidget->appendPlainText( line );
+}
+
+void ecsCANUSB::registerReader() {
+	canusb_setReceiveCallBack( adapterHandle, (LPFNDLL_RECEIVE_CALLBACK)readCallbackFn );
+}
+
+void ecsCANUSB::unregisterReader() {
+	canusb_setReceiveCallBack( adapterHandle, NULL );
 }
