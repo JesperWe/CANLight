@@ -79,7 +79,27 @@ void SystemDescription::saveFile( QString toFile )
 		out.writeEndElement();
 	}
 
+	// Do all Activity type groups first, since they need to be read before the controllers,
+	// so that they can be referenced by <targetgroup>.
+
 	foreach( ecsControlGroup* group, ecsManagerApp::inst()->cGroups->ecsControlGroups ) {
+		if( group->itemType != ecsControlGroup::Activity ) continue;
+		out.writeStartElement( "controlgroup" );
+		out.writeAttribute( "id", QString::number( group->id ) );
+		out.writeAttribute( "description", group->description );
+		out.writeAttribute( "type", QString::number( group->itemType) );
+
+		foreach( ecsControlGroup* linkedapp,  group->links ) {
+			out.writeStartElement( "appliance-function" );
+			out.writeAttribute( "id", QString::number( linkedapp->id ) );
+			out.writeAttribute( "function", QString::number( group->functions[linkedapp->id] ) );
+			out.writeEndElement();
+		}
+		out.writeEndElement();
+	}
+
+	foreach( ecsControlGroup* group, ecsManagerApp::inst()->cGroups->ecsControlGroups ) {
+		if( group->itemType != ecsControlGroup::Controller ) continue;
 		out.writeStartElement( "controlgroup" );
 		out.writeAttribute( "id", QString::number( group->id ) );
 		out.writeAttribute( "description", group->description );
@@ -271,6 +291,7 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 	else if(name == "targetgroup") {
 		attrVal = attrs.value("id");
 		if( attrVal != "" ) {
+			qDebug() << "Targetgroup " << attrVal;
 			currentEvent->eventAction->targetGroups.append( cGroups->findItem( attrVal.toInt() )->graphic );
 			if( attrs.value("parented") != "" )
 				currentEvent->eventAction->targetGroups.last()->setParentItem(currentEvent->eventAction);

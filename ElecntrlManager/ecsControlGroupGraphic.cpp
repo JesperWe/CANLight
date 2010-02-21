@@ -94,8 +94,8 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 		if( func != ecsManager::UnknownSource ) {
 			painter->setFont( qApp->property( "buttonFont" ).value<QFont>() );
 
-			painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform );
-			painter->drawPixmap( textPos.x(), textPos.y(), buttonSize, buttonSize, ecsManagerApp::inst()->eventSourceIcons[ func ] );
+			painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform | QPainter::HighQualityAntialiasing );
+			painter->drawImage( QRectF(textPos.x(), textPos.y(), buttonSize, buttonSize), ecsManagerApp::inst()->eventSourceIcons[ func ] );
 
 			switch( func ) {
 			case ecsManager::Key0: {
@@ -106,10 +106,6 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 					break; }
 			case ecsManager::Key2: {
 					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
-					break; }
-			case ecsManager::AnalogSignal: {
-					break; }
-			case ecsManager::ChangeNotifiation: {
 					break; }
 			}
 		}

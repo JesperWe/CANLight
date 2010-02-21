@@ -67,7 +67,7 @@ public:
 	static const float GroupChildMinimumWidth = 60;
 	static const float ApplianceLineSpacing = 17;
 	static const float CtrlFunctionIconWidth = 20;
-	static const float CtrlButtonSize = 15;
+	static const float CtrlButtonSize = 16;
 
 	static const float EventSpacing = 40;
 	static const float EventIconSize = 24;

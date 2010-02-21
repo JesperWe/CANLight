@@ -10,15 +10,15 @@ ecsManagerApp::ecsManagerApp() {
 	actionIcons[ ecsManager::ChangeColor ] = QPixmap(":/graphics/connections.svg");
 	actionIcons[ ecsManager::Actuator ] = QPixmap(":/graphics/actuator.svg");
 
-	eventSourceIcons[ ecsManager::Key0 ] = QPixmap(":/graphics/button.svg");
-	eventSourceIcons[ ecsManager::Key1 ] = QPixmap(":/graphics/button.svg");
-	eventSourceIcons[ ecsManager::Key2 ] = QPixmap(":/graphics/button.svg");
-	eventSourceIcons[ ecsManager::AnalogSignal ] = QPixmap(":/graphics/signal.svg");
-	eventSourceIcons[ ecsManager::ChangeNotifiation ] = QPixmap(":/graphics/connections.svg");
-	eventSourceIcons[ ecsManager::LightRed ] = QPixmap(":/graphics/light-red.svg");
-	eventSourceIcons[ ecsManager::LightWhite ] = QPixmap(":/graphics/light-white.svg");
-	eventSourceIcons[ ecsManager::LightAll ] = QPixmap(":/graphics/light-both.svg");
-	eventSourceIcons[ ecsManager::ActuatorOut ] = QPixmap(":/graphics/cogs.svg");
+	eventSourceIcons[ ecsManager::Key0 ] = QImage(":/graphics/button.svg");
+	eventSourceIcons[ ecsManager::Key1 ] = QImage(":/graphics/button.svg");
+	eventSourceIcons[ ecsManager::Key2 ] = QImage(":/graphics/button.svg");
+	eventSourceIcons[ ecsManager::AnalogSignal ] = QImage(":/graphics/signal.svg");
+	eventSourceIcons[ ecsManager::ChangeNotifiation ] = QImage(":/graphics/connections.svg");
+	eventSourceIcons[ ecsManager::LightRed ] = QImage(":/graphics/light-red.svg");
+	eventSourceIcons[ ecsManager::LightWhite ] = QImage(":/graphics/light-white.svg");
+	eventSourceIcons[ ecsManager::LightAll ] = QImage(":/graphics/light-both.svg");
+	eventSourceIcons[ ecsManager::ActuatorOut ] = QImage(":/graphics/cogs.svg");
 
 	eventIcons[ ecsManager::SingleClick ] = QPixmap(":/graphics/click-single.svg");
 	eventIcons[ ecsManager::DoubleClick ] = QPixmap(":/graphics/click-double.svg");
