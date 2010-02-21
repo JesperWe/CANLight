@@ -2,7 +2,6 @@
  * $Revision$
  * $Author$
  * $Date$
- * $Id$
  */
 
 #include <cstdio>

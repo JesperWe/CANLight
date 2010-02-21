@@ -1,7 +1,7 @@
 /*
- * Revision $Rev$
- * By $Author$
- * Date $Date$
+ * $Revision$
+ * $Author$
+ * $Date$
  */
 
  #include <QtGui>
