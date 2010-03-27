@@ -9,6 +9,7 @@
 #include "led.h"
 #include "display.h"
 #include "menu.h"
+#include "nmea.h"
 
 //-------------------------------------------------------------------------------
 // Globals
@@ -180,29 +181,40 @@ void config_Task() {
 	// so stay here waiting for one to arrive and flash something to show
 	// we are waiting.
 
-	if ( ! config_Valid ) {
+	unsigned long timer;
+
+	while ( ! config_Valid ) {
 
 		_TRISB5 = 0;
 		_TRISB11 = 0;
 
-		schedule_Sleep(1000);
+		timer = schedule_time + 1000;
+		while( schedule_time < timer );
 
 		_RB5 = 1;
 		_RB11 = 1;
+		led_SetLevel( led_RED, 1.0);
 
-		schedule_Sleep(400);
+		timer = schedule_time + 400;
+		while( schedule_time < timer );
 
 		_RB5 = 0;
 		_RB11 = 0;
+		led_SetLevel( led_RED, 0.0);
 	}
 
-	else {
-		short status;
-		schedule_AddTask( led_PowerOnTest, 100 );
-		if( status != 0 ) {
-			status = 0;
-		}
-		schedule_Finished();
+
+	short status;
+	schedule_AddTask( led_PowerOnTest, 100 );
+	if( status != 0 ) {
+		status = 0;
 	}
+	schedule_Finished();
+
 }
 
+//-------------------------------------------------------------------------------
+
+void config_Update( unsigned short configBytes ) {
+
+}

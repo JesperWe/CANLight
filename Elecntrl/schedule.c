@@ -18,7 +18,7 @@ short schedule_NoTasks;
 schedule_Task_t schedule_Tasks[schedule_MAX_NO_TASKS];
 short schedule_ActiveTask;
 unsigned char schedule_Running = FALSE;
-
+unsigned long schedule_time = 0;
 
 void schedule_Initialize() {
 	schedule_NoTasks = 0;
@@ -160,10 +160,14 @@ void schedule_Finished() {
 void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	_T1IE = 0;
 	short i;
+
 	for( i=0; i<schedule_NoTasks; i++) {
 		if( schedule_Tasks[i].suspended ) continue;
 		schedule_Tasks[i].waitedTicks++;
 	}
+
+	schedule_time++;
+
     _T1IF = 0;
     _T1IE = 1;
 }

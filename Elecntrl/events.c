@@ -180,6 +180,13 @@ void event_Task() {
 					break;
 				}
 
+				// Always listen to config file updates.
+
+				if( event.ctrlEvent == e_CONFIG_FILE_UPDATE ) {
+					config_Update( event.info );
+					break;
+				}
+
 				// Only process event this device is listening for.
 
 				listenEvent = event_FindNextListener( config_MyEvents, &event );

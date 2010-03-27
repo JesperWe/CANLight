@@ -27,5 +27,6 @@ void schedule_Suspend();
 void schedule_Finished();
 
 extern unsigned char schedule_Running;
+extern unsigned long schedule_time;
 
 #endif /* SCHEDULE_H_ */

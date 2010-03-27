@@ -52,6 +52,7 @@ void config_AddControlEvent(
 
 void config_Initialize();
 void config_Task();
+void config_Update( unsigned short configBytes );
 short config_FileCountTargets( unsigned char groupId );
 config_File_t config_FileFindGroup( unsigned char groupId );
 

@@ -371,7 +371,7 @@ void nmea_SendMultipacket( unsigned char *msgBuffer, unsigned short msgLength, l
 
 
 //---------------------------------------------------------------------------------------------
-// CANBus event interrupt.
+// ECAN event interrupt. Called both for read and write operations.
 
 void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 	IFS2bits.C1IF = 0;
@@ -384,6 +384,8 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 	}
 
 	if(C1INTFbits.WAKIF) C1INTFbits.WAKIF = 0;
+
+	// Something to transmit?
 
 	if(C1INTFbits.TBIF) {
 		C1INTFbits.TBIF = 0;
