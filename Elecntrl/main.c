@@ -66,9 +66,9 @@ int main (void)
 	}
 
 	ctrlkey_Initialize();
+	nmea_Initialize();
 	config_Initialize();
 	events_Initialize();
-	nmea_Initialize();
 	led_Initialize();
 
 	// Now setup tasks and start Scheduler.

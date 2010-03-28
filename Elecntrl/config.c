@@ -4,7 +4,6 @@
 #include "hw.h"
 #include "schedule.h"
 #include "config.h"
-#include "config_groups.h"
 #include "events.h"
 #include "led.h"
 #include "display.h"
@@ -18,13 +17,42 @@ config_Event_t *config_MyEvents;
 unsigned char cfg_MyDeviceId = 0;
 unsigned char config_Valid = 0;
 
-#include "config_groups.h"
+//-------------------------------------------------------------------------------
+// The system config represents the entire system, and is stored in each device.
+// The config "file" is actually a byte sequence sent from some master controller
+// to all devices on update. This "file" is stored in User Flash memory and parsed at runtime.
+//
+// A "device" in the system is a single piece of hardware with its own CPU.
+// It has an address (device number) in the range 0-253.
+//
+// A "function" is one individually controllable output on this device.
+//
+// A "group" is a collection of functions on one or many devices that listen to the same events.
+// A group can consist of only a single function on a single device.
+// A function must be part of a group to be able to listen for events.
+//
+// The config "file" byte sequence follows this pattern:
+//   <2 bytes sequence number>
+//   group device func [ device func ] FE
+//   device func event [ event ] FE
+//   device func event [ event ] FE
+
+//  ^^^ change these to: event action device func [ device func ] FE
+// (Better fit with GUI data model?)
+
+//   FE
+//   group device func [ device func ] FE
+//   device func event [ event ] FE
+//   device func event [ event ] FE
+//   FE
+//   ...
+//   FF
 
 // The Configuration File lives in program memory.
 // The size is dictated by the maximum length of a NMEA transmission,
-// which is 7*255 = 1785 bytes.
 
-static const unsigned char config_File[1785] = cfg_DEFAULT_CONFIG_FILE;
+//static const unsigned char __attribute__((space(prog),aligned(_FLASH_PAGE*2))) config_File[1700];
+static const unsigned char config_File[1785];
 
 //-------------------------------------------------------------------------------
 // Utility functions to make navigation of the config_File easier to understand.
@@ -94,6 +122,13 @@ void config_Initialize() {
 	// with default 0xFFFFFFFF in the Unit ID form of MPLAB.
 
 	if( hw_DeviceID == 0xFF ) {
+		config_Valid = 0;
+		return;
+	}
+
+	// Check for valid config file.
+
+	if( (((unsigned short)config_File[0])<<8 | ((unsigned short)config_File[1])) != hw_CONFIG_MAGIC_WORD ) {
 		config_Valid = 0;
 		return;
 	}
@@ -185,6 +220,8 @@ void config_Task() {
 
 	while ( ! config_Valid ) {
 
+		schedule_Running = FALSE;  // We hijack the scheduler in this loop.
+
 		_TRISB5 = 0;
 		_TRISB11 = 0;
 
@@ -204,7 +241,10 @@ void config_Task() {
 	}
 
 
+	schedule_Running = TRUE;
+
 	short status;
+
 	schedule_AddTask( led_PowerOnTest, 100 );
 	if( status != 0 ) {
 		status = 0;
@@ -214,7 +254,15 @@ void config_Task() {
 }
 
 //-------------------------------------------------------------------------------
+// We have received a new system configuration over the NMEA bus.
+// Store it in flash and start using it.
 
 void config_Update( unsigned short configBytes ) {
+
+	config_Valid = FALSE;
+
+	// XXX Save the config here...
+
+	config_Valid = TRUE;
 
 }

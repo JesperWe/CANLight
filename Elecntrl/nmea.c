@@ -16,7 +16,7 @@
 //---------------------------------------------------------------------------------------------
 // Globals
 
-unsigned char __attribute__((space(dma))) nmea_LargeBuffer[nmea_MAX_TP_PACKETS*nmea_TP_PACKET_BYTES];
+unsigned char 		nmea_LargeBuffer[nmea_MAX_TP_PACKETS*nmea_TP_PACKET_BYTES];
 
 nmea_MsgBuffer_t	nmea_MsgBuf[nmea_NO_MSG_BUFFERS] __attribute__((space(dma),aligned(nmea_NO_MSG_BUFFERS*nmea_MSG_BUFFER_WORDS*2)));
 nmea_MsgBuffer_t	nmea_TxQueue[nmea_NO_MSG_BUFFERS];
@@ -40,7 +40,7 @@ unsigned long 		ContentionWaitTime;
 unsigned char 		nmea_CA_Address = 0x55;
 nmea_FLAG    		nmea_Flags;
 nmea_MsgBuffer_t	inMessage;
-nmea_PGN_t 			inPGN, outPGN;
+nmea_PDU_t 			inPDU, outPGN;
 
 nmea_CA_NAME_t		nmea_CA_Name;
 
@@ -48,6 +48,9 @@ WORD				nmea_HW_EN_Reg_Addr;
 WORD				nmea_HW_EN_Reg_Bit;
 WORD				nmea_HW_Rate_Reg_Addr;
 WORD				nmea_HW_Rate_Reg_Bit;
+
+unsigned short		nmea_msgCounter = 0;
+unsigned short		nmea_overflowCounter = 0;
 
 //---------------------------------------------------------------------------------------------
 // Set up CAN Module for baud rate = 250kBit, 12 TQ with sample point at 80% of bit time.
@@ -92,20 +95,45 @@ void nmea_Initialize() {
 	C1TR01CONbits.TXEN0=1;			// Buffer 0 is a Transmit Buffer.
 	C1TR01CONbits.TX0PRI=0x2; 		// Message Buffer 0 Priority Level = High.
 
-	// Set up one filter and mask, accept only PGN # 65089, Lighing Command.
+	// Upper byte of PGN, called PF:
+	//	PF(7:2) maps to SID(5:0) or EID(23:18).
+	//  PF(1:0) maps to EID(17:16).
+	//
+	// Lower byte of PGN, called PS:
+	//  PS(7:0) maps to EID(15:8)
+	//
+	// EID(7:0) is the Source Address.
+
+	// One filter accept only PGN # 65089, Lighting Command.
 
 	C1FEN1bits.FLTEN0=1;			// Filter 0 active.
-	C1FMSKSEL1bits.F0MSK=0;		// Select Acceptance Filter Mask 0 for Acceptance Filter 0.
+	C1FMSKSEL1bits.F0MSK=0;			// Select Acceptance Filter Mask 0 for Acceptance Filter 0.
 
 	C1CTRL1bits.WIN = 0x1;
-	C1RXM0SID = 0x07E3;				// The 8 PDUFormat bits...
+	C1RXM0SID = 0; //0x07E3;				// The 8 PDUFormat bits...
 	C1RXF0SID = 0x07E2;				// ...are equal to 0XFE (PDUFormat = 254).
-	C1RXM0EID = 0xFF00;				// The 8 PDUSpecific bits...
+	C1RXM0EID = 0; //0xFF00;				// The 8 PDUSpecific bits...
 	C1RXF0EID = 0x4100;				// .. are equal to PDUSpecific = 65.
 	C1RXM0SIDbits.MIDE = 1;			// We don't want to accept standard frames.
 	C1RXF0SIDbits.EXIDE = 1;
 	C1BUFPNT1bits.F0BP = 0x1;		// Store in buffer 1.
+
+	// One filter for config updates, PGN 60416/0xEC00/CM_BAM and 60160/0xEB00/DATATRANSFER
+	// So the mask is 0xF8FF, value 0xE800
+
+	C1FEN1bits.FLTEN1=1;			// Filter 1 active.
+	C1FMSKSEL1bits.F1MSK=1;			// Select Acceptance Filter Mask 1 for Acceptance Filter 1.
+
+	C1RXM1SID = 0x1F03;				// The 8 PDUFormat bits.
+	C1RXF1SID = 0x1D00;				//
+	C1RXM1EID = 0xFF00;				// The 8 PDUSpecific bits.
+	C1RXF1EID = 0x0000;				//
+	C1RXM1SIDbits.MIDE = 1;			// We don't want to accept standard frames.
+	C1RXF1SIDbits.EXIDE = 1;
+	C1BUFPNT1bits.F1BP = 0x1;		// Store in buffer 1.
+
 	C1CTRL1bits.WIN = 0x0;
+
 
 	// DMA Initialization for ECAN1 Transmit.
 
@@ -298,23 +326,20 @@ void nmea_MakePGN(
 
 //---------------------------------------------------------------------------------------------
 
-void nmea_GetReceivedPGN( nmea_PGN_t *pgn ) {
+void nmea_GetReceivedPDU( nmea_PDU_t *pdu ) {
 	unsigned long SID, SIDExt, EID;
 
 	SID = (inMessage[0] & 0x1FFC) >> 2;
-	SIDExt = ((unsigned long)inMessage[1]) << 6;
+	SIDExt = ((unsigned long)(inMessage[1])) << 6;
 	SIDExt |= (inMessage[2] & 0xFC00) >> 10;
 	EID = (SID << 18) | SIDExt;
 
-	pgn->Priority = (SID & 0300) >> 8;
-	pgn->PDUFormat = (SID & 0x003F) << 2 | ((EID & 0x30000) >> 16);
-	pgn->PDUSpecific = (EID & 0xFF00) >> 8;
-	pgn->PGN = (pgn->PDUFormat << 8) | pgn->PDUSpecific;
-	pgn->Priority = (SID & 0300) >> 8;
-	pgn->SourceAddress = EID & 0xFF;
+	pdu->PDU = EID;
 
-	pgn->bytes = inMessage[2] & 0x000F;
-	memcpy( pgn->data, (&inMessage[3]), pgn->bytes );
+	pdu->bytes = inMessage[2] & 0x000F;
+	memcpy( pdu->data, (&inMessage[3]), pdu->bytes );
+
+	pdu->PGN = (pdu->PDUFormat << 8) | pdu->PDUSpecific;
 }
 
 
@@ -383,11 +408,13 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 		return;
 	}
 
-	if(C1INTFbits.WAKIF) C1INTFbits.WAKIF = 0;
+	if( C1INTFbits.WAKIF ) {
+		C1INTFbits.WAKIF = 0;
+	}
 
 	// Something to transmit?
 
-	if(C1INTFbits.TBIF) {
+	if( C1INTFbits.TBIF ) {
 		C1INTFbits.TBIF = 0;
 
 		// Any messages to send in the queue?
@@ -401,9 +428,17 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 		}
 	}
 
+	// Check for overflow.
+
+    if( C1INTFbits.RBOVIF ) {
+    	// Oops, we lost stuff!
+    	C1INTFbits.RBOVIF = 0;
+    	nmea_overflowCounter++;
+    }
+
 	// Any received messages?
 
-    if(C1INTFbits.RBIF) {
+    if( C1INTFbits.RBIF ) {
 		unsigned short timer;
 		C1INTFbits.RBIF = 0;
 
@@ -412,27 +447,29 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 		C1RXFUL1bits.RXFUL1 = 0;
 		C1RXOVF1bits.RXOVF1 = 0;
 
-		nmea_GetReceivedPGN( &inPGN );
-		timer = inPGN.data[2];
-		timer = timer<<8 | inPGN.data[3];
+		nmea_GetReceivedPDU( &inPDU );
+		timer = inPDU.data[2];
+		timer = timer<<8 | inPDU.data[3];
 
-		switch( inPGN.PGN ){
+		nmea_msgCounter++;
+
+		switch( inPDU.PGN ){
 
 			case nmea_MAINTAIN_POWER: return;
 
 			case nmea_LIGHTING_COMMAND: {
-				events_Push( e_NMEA_MESSAGE, inPGN.PGN,
-					inPGN.data[4], inPGN.data[5], inPGN.data[6],
-					inPGN.data[1], timer );
+				events_Push( e_NMEA_MESSAGE, inPDU.PGN,
+					inPDU.data[4], inPDU.data[5], inPDU.data[6],
+					inPDU.data[1], timer );
 				break;
 			}
 
 			case nmea_CM_BAM: {
-				if( inPGN.data[0] != 0x20 ) break; // We only implement BAM at the moment, not the other TP.CM parts.
+				if( inPDU.data[0] != 0x20 ) break; // We only implement BAM at the moment, not the other TP.CM parts.
 				nmea_TPMessage_Complete = FALSE;
 				nmea_TPMessage_Error = FALSE;
-				nmea_TPMessage_Size = inPGN.data[1]<<8 | inPGN.data[2];
-				nmea_TPMessage_PGN = ((long)inPGN.data[5])<<16 | ((long)inPGN.data[6])<<8 | inPGN.data[2];
+				nmea_TPMessage_Size = inPDU.data[1]<<8 | inPDU.data[2];
+				nmea_TPMessage_PGN = ((long)inPDU.data[5])<<16 | ((long)inPDU.data[6])<<8 | inPDU.data[2];
 				nmea_TPMessage_Bytes = 0;
 				nmea_TPMessage_LastPackage = 0;
 				break;
@@ -445,21 +482,26 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 
 				nmea_TPMessage_LastPackage++;
 
-				if( inPGN.data[0] != nmea_TPMessage_LastPackage ) {
+				if( inPDU.data[0] != nmea_TPMessage_LastPackage ) {
 					// Package was lost. Too bad...
 					nmea_TPMessage_Error = TRUE;
 					break;
 				}
 
 				for( i=1; i<8; i++ ) {
-					nmea_LargeBuffer[ nmea_TPMessage_Bytes++ ] = inPGN.data[i];
+					nmea_LargeBuffer[ nmea_TPMessage_Bytes++ ] = inPDU.data[i];
 				}
 
 				if( nmea_TPMessage_Bytes >= nmea_TPMessage_Size ) {
 					nmea_TPMessage_Complete = TRUE;
 					events_Push( e_NMEA_MESSAGE, nmea_TPMessage_PGN,
-						inPGN.SourceAddress, 0, e_CONFIG_FILE_UPDATE, 0, nmea_TPMessage_Size );
+						inPDU.SourceAddress, 0, e_CONFIG_FILE_UPDATE, 0, nmea_TPMessage_Size );
 				}
+
+				// If this is our first config file, we need to signal to the config task to
+				// stop hanging in a waiting loop.
+
+				config_Valid = TRUE;
 
 				break;
 			}

@@ -77,23 +77,26 @@ typedef unsigned short nmea_MsgBuffer_t[nmea_MSG_BUFFER_WORDS];
 
 // NMEA Transport Protocol multi-packet messages need a buffer of up to 7*255=1785 bytes.
 
-extern unsigned char __attribute__((space(dma))) nmea_LargeBuffer[nmea_MAX_TP_PACKETS*nmea_TP_PACKET_BYTES];
+extern unsigned char nmea_LargeBuffer[nmea_MAX_TP_PACKETS*nmea_TP_PACKET_BYTES];
 
-union nmea_PGN_UNION {
+// NB!! Reversed byte order due to little endian storage.
+
+union nmea_PDU_UNION {
 	struct {
-		unsigned Priority			: 3;
-		unsigned _Reserved			: 1;
-		unsigned Datapage			: 1;
-		unsigned char PDUFormat;
-		unsigned char PDUSpecific;
-		unsigned long PGN;
 		unsigned char SourceAddress;
+		unsigned char PDUSpecific;
+		unsigned char PDUFormat;
+		unsigned Datapage			: 1;
+		unsigned _Reserved			: 1;
+		unsigned Priority			: 3;
 		unsigned char bytes;
 		unsigned char data[8];
+		unsigned short PGN;
 	};
+	unsigned long PDU;
 };
 
-typedef union nmea_PGN_UNION nmea_PGN_t;
+typedef union nmea_PDU_UNION nmea_PDU_t;
 
 
 union nmea_FLAGS_UNION {
@@ -139,7 +142,7 @@ extern unsigned char	RXQueueCount;
 extern nmea_MsgBuffer_t	nmea_MsgBuf[nmea_NO_MSG_BUFFERS] __attribute__((space(dma)));
 extern nmea_CA_NAME_t 	nmea_CA_Name;
 extern nmea_MsgBuffer_t	inMessage;
-extern nmea_PGN_t 		inPGN, outPGN;
+extern nmea_PDU_t 		inPDU, outPGN;
 extern nmea_MsgBuffer_t	nmea_TxQueue[nmea_NO_MSG_BUFFERS];
 extern unsigned char	nmea_TxQueueHead;
 extern unsigned char	nmea_TxQueueTail;
@@ -174,6 +177,6 @@ unsigned char nmea_SendMessage();
 
 void nmea_ControllerMode( unsigned char mode );
 
-void nmea_GetReceivedPGN( nmea_PGN_t *pgn );
+void nmea_GetReceivedPDU( nmea_PDU_t *pgn );
 
 #endif /* NMEA_H_ */

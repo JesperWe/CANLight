@@ -39,8 +39,8 @@ unsigned short		hw_SleepTimer;	// Count ticks before we can go to sleep.
 
 static const hw_Port_t hw_Port[hw_NoVariants][hw_NoPortNames] =
 {{
-	{ &PORTB, &TRISB, 10 }, // CAN_EN
-	{ &PORTB, &TRISB, 11 },	// CAN_RATE
+	{ &PORTB, &TRISB, 10 }, // CAN_RATE
+	{ &PORTB, &TRISB, 11 },	// CAN_EN
 	{ &PORTC, &TRISC, 4 },	// LED_RED
 	{ &PORTC, &TRISC, 5 },	// LED_WHITE
 	{ &PORTB, &TRISB, 0 },	// LED1
@@ -56,8 +56,8 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_NoPortNames] =
 },
 
 {
-	{ &PORTA, &TRISA, 1 },	// CAN_EN
-	{ &PORTB, &TRISB, 1 },	// CAN_RATE
+	{ &PORTA, &TRISA, 1 },	// CAN_RATE
+	{ &PORTB, &TRISB, 1 },	// CAN_EN
 	{ &PORTB, &TRISB, 5 },	// LED_RED
 	{ &PORTB, &TRISB, 0 },	// LED_WHITE
 	{ &PORTA, &TRISA, 9 },	// LED1
