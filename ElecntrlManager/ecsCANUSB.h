@@ -37,6 +37,7 @@ public:
 	void registerReader();
 	void unregisterReader();
 	void sendConfig( QByteArray &configFile );
+	void sendTest( QByteArray &byteSequence );
 	void alert( QString location,  int result );
 	QString errorString( int result );
 

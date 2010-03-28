@@ -507,3 +507,9 @@ void MainWindow::on_MonitorDialogReject()
 {
 	canusb->unregisterReader();
 }
+
+void MainWindow::on_actionSend_NMEA_Test_Sequence_A_triggered()
+{
+	QByteArray testdata;
+	canusb->sendTest( testdata );
+}

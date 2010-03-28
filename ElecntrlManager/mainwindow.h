@@ -49,7 +49,8 @@ private:
 	ecsCANUSB* canusb;
 
 private slots:
-	void on_actionShow_Monitor_triggered();
+	void on_actionSend_NMEA_Test_Sequence_A_triggered();
+ void on_actionShow_Monitor_triggered();
 	void on_actionClose_Connection_triggered();
 	void on_actionOpen_Connection_triggered();
 	void on_actionUpload_to_Yacht_triggered();

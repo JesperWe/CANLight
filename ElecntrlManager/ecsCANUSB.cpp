@@ -151,23 +151,42 @@ void ecsCANUSB::unregisterReader() {
 //------------------------------------------------------------------------------------
 // Build NMEA PGN
 
-void nmea_MakePGN( nmea_PGN_t &outPGN,
+void nmea_MakePDU( _u32 &outPGN,
 	unsigned short pgn_priority,
 	unsigned short pgn_no,
 	unsigned short msg_bytes ) {
 
-	outPGN.PGN				= pgn_no;
-	outPGN.PDUFormat 		= (pgn_no & 0xFF00) >> 8;
-	outPGN.PDUSpecific 		= pgn_no & 0x00FF;
-	outPGN.Datapage			= 0;
-	outPGN._Reserved		= 0;
-	outPGN.Priority			= pgn_priority;
+	outPGN =  _u32(pgn_no) << 8;
+	outPGN |= _u32(pgn_priority) << 26;
 }
 
+void ecsCANUSB::sendTest( QByteArray &byteSequence ) {
+	_u32 outPDU;
+	CANMsg msg;
+	int result;
+
+	nmea_MakePDU( outPDU, 1, nmea_LIGHTING_COMMAND, 8 );
+
+	msg.id = outPDU;
+	msg.flags = CANMSG_EXTENDED;
+	msg.timestamp = time( 0 );
+	msg.len = 8;
+
+	msg.data[0] = 0x11;
+	msg.data[1] = 0x22;
+	msg.data[2] = 0x33;
+	msg.data[3] = 0x44;
+	msg.data[4] = 0x55;
+	msg.data[5] = 0x66;
+	msg.data[6] = 0x77;
+	msg.data[7] = 0x88;
+
+	result = canusb_Write( adapterHandle, &msg );
+}
 
 void ecsCANUSB::sendConfig( QByteArray &configFile ) {
 
-	nmea_PGN_t outPGN;
+	_u32 outPDU;
 	CANMsg msg;
 	int msgLength;
 	int noPackets;
@@ -180,9 +199,9 @@ void ecsCANUSB::sendConfig( QByteArray &configFile ) {
 
 	// First tell the bus we are about to transmit a multi-packet message.
 
-	nmea_MakePGN( outPGN, 1, nmea_CM_BAM, 8 );
+	nmea_MakePDU( outPDU, 1, nmea_CM_BAM, 8 );
 
-	msg.id = outPGN.PGN;
+	msg.id = outPDU;
 	msg.flags = CANMSG_EXTENDED;
 	msg.timestamp = time( 0 );
 	msg.len = 8;
@@ -204,14 +223,14 @@ void ecsCANUSB::sendConfig( QByteArray &configFile ) {
 
 	// Now do data packets.
 
-	nmea_MakePGN( outPGN, 1, nmea_DATATRANSFER, 8 );
-	msg.id = outPGN.PGN;
+	nmea_MakePDU( outPDU, 1, nmea_DATATRANSFER, 8 );
+	msg.id = outPDU;
 	sentBytes = 0;
 
 	for( int i=0; i<noPackets; i++ ) {
 
 		msg.timestamp = time( 0 );
-		msg.data[0] = noPackets;
+		msg.data[0] = i+1;
 
 		for( int j=1; j<8; j++ ) {
 
