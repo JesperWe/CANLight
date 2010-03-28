@@ -14,7 +14,8 @@ SOURCES += ecsGraphicsView.cpp \
     ecsControlGroupGraphic.cpp \
     ecsManagerApp.cpp \
     ecsCANUSB.cpp
-HEADERS += ecsGraphicsView.h \
+HEADERS += nmea.h \
+    ecsGraphicsView.h \
     ecsTableView.h \
     mainwindow.h \
     systemdescription.h \

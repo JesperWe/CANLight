@@ -36,6 +36,9 @@ public:
 	char* info();
 	void registerReader();
 	void unregisterReader();
+	void sendConfig( QByteArray &configFile );
+	void alert( QString location,  int result );
+	QString errorString( int result );
 
 private:
 	int lastStatus;

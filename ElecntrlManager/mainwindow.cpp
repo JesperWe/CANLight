@@ -476,6 +476,9 @@ void MainWindow::onKeypress( int key ) {
 
 void MainWindow::on_actionUpload_to_Yacht_triggered()
 {
+	QByteArray configFile;
+	SystemDescription::buildNMEAConfig( configFile );
+	canusb->sendConfig( configFile );
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -21,7 +21,7 @@ public:
 	static QString loadedFileName;
 	static void loadFile( QString fromFile );
 	static void saveFile( QString toFile );
-	void buildNMEAConfig( QByteArray &configFile );
+	static void buildNMEAConfig( QByteArray &configFile );
 };
 
 class SysDescrHandler : public QXmlDefaultHandler {
