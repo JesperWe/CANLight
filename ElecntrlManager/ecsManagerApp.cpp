@@ -1,3 +1,9 @@
+/*
+ * $Revision$
+ * $Author$
+ * $Date$
+ */
+
 #include "ecsManager.h"
 #include "ecsManagerApp.h"
 

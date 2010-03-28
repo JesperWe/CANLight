@@ -1,3 +1,9 @@
+/*
+ * $Revision$
+ * $Author$
+ * $Date$
+ */
+
 #include <QIcon>
 
 #include "ecsManager.h"

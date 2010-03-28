@@ -20,11 +20,14 @@ ecsCANUSB::ecsCANUSB() {
 	return;
 }
 
+//------------------------------------------------------------------------------------
 
 int ecsCANUSB::status() {
 	return lastStatus;
 
 }
+
+//------------------------------------------------------------------------------------
 
 int ecsCANUSB::open() {
 	adapterHandle = canusb_Open(
@@ -40,10 +43,14 @@ int ecsCANUSB::open() {
 	return adapterHandle;
 }
 
+//------------------------------------------------------------------------------------
+
 int ecsCANUSB::close() {
 	lastStatus = BusDisconnected;
 	return canusb_Close( adapterHandle );
 }
+
+//------------------------------------------------------------------------------------
 
 char* ecsCANUSB::info() {
 	int resultCode;
@@ -64,7 +71,10 @@ char* ecsCANUSB::info() {
 	return adapterInfo;
 }
 
-// This is a "C" style callback function which cannot be part of the object context.
+//------------------------------------------------------------------------------------
+// The read callback function called by the device driver when data is read from the bus.
+// This is a "C" style callback function which cannot be part of an object context.
+
 void __stdcall readCallbackFn( CANMsg* msg ) {
 	int i;
 	QString line = "";
@@ -88,9 +98,13 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 	ecsManagerApp::inst()->logWidget->appendPlainText( line );
 }
 
+//------------------------------------------------------------------------------------
+
 void ecsCANUSB::registerReader() {
 	canusb_setReceiveCallBack( adapterHandle, (LPFNDLL_RECEIVE_CALLBACK)readCallbackFn );
 }
+
+//------------------------------------------------------------------------------------
 
 void ecsCANUSB::unregisterReader() {
 	canusb_setReceiveCallBack( adapterHandle, NULL );

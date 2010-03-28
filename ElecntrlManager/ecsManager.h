@@ -1,3 +1,9 @@
+/*
+ * $Revision$
+ * $Author$
+ * $Date$
+ */
+
 #ifndef ECSMANAGER_H
 #define ECSMANAGER_H
 

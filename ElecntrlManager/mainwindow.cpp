@@ -4,7 +4,7 @@
  * $Date$
  */
 
- #include <QtGui>
+#include <QtGui>
 #include <QtSvg>
 
 #include "ecsManager.h"
