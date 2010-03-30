@@ -34,6 +34,8 @@ void led_ProcessEvent( event_t *event, unsigned char function );
 
 void led_PowerOnTest();
 
+void led_TaskComplete();
+
 void led_CrossfadeTask();
 
 #endif

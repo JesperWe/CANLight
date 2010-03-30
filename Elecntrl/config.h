@@ -22,19 +22,19 @@ typedef struct {
 } config_Group_t;
 
 typedef struct cfg_Event_s {
-	unsigned char group;
 	unsigned char ctrlDev;
 	unsigned char ctrlFunc;
 	unsigned char ctrlEvent;
+	unsigned char ctrlAction;
 	unsigned char function;
 	struct cfg_Event_s *next;
 } config_Event_t;
 
-typedef const unsigned char* config_File_t;
+typedef const unsigned char *config_File_t;
 
 
 extern config_Event_t *config_MyEvents;
-extern unsigned char config_Valid;
+extern unsigned char config_Invalid;
 
 void config_AddMyControlEvents( 
 	unsigned char group, 
@@ -43,17 +43,16 @@ void config_AddMyControlEvents(
 );
 
 void config_AddControlEvent( 
-	unsigned char group, 
 	const unsigned char ctrlDev, 
 	const unsigned char ctrlFunc, 
 	const unsigned char ctrlEvent, 
+	const unsigned char ctrlAction,
 	const unsigned char function
 );
 
 void config_Initialize();
 void config_Task();
 void config_Update( unsigned short configBytes );
-short config_FileCountTargets( unsigned char groupId );
 config_File_t config_FileFindGroup( unsigned char groupId );
 
 inline unsigned char _findNextGroup( config_File_t* filePointer );

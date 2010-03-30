@@ -501,7 +501,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 				// If this is our first config file, we need to signal to the config task to
 				// stop hanging in a waiting loop.
 
-				config_Valid = TRUE;
+				config_Invalid = FALSE;
 
 				break;
 			}

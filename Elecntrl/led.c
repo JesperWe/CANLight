@@ -280,7 +280,43 @@ void led_PowerOnTest() {
 		}
 	}
 
-	schedule_Suspend();
+	schedule_Finished();
+}
+
+
+//-------------------------------------------------------------------------------
+// This task will signal that the device has completed some significant task,
+// such as reconfiguring itself.
+
+void led_TaskComplete() {
+	int i;
+
+	for( i=0; i<4; i++ ) {
+		switch( hw_Type ) {
+
+			case hw_LEDLAMP: {
+				led_PresetLevel[ led_WHITE ] = 0.5;
+				schedule_Sleep(300);
+				led_PresetLevel[ led_WHITE ] = 0.0;
+				schedule_Sleep(300);
+				break;
+			}
+
+			case hw_SWITCH: {
+				hw_WritePort( hw_LED1, 1 );
+				hw_WritePort( hw_LED2, 0 );
+				hw_WritePort( hw_LED3, 1 );
+				schedule_Sleep(300);
+				hw_WritePort( hw_LED1, 0 );
+				hw_WritePort( hw_LED2, 1 );
+				hw_WritePort( hw_LED3, 0 );
+				schedule_Sleep(300);
+				hw_WritePort( hw_LED2, 0 );
+				break;
+			}
+		}
+	}
+	schedule_Finished();
 }
 
 
