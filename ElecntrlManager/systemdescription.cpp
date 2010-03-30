@@ -146,8 +146,13 @@ void SystemDescription::saveFile( QString toFile )
 void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 
 	configFile.clear();
-	configFile[0] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion >> 8);
-	configFile[1] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion % 0xFF);
+
+	// Magic word == 4713 = 0x1269
+	configFile[0] = 0x12;
+	configFile[1] = 0x69;
+
+	configFile[2] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion >> 8);
+	configFile[3] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion % 0xFF);
 
 	// Start with finding all listening target appliances.
 
@@ -155,6 +160,8 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 		if( cGroup->itemType != ecsControlGroup::Activity ) continue;
 
 		configFile.append( (uint8_t)( cGroup->id )); // Start new target group.
+
+		// List all applicances/functions that are part of this listener group.
 
 		foreach( QGraphicsItem* link, cGroup->graphic->childItems() ) {
 			if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
@@ -181,7 +188,7 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 			configFile.append( (uint8_t)( event->eventType ) );
 			configFile.append( (uint8_t)( action->actionType ) );
 
-			// Two bytes for each linked appliances in this controller group.
+			// Two bytes for each linked appliance id + function  in this controller group.
 
 			foreach( QGraphicsItem* link, controller->childItems() ) {
 				if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
@@ -191,11 +198,11 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 				configFile.append( (uint8_t)( linkedAppliance->id ) );
 				configFile.append( (uint8_t)( controller->srcGroup->functions[linkedAppliance->id] ) );
 			}
-			configFile.append( DELIMITER ); // End of event/actions.
+			configFile.append( DELIMITER ); // End of linked appliances.
 		}
 		configFile.append( DELIMITER ); // End of the whole group.
 	}
-	configFile.append( DELIMITER ); // End of config file.
+	configFile.append( 0xFF ); // End of config file.
 }
 
 //-------------------------------------------------------------------------------------------------

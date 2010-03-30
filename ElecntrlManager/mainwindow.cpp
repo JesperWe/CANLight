@@ -478,6 +478,20 @@ void MainWindow::on_actionUpload_to_Yacht_triggered()
 {
 	QByteArray configFile;
 	SystemDescription::buildNMEAConfig( configFile );
+
+	if( configFile.length() > 1024 ) {
+		QString msg = "Configuration file size ";
+		msg.append( QString::number(configFile.length()) );
+		msg.append( " exceeds maximum supported size of 1024 bytes." );
+
+		QMessageBox msgBox;
+		msgBox.setText( msg );
+		msgBox.setIcon( QMessageBox::Critical );
+		msgBox.exec();
+
+		return;
+	}
+
 	canusb->sendConfig( configFile );
 }
 
