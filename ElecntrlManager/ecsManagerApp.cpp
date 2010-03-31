@@ -37,7 +37,6 @@ ecsManagerApp::ecsManagerApp() {
 	statusIcons[ ecsManager::StatusBlue ] = QPixmap(":/graphics/icon-blue.svg");
 	statusIcons[ ecsManager::StatusGreen ] = QPixmap(":/graphics/icon-green.svg");
 	statusIcons[ ecsManager::StatusActive ] = QPixmap(":/graphics/icon-active.svg");
-
 };
 
 ecsManagerApp* ecsManagerApp::inst() {

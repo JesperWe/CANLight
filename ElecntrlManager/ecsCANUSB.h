@@ -12,8 +12,10 @@
 
 #include <QtGui>
 
-class ecsCANUSB
+class ecsCANUSB : public QObject
 {
+Q_OBJECT
+
 public:
 
 	enum canusb_e {
@@ -40,6 +42,7 @@ public:
 	void sendTest( QByteArray &byteSequence );
 	void alert( QString location,  int result );
 	QString errorString( int result );
+	void readCallback( const QString &text );
 
 private:
 	int lastStatus;
@@ -47,6 +50,8 @@ private:
 	CANHANDLE adapterHandle;
 	char adapterInfo[200];
 
+signals:
+	void addLogLine( const QString  & text );
 };
 
 #endif // ECSCANUSB_H

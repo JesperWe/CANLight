@@ -110,20 +110,30 @@ char* ecsCANUSB::info() {
 }
 
 //------------------------------------------------------------------------------------
+// This method is needed to convert the read callback call into a Qt signal, which is thread safe.
+// (Callbacks from the device driver comes from a different thread)
+
+void ecsCANUSB::readCallback( const QString &text ) {
+	emit addLogLine( text );
+}
+
+//------------------------------------------------------------------------------------
 // The read callback function called by the device driver when data is read from the bus.
 // This is a "C" style callback function which cannot be part of an object context.
 
 void __stdcall readCallbackFn( CANMsg* msg ) {
 	int i;
+	int pgn;
 	QString line = "";
 	QString buf;
 
+	pgn = (msg->id & 0xFFFF00) >> 8;
+
 	line += (msg->flags & CANMSG_EXTENDED)   ?   "E" : "S";
 	line += (msg->flags & CANMSG_RTR)   ?   "R" : " ";
-	line += buf.sprintf( " %08X time=%08X len=%d",
+	line += buf.sprintf( " %08X (PGN %d)",
 			 (unsigned int)(msg->id),
-			 (unsigned int)(msg->timestamp),
-			 msg->len );
+			 pgn );
 
 	if( msg->len ) {
 		line += " [ ";
@@ -133,7 +143,7 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 		line += "]";
 	}
 
-	ecsManagerApp::inst()->logWidget->appendPlainText( line );
+	ecsManagerApp::inst()->canusb_Instance->readCallback( line );
 }
 
 //------------------------------------------------------------------------------------
@@ -149,7 +159,7 @@ void ecsCANUSB::unregisterReader() {
 }
 
 //------------------------------------------------------------------------------------
-// Build NMEA PGN
+// Build NMEA PDU
 
 void nmea_MakePDU( _u32 &outPGN,
 	unsigned short pgn_priority,

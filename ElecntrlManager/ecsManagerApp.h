@@ -11,6 +11,7 @@
 #include <QPixmap>
 
 #include "ecsControlGroupModel.h"
+#include "ecsCANUSB.h"
 
 class ecsManagerApp
 {
@@ -26,7 +27,7 @@ public:
 	static ecsManagerApp* inst();
 
 	int systemDescriptionVersion;
-	QPlainTextEdit* logWidget;
+	ecsCANUSB* canusb_Instance;
 	ecsControlGroupModel* appliances;
 	ecsControlGroupModel* cGroups;
 

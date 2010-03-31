@@ -78,7 +78,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	monitorDialog = new QDialog;
 	Ui::NMEA2000Monitor monitorUi;
 	monitorUi.setupUi(monitorDialog);
-	ecsManagerApp::inst()->logWidget = monitorUi.logWidget;
 
 	connect( monitorDialog, SIGNAL(rejected()), this, SLOT(on_MonitorDialogReject()) );
 
@@ -103,6 +102,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	// Now try the CANUSB Hardware.
 
 	canusb = new ecsCANUSB();
+	ecsManagerApp::inst()->canusb_Instance = canusb;
+	connect( canusb, SIGNAL(addLogLine(QString)), monitorUi.logWidget, SLOT(appendPlainText(QString)) );
 	updateCANStatus();
 }
 
@@ -491,6 +492,8 @@ void MainWindow::on_actionUpload_to_Yacht_triggered()
 
 		return;
 	}
+
+	ui->statusBar->showMessage( tr("Transmitting ") + QString::number(configFile.length()) + " bytes of configuration information." );
 
 	canusb->sendConfig( configFile );
 }
