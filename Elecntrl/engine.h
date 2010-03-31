@@ -11,7 +11,7 @@
 
 #define engine_UNKNOWN_GEAR		17
 #define engine_UNKNOWN_JOYSTICK	4711
-#define engine_JOYSTICK_AD_CHANNEL	4
+#define engine_JOYSTICK_AD_CHANNEL	10
 
 
 enum engine_CalibrationParameters {

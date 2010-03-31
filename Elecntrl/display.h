@@ -55,6 +55,7 @@ void display_SetBrightness( unsigned char value );
 void display_SetContrast( unsigned char value );
 void display_HorizontalBar( unsigned char col, unsigned char row, unsigned char value );
 void display_NumberFormat( char outString[], short digits, short number );
+void display_BacklightTask();
 
 unsigned char display_ReadKeypad();
 void display_Task();

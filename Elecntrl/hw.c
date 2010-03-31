@@ -330,11 +330,11 @@ void ADC_Initialize(void) {
 	AD1CON1bits.ADON = 0;
 
 	if( hw_Detector_Installed ) {
-		AD1PCFGLbits.PCFG11 = 0;	// AN11 to Analog Mode.
+		AD1PCFGLbits.PCFG0 = 0;	// AN0 to Analog Mode.
 	}
 
 	if( hw_Throttle_Installed ) {
-		AD1PCFGLbits.PCFG4 = 0;		// AN4 to Analog Mode.
+		AD1PCFGLbits.PCFG10 = 0;		// AN4 to Analog Mode.
 	}
 
 	AD1CON1 = 0x00E0;			// Idle=Stop, 10bit, unsigned, Auto conversion.

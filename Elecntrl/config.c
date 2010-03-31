@@ -215,6 +215,7 @@ void config_Task() {
 	if( ! config_Invalid ) {
 		schedule_AddTask( led_PowerOnTest, 100 );
 		schedule_Finished();
+		return;
 	}
 
 	while ( config_Invalid ) {

@@ -71,7 +71,7 @@ int main (void)
 	events_Initialize();
 	led_Initialize();
 
-	// Now setup tasks and start Scheduler.
+
 
 	schedule_Initialize();
 
@@ -84,6 +84,10 @@ int main (void)
 	if( hw_I2C_Installed ) {
 		schedule_AddTask( display_Task, 300 );
 		schedule_AddTask( menu_Task, 10 );
+	}
+
+	if( hw_Detector_Installed ) {
+		schedule_AddTask( display_BacklightTask, 2000 );
 	}
 
 	if( hw_Actuators_Installed ) {

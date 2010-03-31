@@ -5,6 +5,9 @@
 #include <stdarg.h>
 
 #include "display.h"
+#include "config.h"
+#include "events.h"
+#include "nmea.h"
 
 unsigned char display_IsOn = 1;
 unsigned char display_CurrentAdjust = 0;
@@ -205,3 +208,39 @@ void display_Task() {
 	}
 }
 
+
+//---------------------------------------------------------------------------------------------
+// Set system back-light level based on ambient light.
+
+void display_BacklightTask() {
+	unsigned short pvVoltage;
+	event_t	ambientEvent;
+
+	pvVoltage = ADC_Read( hw_DetectorADCChannel );
+
+	pvVoltage = pvVoltage >> 2;
+	if( hw_AmbientLevel != pvVoltage ) {
+
+		hw_AmbientLevel = pvVoltage;
+
+		ambientEvent.PGN = 0;
+		ambientEvent.info = 0;
+		ambientEvent.ctrlDev = hw_DeviceID;
+		ambientEvent.ctrlFunc = hw_BACKLIGHT;
+		ambientEvent.ctrlEvent = e_AMBIENT_LIGHT_LEVEL;
+		ambientEvent.data = hw_AmbientLevel;
+
+		nmea_SendEvent( &ambientEvent );
+
+		if( hw_I2C_Installed ) {
+			unsigned short blLevel;
+			blLevel = (2*hw_AmbientLevel) + 10;
+			if( blLevel > 0xFF ) blLevel = 0xFF;
+			//display_Home();
+			//sprintf( line1, "v = %04d, bl = %03d", hw_AmbientLevel, blLevel );
+			//display_Write( line1 );
+
+			display_SetBrightness( blLevel );
+		}
+	}
+}

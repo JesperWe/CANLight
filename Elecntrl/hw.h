@@ -36,6 +36,8 @@
 #define hw_SLOW_HEARTBEAT_MS	3000
 #define hw_FAST_HEARTBEAT_MS	300
 
+#define hw_DetectorADCChannel	0
+
 enum hw_PortNames {
 	hw_CAN_RATE,
 	hw_CAN_EN,
