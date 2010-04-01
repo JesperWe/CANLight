@@ -238,7 +238,7 @@ void hw_Initialize( void ) {
 				PPSUnLock;
 				PPSOutput( PPS_OC1, PPS_RP20 ); 	// Red PWM to RP20.
 				PPSOutput( PPS_OC2, PPS_RP21 ); 	// White PWM to RP21.
-				RPOR6bits.RP12R = 0x10;			// CAN Transmit to RP12.
+				RPOR6bits.RP12R = 0x10;				// CAN Transmit to RP12.
 				RPINR26bits.C1RXR = 13;				// CAN Receive from pin RP13.
 				PPSLock;
 				break;

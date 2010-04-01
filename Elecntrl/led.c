@@ -54,8 +54,15 @@ void led_Initialize( void ) {
 	//	Run in idle mode.
 	//	Timer2 is input.
 
-	OC1CONbits.OCM = 6; 		// PWM mode.
-	OC2CONbits.OCM = 6; 		// PWM mode.
+	if( led_NoChannels > 0 ) {
+		OC1CONbits.OCM = 6; 		// PWM mode.
+		OC1RS = led_PWM_PERIOD;
+		if( led_NoChannels > 1 ) {
+			OC2CONbits.OCM = 6; 		// PWM mode.
+			OC2RS = led_PWM_PERIOD;
+		}
+	}
+
 
 	// So setup Timer 2.
 
@@ -257,6 +264,8 @@ void led_PowerOnTest() {
 		case hw_LEDLAMP: {
 			led_PresetLevel[ led_RED ] = 1.0;
 			led_PresetLevel[ led_WHITE ] = 0.5;
+			led_SetLevel( led_RED, 1.0 );
+			led_SetLevel( led_WHITE, 1.0 );
 			led_FadeToLevel( led_RED, 0.0, 2.0 );
 			led_FadeToLevel( led_WHITE, 0.0, 2.0 );
 			break;

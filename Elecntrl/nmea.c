@@ -51,6 +51,7 @@ WORD				nmea_HW_Rate_Reg_Bit;
 
 unsigned short		nmea_msgCounter = 0;
 unsigned short		nmea_overflowCounter = 0;
+unsigned short		nmea_invalidMsgCounter = 0;
 
 //---------------------------------------------------------------------------------------------
 // Set up CAN Module for baud rate = 250kBit, 12 TQ with sample point at 80% of bit time.
@@ -169,6 +170,8 @@ void nmea_Initialize() {
 
 	C1CTRL1bits.REQOP = 0;
     while( C1CTRL1bits.OPMODE != 0 );
+
+	memset( nmea_LargeBuffer, 0xFF, sizeof(nmea_LargeBuffer) );
 
 	hw_WritePort( hw_CAN_EN, 1);	// Go on bus;
 }
@@ -400,12 +403,14 @@ void nmea_SendMultipacket( unsigned char *msgBuffer, unsigned short msgLength, l
 
 void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 	IFS2bits.C1IF = 0;
+	IEC2bits.C1IE = 0;
 
 	// IVRIF Invalid Message Received
 	if(C1INTFbits.IVRIF) {
 		C1INTFbits.IVRIF = 0;
+		nmea_invalidMsgCounter++;
 		nmea_TX_IN_PROGRESS = 0;	// Abort!
-		return;
+		goto done;
 	}
 
 	if( C1INTFbits.WAKIF ) {
@@ -455,7 +460,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 
 		switch( inPDU.PGN ){
 
-			case nmea_MAINTAIN_POWER: return;
+			case nmea_MAINTAIN_POWER: goto done;
 
 			case nmea_LIGHTING_COMMAND: {
 				events_Push( e_NMEA_MESSAGE, inPDU.PGN,
@@ -507,6 +512,8 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 			}
 		}
 	}
+
+done: IEC2bits.C1IE = 1;
 }
 
 
