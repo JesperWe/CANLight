@@ -17,15 +17,11 @@
 //---------------------------------------------------------------------------------------------
 // Globals.
 
-extern unsigned char ctrlkey_KeyState[ctrlkey_MAX_NO_KEYS];
-extern unsigned short ctrlkey_States[3];
-extern unsigned short ctrlkey_Samples;
 extern unsigned short ctrlkey_NoKeys;
-extern unsigned char ctrlkey_EventPending;
-extern unsigned short ctrlkey_ClickPending;
-extern unsigned char ctrlkey_ClickCount;
-extern unsigned char ctrlkey_KeyHolding;
-extern unsigned char ctrlkey_Holding;
+extern unsigned char ctrlkey_ClickCount[ ctrlkey_MAX_NO_KEYS ];
+extern unsigned char ctrlkey_Holding[ ctrlkey_MAX_NO_KEYS ];
+extern unsigned long ctrlkey_Presstime[ ctrlkey_MAX_NO_KEYS ];
+extern unsigned long ctrlkey_Releasetime[ ctrlkey_MAX_NO_KEYS ];
 
 
 //---------------------------------------------------------------------------------------------
@@ -33,6 +29,6 @@ extern unsigned char ctrlkey_Holding;
 
 void ctrlkey_Initialize( void );
 unsigned short ctrlkey_ReadKeys( void );
-void ctrlkey_task( void *pvParameters );
+void ctrlkey_task();
 
 #endif /* CTRLKEY_H_ */

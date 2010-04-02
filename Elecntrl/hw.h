@@ -97,7 +97,7 @@ extern _prog_addressT		hw_ConfigPtr;
 extern unsigned short		hw_HeartbeatCounter;
 extern unsigned short		hw_Type;
 extern unsigned char 		hw_I2C_Installed;
-extern unsigned char		hw_Detector_Installed;
+extern unsigned char		hw_Photodetector_Installed;
 extern unsigned char		hw_Throttle_Installed;
 extern unsigned char		hw_Actuators_Installed;
 extern unsigned char 		hw_DeviceID;

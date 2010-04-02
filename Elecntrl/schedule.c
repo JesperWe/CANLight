@@ -1,7 +1,7 @@
 /*
  * schedule.c
  *
- *  Created on: 9 dec 2009
+ *  Created on: 9 December 2009
  *      Author: Jesper W
  *
  *  Implements a simplistic and compact scheduler.
@@ -34,12 +34,28 @@ void schedule_Initialize() {
     T1CONbits.TON = 1;				// Start Timer.
 }
 
+//---------------------------------------------------------------------------------------------
+
 short schedule_AddTask( void (*taskFunction)(void), short tickInterval ) {
 	if( schedule_NoTasks == schedule_MAX_NO_TASKS ) return FALSE;
 	schedule_Tasks[ schedule_NoTasks ].function = taskFunction;
 	schedule_Tasks[ schedule_NoTasks ].intervalTicks = tickInterval;
    	schedule_NoTasks++;
-	return TRUE;
+	return schedule_NoTasks;
+}
+
+//---------------------------------------------------------------------------------------------
+// If the number of ticks waited is reset this task will wait at least it's tickInterval before
+// being run next time.
+
+void schedule_ResetTaskTimer( void (*taskFunction)(void) ) {
+	unsigned short i;
+	for( i=0; i<schedule_NoTasks; i++ ) {
+		if( schedule_Tasks[i].function == taskFunction ) {
+			schedule_Tasks[i].waitedTicks = 0;
+			return;
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------
@@ -71,8 +87,6 @@ void schedule_Run() {
 		}
 #endif
 		curTask = &schedule_Tasks[ schedule_ActiveTask ];
-
-		if( curTask->suspended ) continue;
 
 		// Assuming sleep times will always be longer than the tasks interval.
 
@@ -124,16 +138,6 @@ void schedule_Sleep( short forTicks ) {
 
 
 //---------------------------------------------------------------------------------------------
-// Called from a task function that does not want to run.
-
-void schedule_Suspend() {
-	schedule_Task_t *curTask;
-	curTask = &schedule_Tasks[ schedule_ActiveTask ];
-	curTask->suspended = TRUE;
-}
-
-
-//---------------------------------------------------------------------------------------------
 // Called from a task function that wants to remove itself completely because it is finished.
 
 void schedule_Finished() {
@@ -162,7 +166,6 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	short i;
 
 	for( i=0; i<schedule_NoTasks; i++) {
-		if( schedule_Tasks[i].suspended ) continue;
 		schedule_Tasks[i].waitedTicks++;
 	}
 

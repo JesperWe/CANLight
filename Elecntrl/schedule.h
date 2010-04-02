@@ -16,14 +16,13 @@ typedef struct schedule_Task_s {
 	short intervalTicks;
 	short sleepForTicks;
 	short waitedTicks;
-	char suspended;
 } schedule_Task_t;
 
 void schedule_Initialize();
 short schedule_AddTask( void (*taskFunction)(void), short tickInterval );
+void schedule_ResetTaskTimer( void (*taskFunction)(void) );
 void schedule_Run();
 void schedule_Sleep( short forTicks );
-void schedule_Suspend();
 void schedule_Finished();
 
 extern unsigned char schedule_Running;

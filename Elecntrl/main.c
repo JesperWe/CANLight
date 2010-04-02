@@ -52,7 +52,7 @@ int main (void)
 		menu_Initialize();
 	}
 
-	if( hw_Detector_Installed ) {
+	if( hw_Photodetector_Installed ) {
 		ADC_Initialize();
 	}
 
@@ -86,7 +86,7 @@ int main (void)
 		schedule_AddTask( menu_Task, 10 );
 	}
 
-	if( hw_Detector_Installed ) {
+	if( hw_Photodetector_Installed ) {
 		schedule_AddTask( display_BacklightTask, 2000 );
 	}
 
@@ -96,6 +96,10 @@ int main (void)
 
 	if( hw_Throttle_Installed ) {
 		schedule_AddTask( engine_JoystickTask, 100 );
+	}
+
+	if( hw_NoKeys > 0 ) {
+		schedule_AddTask( ctrlkey_task, 100 );
 	}
 
 	schedule_Run();

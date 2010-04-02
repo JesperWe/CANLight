@@ -11,20 +11,17 @@
 #include "events.h"
 #include "ctrlkey.h"
 #include "engine.h"
+#include "schedule.h"
 
 //---------------------------------------------------------------------------------------------
 // Globals
 
 unsigned char ctrlkey_KeyState[ctrlkey_MAX_NO_KEYS];
-unsigned short ctrlkey_States[3];
-unsigned short ctrlkey_Samples;
 unsigned short ctrlkey_NoKeys;
-unsigned char ctrlkey_EventPending;
-unsigned short ctrlkey_ClickPending;
-unsigned char ctrlkey_KeyHolding;
-unsigned char ctrlkey_Holding;
-unsigned char ctrlkey_ClickCount;
-unsigned char ctrlkey_ClickPendingKeyNo;
+unsigned char ctrlkey_Holding[ ctrlkey_MAX_NO_KEYS ];
+unsigned long ctrlkey_Presstime[ ctrlkey_MAX_NO_KEYS ];
+unsigned long ctrlkey_Releasetime[ ctrlkey_MAX_NO_KEYS ];
+unsigned char ctrlkey_ClickCount[ ctrlkey_MAX_NO_KEYS ];
 
 static const unsigned char ctrlkey_Key2Function[] = { hw_KEY1, hw_KEY2, hw_KEY3 };
 
@@ -32,12 +29,6 @@ static const unsigned char ctrlkey_Key2Function[] = { hw_KEY1, hw_KEY2, hw_KEY3 
 //---------------------------------------------------------------------------------------------
 
 void ctrlkey_Initialize( void ) {
-
-	ctrlkey_EventPending = 0;
-	ctrlkey_ClickPending = 0;
-	ctrlkey_KeyHolding = 0;
-	ctrlkey_Holding = 0;
-	ctrlkey_ClickCount = 0;
 
 	switch( hw_Type ) {
 
@@ -64,9 +55,6 @@ void ctrlkey_Initialize( void ) {
 
 		default:			ctrlkey_NoKeys = 0; return;
 	}
-
-	if( ctrlkey_NoKeys != 0 )
-		ctrlkey_States[2] = ctrlkey_States[1] = ctrlkey_States[0] = ctrlkey_ReadKeys();
 }
 
 //---------------------------------------------------------------------------------------------
@@ -77,157 +65,138 @@ unsigned short ctrlkey_ReadKeys( void ) {
 
 	newstate = 0;
 
-	newstate |= hw_ReadPort( hw_KEY1 );
-	newstate |= hw_ReadPort( hw_KEY2 ) << 1;
-	newstate |= hw_ReadPort( hw_KEY3 ) << 2;
+	if( hw_ReadPort( hw_KEY1 ) == 0 ) newstate |= 1;
+	if( hw_ReadPort( hw_KEY2 ) == 0 ) newstate |= 2;
+	if( hw_ReadPort( hw_KEY3 ) == 0 ) newstate |= 4;
 
 	return newstate;
 }
 
 
 //---------------------------------------------------------------------------------------------
-// Control Key Task
-// Keep track of all key changes, accept them as debounced if they
-// are stable over two periods. Then track key pressed times, and generate key clicked,
-// key held or key released events accordingly.
-//
+// The Control Key Task monitors time elapsed between key clicks and determines
+// if the click is a single/double/tripple click, and sends bus events accordingly.
 
-void ctrlkey_task( void *pvParameters ) {
-	static unsigned short holdingSamples[ctrlkey_MAX_NO_KEYS];
-	unsigned short diffKeys, currentState;
-	short keyNo;
+void ctrlkey_task() {
+	unsigned char keyNo;
+	unsigned char event;
 
-	while(1) {
-		ctrlkey_Samples++;
+	_CNIE = 0; // Disable interrupts while we process, otherwise confusion might ensue...
 
-		// If we have pending clicks waiting for a double/triple sequence check
-		// and time has run out, ship it!
+	for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 
-		ctrlkey_ClickPending++;
+		if( ctrlkey_Holding[ keyNo ] ) continue;
 
-		if( ctrlkey_ClickCount != 0 && ctrlkey_ClickPending > ctrlkey_DOUBLECLICK_THRESHOLD ) {
-			unsigned char clickEvent = e_KEY_CLICKED;
-			if( ctrlkey_ClickCount == 2 ) clickEvent = e_KEY_DOUBLECLICKED;
-			if( ctrlkey_ClickCount > 2 ) clickEvent = e_KEY_TRIPLECLICKED;
-
-			events_Push( clickEvent, 0,
-					hw_DeviceID,
-					ctrlkey_Key2Function[ctrlkey_ClickPendingKeyNo],
-					clickEvent, ctrlkey_ClickPendingKeyNo,
-					ctrlkey_Samples );
-
-			ctrlkey_ClickPending = 0;
-			ctrlkey_ClickCount = 0;
-		}
-
-		// We also use this timer for the heartbeat timers. (Slow = 3s / Fast = 0.3s)
-		// In addition, if we are in the middle of a PWM LED fade, heartbeats will
-		// step the fade level.
-
-		/*hw_HeartbeatCounter = ++hw_HeartbeatCounter % hw_SLOW_HEARTBEAT_MS;
-		if( (hw_HeartbeatCounter % hw_FAST_HEARTBEAT_MS) == 0 && ctrlkey_Holding ) {
-			events_Push( e_FAST_HEARTBEAT, 0, hw_DeviceID, 0, e_FAST_HEARTBEAT, 0, hw_HeartbeatCounter );
-		}
-		if( hw_HeartbeatCounter == 0 ) {
-			events_Push( e_SLOW_HEARTBEAT, 0, hw_DeviceID, 0, e_SLOW_HEARTBEAT, 0, hw_HeartbeatCounter );
-		}
-
-
-
-		if( hw_Actuators_Installed ) engine_InterruptService();*/
-
-
-		// Now see if we have a key depressed long enough to generate a holding event.
-
-		if( ctrlkey_KeyHolding ) {
-			for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
-				if( holdingSamples[keyNo] ) {
-					holdingSamples[keyNo]++;
-					if( holdingSamples[keyNo] == ctrlkey_HOLDING_THRESHOLD ) {
-						events_Push( e_KEY_HOLDING, 0,
-							hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_HOLDING,
-							keyNo, ctrlkey_Samples );
-					}
+		if( ctrlkey_Releasetime[ keyNo ] ) {
+			if( (schedule_time - ctrlkey_Releasetime[ keyNo ]) > ctrlkey_DOUBLECLICK_THRESHOLD ) {
+				switch( ctrlkey_ClickCount[ keyNo ] ) {
+				case 2: { event = e_KEY_DOUBLECLICKED; break; }
+				case 3: { event = e_KEY_TRIPLECLICKED; break; }
+				default: { event = e_KEY_CLICKED; break; }
 				}
+
+				events_Push( event, 0, hw_DeviceID,
+						ctrlkey_Key2Function[ keyNo ],
+						event, keyNo, (short)ctrlkey_Presstime[ keyNo ] );
+
+				ctrlkey_ClickCount[ keyNo ] = 0;
+				ctrlkey_Presstime[ keyNo ] = 0;
+				ctrlkey_Releasetime[ keyNo ] = 0;
+				ctrlkey_Holding[ keyNo ] = FALSE;
 			}
 		}
 
-		if( ctrlkey_EventPending ) {
+		// See if the key has been pressed long enough to go into holding state.
 
-			currentState = ctrlkey_ReadKeys();
-			ctrlkey_States[1] = ctrlkey_States[0];
-			ctrlkey_States[0] = currentState;
+		if( ctrlkey_Presstime[ keyNo ] ) {
+			if( (schedule_time - ctrlkey_Presstime[ keyNo ]) > ctrlkey_HOLDING_THRESHOLD )
+			ctrlkey_Holding[ keyNo ] = TRUE;
 
-			// Stable = Same value for two periods.
-			if(ctrlkey_States[1] == ctrlkey_States[0]) {
-
-				// Any change from currently reported key states?
-				if(ctrlkey_States[1] != ctrlkey_States[2]) {
-					diffKeys = ctrlkey_States[1] ^ ctrlkey_States[2];
-
-					ctrlkey_KeyHolding = 0;
-
-					for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
-
-						// Did this key change?
-						if( diffKeys & 0x0001 ) {
-
-							// Is this a new key press?
-							if( (holdingSamples[keyNo] == 0) && ((currentState&0x0001) == 0) ) {
-								holdingSamples[keyNo]++;
-								ctrlkey_KeyHolding = 1;
-							}
-
-							// Is it a release?
-							else if( (currentState&0x0001) == 1 ) {
-
-								if( holdingSamples[keyNo] > ctrlkey_HOLDING_THRESHOLD ) {
-
-									events_Push( e_KEY_RELEASED, 0,
-											hw_DeviceID,
-											ctrlkey_Key2Function[keyNo],
-											e_KEY_RELEASED, keyNo,
-											ctrlkey_Samples );
-								}
-
-								else {
-
-									// The key was released before being considered held, so it is a click.
-									// Don't send it until we have determined if it is a double/triple click.
-
-									ctrlkey_ClickCount++;
-									ctrlkey_ClickPending = 0;
-									ctrlkey_ClickPendingKeyNo = keyNo;
-								}
-
-								holdingSamples[keyNo] = 0;
-							}
-						}
-
-						// If the key didn't change, check if it is being held.
-						else {
-							if( holdingSamples[keyNo] ) ctrlkey_KeyHolding = 1;
-						}
-
-						diffKeys = diffKeys >> 1;
-						currentState = currentState >> 1;
-					}
-
-					// OK new state has been processed. Save it as current.
-					ctrlkey_States[2] = ctrlkey_States[1];
-				}
-				ctrlkey_EventPending = 0;
-			}
+			events_Push( e_KEY_HOLDING, 0,
+				hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_HOLDING,
+				keyNo, 0 );
 		}
 	}
+
+	_CNIE = 1;
 }
 
 
 //---------------------------------------------------------------------------------------------
 // Input Change ISR
 
-void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void)
-{
+void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
+	static unsigned short lastTimer;
+	static unsigned short lastState;
+
+	unsigned short elapsed;
+	unsigned short currentState;
+	unsigned char diffKeys;
+	unsigned char keyNo;
+
+	_CNIE = 0;
 	_CNIF = 0;
-	ctrlkey_EventPending++;
+
+	elapsed = (TMR1>=lastTimer) ?
+			TMR1 - lastTimer :
+			0xFFFF - (lastTimer - TMR1);
+
+	// Ignore Bounces.
+	if( elapsed < 2 ) goto done;
+
+	currentState = ctrlkey_ReadKeys();
+
+	// Ignore events that don't change anything.
+	diffKeys = lastState ^ currentState;
+	if( ! diffKeys ) goto done;
+
+	for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
+
+		// Did this key change?
+		if( diffKeys & 0x01 ) {
+
+			// Is this a new key press?
+			if( (currentState & 0x0001) == 0 ) {
+				ctrlkey_Presstime[ keyNo ] = schedule_time;
+				ctrlkey_Releasetime[ keyNo ] = 0;
+			}
+
+			// Is it a release?
+			else if( (currentState&0x0001) == 1 ) {
+				if( ctrlkey_Holding[ keyNo ] ) {
+
+					events_Push( e_KEY_RELEASED, 0,
+							hw_DeviceID,
+							ctrlkey_Key2Function[keyNo],
+							e_KEY_RELEASED, keyNo,
+							(short)schedule_time );
+
+					ctrlkey_Presstime[ keyNo ] = 0;
+					ctrlkey_Releasetime[ keyNo ] = 0;
+					ctrlkey_Holding[ keyNo ] = FALSE;
+					ctrlkey_ClickCount[ keyNo ] = 0;
+				}
+
+				else {
+
+					// The key was released before being considered held, so it is a click.
+					// Don't send it until we have determined if it is a double/triple click.
+
+					ctrlkey_Releasetime[ keyNo ] = schedule_time;
+					ctrlkey_ClickCount[ keyNo ]++;
+				}
+			}
+		}
+
+		diffKeys = diffKeys >> 1;
+		currentState = currentState >> 1;
+	}
+
+	lastState = currentState;
+	schedule_ResetTaskTimer( ctrlkey_task );
+
+done:
+	lastTimer = TMR1;
+	_CNIE = 1;
+	return;
 }

@@ -21,7 +21,7 @@ unsigned short		hw_PWMInverted = 0;
 
 unsigned short		hw_Type;
 unsigned char		hw_I2C_Installed = 0;
-unsigned char		hw_Detector_Installed = 0;
+unsigned char		hw_Photodetector_Installed = 0;
 unsigned char		hw_Throttle_Installed = 0;
 unsigned char		hw_Actuators_Installed = 0;
 unsigned char		hw_ConfigByte = 0;
@@ -67,9 +67,9 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_NoPortNames] =
 	{ &PORTA, &TRISA, 8 },	// SWITCH2
 	{ &PORTB, &TRISB, 3 },	// SWITCH3
 	{ &PORTC, &TRISC, 1 },	// SWITCH4
-	{ &PORTC, &TRISC, 3 },	// KEY1
+	{ &PORTC, &TRISC, 7 },	// KEY1
 	{ &PORTC, &TRISC, 5 },	// KEY2
-	{ &PORTC, &TRISC, 7 }	// KEY3
+	{ &PORTC, &TRISC, 3 }	// KEY3
 },
 
 {
@@ -181,7 +181,7 @@ void hw_Initialize( void ) {
 	hw_ConfigByte = fidc_data.byte.LB;
 
 	hw_I2C_Installed =       ((hw_ConfigByte & 0x10) != 0);
-	hw_Detector_Installed =  ((hw_ConfigByte & 0x20) != 0); // XXX Fix bug where unit hangs in ADC if disabled!
+	hw_Photodetector_Installed =  ((hw_ConfigByte & 0x20) != 0); // XXX Fix bug where unit hangs in ADC if disabled!
 	hw_Throttle_Installed =  ((hw_ConfigByte & 0x40) != 0);
 	hw_Actuators_Installed = ((hw_ConfigByte & 0x80) != 0);
 
@@ -355,7 +355,7 @@ void hw_Sleep( void ) {
 void ADC_Initialize(void) {
 	AD1CON1bits.ADON = 0;
 
-	if( hw_Detector_Installed ) {
+	if( hw_Photodetector_Installed ) {
 		AD1PCFGLbits.PCFG0 = 0;	// AN0 to Analog Mode.
 	}
 

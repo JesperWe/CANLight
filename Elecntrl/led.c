@@ -229,13 +229,12 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 
 	switch( event->ctrlEvent ) {
 		case e_KEY_HOLDING: {
-			ctrlkey_Holding = 1;
 			if( led_CurrentLevel[led_CurrentColor] > 0.5 ) led_CurFadeStep = -0.05;
 			else led_CurFadeStep = 0.05;
 			break;
 		}
 		case e_KEY_RELEASED: {
-			ctrlkey_Holding = 0;
+			led_CurFadeStep = 0.0;
 			break;
 		}
 		case e_KEY_CLICKED: {
