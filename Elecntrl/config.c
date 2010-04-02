@@ -258,13 +258,18 @@ void config_Task() {
 // Store it in flash and start using it.
 
 void config_Update( unsigned short configBytes ) {
-	int i;
+	unsigned short i;
 	int *newConfigData;
 	_prog_addressT config_FlashPage;
 
-	config_Invalid = TRUE;
+		// Don't save the new config if it is the same we already have in flash.
 
-	// Save the config here...
+	if( nmea_LargeBuffer[2] == config_Data[2] &&
+		nmea_LargeBuffer[3] == config_Data[3] ) return;
+
+	// Save the config.
+
+	config_Invalid = TRUE;
 
 	_init_prog_address( config_FlashPage, config_Data );
 

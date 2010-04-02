@@ -213,18 +213,23 @@ void display_Task() {
 // Set system back-light level based on ambient light.
 
 void display_BacklightTask() {
+	static float ambientLevel;
 	unsigned short pvVoltage;
 	event_t	ambientEvent;
 
 	pvVoltage = ADC_Read( hw_DetectorADCChannel );
 
-	pvVoltage = pvVoltage >> 2;
+	ambientLevel = 0.9*ambientLevel + 0.1*pvVoltage;
+
+	pvVoltage = ((short)ambientLevel) >> 2;
+
 	if( hw_AmbientLevel != pvVoltage ) {
 
 		hw_AmbientLevel = pvVoltage;
 
 		ambientEvent.PGN = 0;
 		ambientEvent.info = 0;
+		ambientEvent.type = 0;
 		ambientEvent.ctrlDev = hw_DeviceID;
 		ambientEvent.ctrlFunc = hw_BACKLIGHT;
 		ambientEvent.ctrlEvent = e_AMBIENT_LIGHT_LEVEL;
