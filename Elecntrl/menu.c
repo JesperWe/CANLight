@@ -47,33 +47,6 @@ _psv(M_Group)		= "G";
 _psv(M_By)			= "By";
 _psv(M_)			= "";
 
-/*
-hw_CAN_RATE,
-hw_CAN_EN,
-hw_LED_RED,
-hw_LED_WHITE,
-hw_LED1,
-hw_LED2,
-hw_LED3,
-hw_SWITCH1,
-hw_SWITCH2,
-hw_SWITCH3,
-hw_SWITCH4,
-hw_KEY1,
-hw_KEY2,
-hw_KEY3,
-hw_LED_LIGHT,	// Composite port RED+WHITE
-hw_BACKLIGHT,	// Virtual Port. */
-
-
-// These are mnemonic names for the ports as defined in hw.h and the events from evenths.h.
-// They are used in the config editing display.
-// A mnemonic of "--" means this port/event is not configurable.
-
-_psv(M_PortNames)	= "----*R*W*1*2*3\3301\3302\3303\3304o1o2o3*A*\304";
-_psv(M_EventNames)	= ">\373\310\274\021\305\306\321\366\367-------M%--";
-
-int config_FileEditor();
 
 menu_State_t menu_States[] = {
 
@@ -92,7 +65,7 @@ menu_State_t menu_States[] = {
 			{ M_Backlight, S_BACKLIGHT }
 	} },
 
-	{ S_LIGHTCONFIG, S_LIGHTING, 0, 0, config_FileEditor, {
+	{ S_LIGHTCONFIG, S_LIGHTING, 0, 0, 0, {
 			{ 0,0 }
 	} },
 
@@ -247,131 +220,6 @@ int menu_EngineSaveCalibration() {
 	hw_WriteConfigFlash();
 
 	menu_ActiveHandler = NULL;
-
-	return 0;
-}
-
-int config_FileEditor() {
-	static unsigned char groupID, maxGroupID, outputID, noTargets;
-	unsigned char updateScreen, funcIndex, curTarget;
-	char strBuf[10];
-	config_File_t groupPtr, targetsPtr, controllersPtr;
-
-	menu_ActiveHandler = config_FileEditor;
-
-	if( menu_Keypress == 0 ) {
-		groupID = 0;
-
-		// Scan through the whole file to find the highest group id.
-
-		maxGroupID = 0;
-		groupPtr = config_FileFindGroup( 0 );
-		while( _findNextGroup( &groupPtr ) ) { maxGroupID++; }
-	
-		groupPtr = config_FileFindGroup( 0 );
-		noTargets = 0;
-		outputID = 0;
-		updateScreen = TRUE;
-	}
-
-	else {
-		switch( menu_Keypress ) {
-
-			case DISPLAY_KEY_UP: {
-				break;
-			}
-
-			case DISPLAY_KEY_DOWN: {
-				break;
-			}
-
-			case DISPLAY_KEY_NORTH: {
-				if( groupID < maxGroupID ) groupID++;
-				groupPtr = config_FileFindGroup( groupID );
-				updateScreen = TRUE;
-				break;
-			}
-
-			case DISPLAY_KEY_SOUTH: {
-				if( groupID > 0 ) groupID--;
-				groupPtr = config_FileFindGroup( groupID );
-				updateScreen = TRUE;
-				break;
-			}
-
-			case DISPLAY_KEY_WEST: {
-				if( outputID > 0 ) outputID--;
-				break;
-			}
-
-			case DISPLAY_KEY_EAST: {
-				if( outputID < noTargets ) outputID++;
-				break;
-			}
-		}
-	}
-
-	if( updateScreen ) {
-
-		targetsPtr = groupPtr + 1;
-
-		display_Clear();
-		display_Write( M_Group );
-		display_NumberFormat( strBuf, 3, groupID );
-		display_Write( strBuf );
-		display_Write( M_SPACE );
-
-		noTargets = 0;
-
-		do {
-			funcIndex = 2 * (*(targetsPtr+1));
-			noTargets++;
-			curTarget = 0;
-
-			display_NumberFormat( strBuf, 0, *targetsPtr );
-			display_Write( strBuf );
-			strBuf[0] = M_PortNames[funcIndex];
-			strBuf[1] = M_PortNames[funcIndex+1];
-			strBuf[2] = 0;
-			display_Write( strBuf );
-			display_Write( M_SPACE );
-		} while( _findNextTarget(&targetsPtr) );
-
-		// Now display this groups controllers.
-
-		display_SetPosition( 1, 3 );
-		display_Write( M_By );
-		display_Write( M_SPACE );
-
-		controllersPtr = groupPtr;
-		_findControllers( &controllersPtr );
-
-		while( *controllersPtr != config_GroupEnd ) {
-
-			display_NumberFormat( strBuf, 0, *controllersPtr );
-			display_Write( strBuf );
-			controllersPtr++;
-
-			funcIndex = 2 * (*controllersPtr);
-			strBuf[0] = M_PortNames[funcIndex];
-			strBuf[1] = M_PortNames[funcIndex+1];
-			strBuf[2] = 0;
-			display_Write( strBuf );
-			display_Write( M_SPACE );
-
-			controllersPtr++;
-			strBuf[1] = 0;
-
-			while( *controllersPtr != config_GroupEnd ) {
-				strBuf[0] = M_EventNames[*controllersPtr];
-				display_Write( strBuf );
-				controllersPtr++;
-			}
-
-			display_Write( M_SPACE );
-			controllersPtr++;
-		}
-	}
 
 	return 0;
 }
