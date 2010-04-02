@@ -104,17 +104,19 @@ void ctrlkey_task() {
 				ctrlkey_Releasetime[ keyNo ] = 0;
 				ctrlkey_Holding[ keyNo ] = FALSE;
 			}
+			continue;
 		}
 
 		// See if the key has been pressed long enough to go into holding state.
 
 		if( ctrlkey_Presstime[ keyNo ] ) {
-			if( (schedule_time - ctrlkey_Presstime[ keyNo ]) > ctrlkey_HOLDING_THRESHOLD )
-			ctrlkey_Holding[ keyNo ] = TRUE;
+			if( (schedule_time - ctrlkey_Presstime[ keyNo ]) > ctrlkey_HOLDING_THRESHOLD ) {
+				ctrlkey_Holding[ keyNo ] = TRUE;
 
-			events_Push( e_KEY_HOLDING, 0,
-				hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_HOLDING,
-				keyNo, 0 );
+				events_Push( e_KEY_HOLDING, 0,
+					hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_HOLDING,
+					keyNo, schedule_time - ctrlkey_Presstime[ keyNo ] );
+			}
 		}
 	}
 
@@ -142,13 +144,15 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 			0xFFFF - (lastTimer - TMR1);
 
 	// Ignore Bounces.
-	if( elapsed < 2 ) goto done;
+	if( elapsed < 5 ) goto done;
 
 	currentState = ctrlkey_ReadKeys();
 
 	// Ignore events that don't change anything.
+	if( lastState == currentState ) goto done;
+
 	diffKeys = lastState ^ currentState;
-	if( ! diffKeys ) goto done;
+	lastState = currentState;
 
 	for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 
@@ -156,13 +160,13 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 		if( diffKeys & 0x01 ) {
 
 			// Is this a new key press?
-			if( (currentState & 0x0001) == 0 ) {
+			if( (currentState & 0x0001) == 1 ) {
 				ctrlkey_Presstime[ keyNo ] = schedule_time;
 				ctrlkey_Releasetime[ keyNo ] = 0;
 			}
 
 			// Is it a release?
-			else if( (currentState&0x0001) == 1 ) {
+			else {
 				if( ctrlkey_Holding[ keyNo ] ) {
 
 					events_Push( e_KEY_RELEASED, 0,
@@ -192,7 +196,6 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 		currentState = currentState >> 1;
 	}
 
-	lastState = currentState;
 	schedule_ResetTaskTimer( ctrlkey_task );
 
 done:
