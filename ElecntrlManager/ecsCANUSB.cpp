@@ -120,27 +120,76 @@ void ecsCANUSB::readCallback( const QString &text ) {
 //------------------------------------------------------------------------------------
 // The read callback function called by the device driver when data is read from the bus.
 // This is a "C" style callback function which cannot be part of an object context.
+//
+// NB! That we can't use most Qt features in this code since it is executed outside of the Qt event loop
+// and in a separate thread.
 
 void __stdcall readCallbackFn( CANMsg* msg ) {
 	int i;
 	int pgn;
 	QString line = "";
 	QString buf;
+	QString eventName;
+	QString funcName;
 
 	pgn = (msg->id & 0xFFFF00) >> 8;
 
 	line += (msg->flags & CANMSG_EXTENDED)   ?   "E" : "S";
 	line += (msg->flags & CANMSG_RTR)   ?   "R" : " ";
-	line += buf.sprintf( " %08X (PGN %d)",
+	line += buf.sprintf( " %08X (PGN %d): ",
 			 (unsigned int)(msg->id),
 			 pgn );
 
 	if( msg->len ) {
-		line += " [ ";
-		for ( i=0; i<msg->len; i++ ) {
-			line += buf.sprintf( "%02X ", msg->data[ i ] );
+
+		switch( msg->data[ 5 ] ) {
+		case 0: funcName = "hw_CAN_RATE"; break;
+		case 1: funcName = "hw_CAN_EN"; break;
+		case 2: funcName = "hw_LED_RED"; break;
+		case 3: funcName = "hw_LED_WHITE"; break;
+		case 4: funcName = "hw_LED1"; break;
+		case 5: funcName = "hw_LED2"; break;
+		case 6: funcName = "hw_LED3"; break;
+		case 7: funcName = "hw_SWITCH1"; break;
+		case 8: funcName = "hw_SWITCH2"; break;
+		case 9: funcName = "hw_SWITCH3"; break;
+		case 10: funcName = "hw_SWITCH4"; break;
+		case 11: funcName = "hw_KEY1"; break;
+		case 12: funcName = "hw_KEY2"; break;
+		case 13: funcName = "hw_KEY3"; break;
+		case 14: funcName = "hw_LED_LIGHT"; break;
+		case 15: funcName = "hw_BACKLIGHT"; break;
+		default: funcName = "<unknown>";
 		}
-		line += "]";
+
+		switch( msg->data[ 6 ] ) {
+		case 0: eventName = "e_KEY_CLICKED"; break;
+		case 1: eventName = "e_KEY_HOLDING"; break;
+		case 2: eventName = "e_KEY_RELEASED"; break;
+		case 3: eventName = "e_KEY_DOUBLECLICKED"; break;
+		case 4: eventName = "e_KEY_TRIPLECLICKED"; break;
+		case 5: eventName = "e_SWITCH_ON"; break;
+		case 6: eventName = "e_SWITCH_OFF"; break;
+		case 7: eventName = "e_SWITCH_FAIL"; break;
+		case 8: eventName = "e_FADE_START"; break;
+		case 9: eventName = "e_FADE_STOP"; break;
+		case 10: eventName = "e_FAST_HEARTBEAT"; break;
+		case 11: eventName = "e_NMEA_MESSAGE"; break;
+		case 12: eventName = "e_NIGHTMODE"; break;
+		case 13: eventName = "e_DAYLIGHTMODE"; break;
+		case 14: eventName = "e_AMBIENT_LIGHT_LEVEL"; break;
+		case 15: eventName = "e_BLACKOUT"; break;
+		case 16: eventName = "e_SLOW_HEARTBEAT"; break;
+		case 17: eventName = "e_THROTTLE_MASTER"; break;
+		case 18: eventName = "e_SET_THROTTLE"; break;
+		case 19: eventName = "e_CONFIG_FILE_UPDATE"; break;
+		default: eventName = "<unknown>";
+		}
+
+		line += buf.sprintf( "Dev %02d: %ls/%ls  Type %03d, Data %d, Info %d",
+								 msg->data[ 4 ], funcName.utf16(),  eventName.utf16(),
+								 msg->data[ 0 ], msg->data[ 1 ],
+								 msg->data[ 2 ] << 8 | msg->data[ 3 ] );
 	}
 
 	ecsManagerApp::inst()->canusb_Instance->readCallback( line );
