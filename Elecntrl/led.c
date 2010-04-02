@@ -304,9 +304,9 @@ void led_TaskComplete() {
 		switch( hw_Type ) {
 
 			case hw_LEDLAMP: {
-				led_PresetLevel[ led_WHITE ] = 0.5;
+				led_SetLevel[ led_WHITE ] = 0.5;
 				schedule_Sleep(300);
-				led_PresetLevel[ led_WHITE ] = 0.0;
+				led_SetLevel[ led_WHITE ] = 0.0;
 				schedule_Sleep(300);
 				break;
 			}

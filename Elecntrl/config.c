@@ -226,8 +226,7 @@ void config_Task() {
 
 		schedule_Running = FALSE;
 
-		_TRISB5 = 0;
-		_TRISB11 = 0;
+		if( hw_Type == hw_LEDLAMP ) led_SetLevel( led_WHITE, 0.0 );
 
 		timer = schedule_time + 800;
 		while( schedule_time < timer );
@@ -235,20 +234,15 @@ void config_Task() {
 		// Number of flashes indicates type of config problem.
 
 		for( i=0; i< config_Invalid; i++ ) {
-			_RB5 = 1;
-			_RB11 = 1;
 			led_SetLevel( led_RED, 1.0);
 
 			timer = schedule_time + 200;
 			while( schedule_time < timer );
 
-			_RB5 = 0;
-			_RB11 = 0;
 			led_SetLevel( led_RED, 0.0);
 
 			timer = schedule_time + 200;
 			while( schedule_time < timer );
-
 		}
 	}
 

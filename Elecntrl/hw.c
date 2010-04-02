@@ -144,135 +144,161 @@ void hw_Initialize( void ) {
 
 	hw_DeviceID = fidc_data.byte.LB;
 
-	if( hw_DeviceID != 0xFF ) {
-		// Find out additional individual config parameters from Unit ID byte 1.
+	// If ID memory was not programmed we have no clue what type of hardware we are.
 	
-		fidc.Val = 0xf80014;
-		fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-		fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
-	
-		hw_ConfigByte = fidc_data.byte.LB;
-	
-		hw_I2C_Installed =       ((hw_ConfigByte & 0x10) != 0);
-		hw_Detector_Installed =  ((hw_ConfigByte & 0x20) != 0); // XXX Fix bug where unit hangs in ADC if disabled!
-		hw_Throttle_Installed =  ((hw_ConfigByte & 0x40) != 0);
-		hw_Actuators_Installed = ((hw_ConfigByte & 0x80) != 0);
-	
-		// Byte 2 is the type of circuit board we are on.
-	
-		fidc.Val = 0xf80012;
-		fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-		fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
-	
-		hw_Type = fidc_data.byte.LB;
-	
-		fidc.Val = 0xf80010;
-		fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-		fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
-	
-	
-		// Check configuration area, erase it if it is non-zero but seems corrupted.
-		// This can happen if the code has been recompiled and the compiler
-		// has moved the hw_ConfigData area to a new address.
-	
-		_init_prog_address( hw_ConfigPtr, hw_ConfigData);
-		_memcpy_p2d16( &hw_Config, hw_ConfigPtr, _FLASH_ROW );
-	
-		if( hw_Config.data[0] != hw_CONFIG_MAGIC_WORD ) {
-	
-			hw_Config.data[0] = hw_CONFIG_MAGIC_WORD;
-			hw_Config.data[1] = nmea_ARBITRARY_ADDRESS;
-			hw_Config.data[2] = nmea_INDUSTRY_GROUP;
-			hw_Config.data[3] = nmea_VEHICLE_SYSTEM;
-			hw_Config.data[4] = nmea_FUNCTION_SWITCH;
-			hw_Config.data[5] = hw_DeviceID;
-			hw_Config.data[6] = nmea_MANUFACTURER_CODE;
-			hw_Config.data[7] = (unsigned short)((nmea_IDENTITY_NUMBER & 0x001F0000) >> 16);
-			hw_Config.data[8] = (unsigned short)(nmea_IDENTITY_NUMBER & 0xFFFF);
-	
-			// Load some sensible values if we have lost engine calibration.
-	
-			hw_Config.engine_Calibration[ p_ThrottleMin ] = 212;
-			hw_Config.engine_Calibration[ p_ThrottleMax ] = 140;
-			hw_Config.engine_Calibration[ p_GearNeutral ] = 170;
-			hw_Config.engine_Calibration[ p_GearReverse ] = 216;
-			hw_Config.engine_Calibration[ p_GearForward ] = 140;
-	
-			hw_Config.engine_Calibration[ p_JoystickMin ] = 110;
-			hw_Config.engine_Calibration[ p_JoystickMid ] = 530;
-			hw_Config.engine_Calibration[ p_JoystickMax ] = 880;
-	
-			hw_WriteConfigFlash();
+	if( hw_DeviceID == 0xFF ) {
+
+		// First turn off LED of hw_LED_LAMP.
+
+		_TRISC4 = 0;
+		_TRISC5 = 0;
+		_RC4 = 1;
+		_RC5 = 1;
+
+		// Enable keypad back-light of hw_SWITCH.
+
+		_TRISB5 = 0;
+
+		// Now hang flashing some lights...
+
+		while(1) {
+			_RC4 = 1;
+			_RB5 = 1;
+			__delay32(1500000);
+			_RC4 = 0;
+			_RB5 = 0;
+			__delay32(7000000);
 		}
+	}
 	
-		// IO setup for SN65HVD234 CANBus driver.
-		// The wiring is different on different versions of the hardware.
 	
-		// hw_Type					hw_LEDLAMP		hw_SWITCH
-		//--------------------------------------------------------------
-		// Slew Rate control pin	Pin  8 RB10		Pin 20 RA1
-		// Driver Enable			Pin  9 RB11		Pin 22 RB1
-		// CAN Tx					Pin 10 RB12		Pin 10 RB12
-		// CAN Rx					Pin 11 RB13		Pin 21 RB0
+	// Find out additional individual config parameters from Unit ID byte 1.
+
+	fidc.Val = 0xf80014;
+	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+
+	hw_ConfigByte = fidc_data.byte.LB;
+
+	hw_I2C_Installed =       ((hw_ConfigByte & 0x10) != 0);
+	hw_Detector_Installed =  ((hw_ConfigByte & 0x20) != 0); // XXX Fix bug where unit hangs in ADC if disabled!
+	hw_Throttle_Installed =  ((hw_ConfigByte & 0x40) != 0);
+	hw_Actuators_Installed = ((hw_ConfigByte & 0x80) != 0);
+
+	// Byte 2 is the type of circuit board we are on.
+
+	fidc.Val = 0xf80012;
+	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+
+	hw_Type = fidc_data.byte.LB;
+
+	fidc.Val = 0xf80010;
+	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
+	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+
+
+	// Check configuration area, erase it if it is non-zero but seems corrupted.
+	// This can happen if the code has been recompiled and the compiler
+	// has moved the hw_ConfigData area to a new address.
+
+	_init_prog_address( hw_ConfigPtr, hw_ConfigData);
+	_memcpy_p2d16( &hw_Config, hw_ConfigPtr, _FLASH_ROW );
+
+	if( hw_Config.data[0] != hw_CONFIG_MAGIC_WORD ) {
+
+		hw_Config.data[0] = hw_CONFIG_MAGIC_WORD;
+		hw_Config.data[1] = nmea_ARBITRARY_ADDRESS;
+		hw_Config.data[2] = nmea_INDUSTRY_GROUP;
+		hw_Config.data[3] = nmea_VEHICLE_SYSTEM;
+		hw_Config.data[4] = nmea_FUNCTION_SWITCH;
+		hw_Config.data[5] = hw_DeviceID;
+		hw_Config.data[6] = nmea_MANUFACTURER_CODE;
+		hw_Config.data[7] = (unsigned short)((nmea_IDENTITY_NUMBER & 0x001F0000) >> 16);
+		hw_Config.data[8] = (unsigned short)(nmea_IDENTITY_NUMBER & 0xFFFF);
+
+		// Load some sensible values if we have lost engine calibration.
+
+		hw_Config.engine_Calibration[ p_ThrottleMin ] = 212;
+		hw_Config.engine_Calibration[ p_ThrottleMax ] = 140;
+		hw_Config.engine_Calibration[ p_GearNeutral ] = 170;
+		hw_Config.engine_Calibration[ p_GearReverse ] = 216;
+		hw_Config.engine_Calibration[ p_GearForward ] = 140;
+
+		hw_Config.engine_Calibration[ p_JoystickMin ] = 110;
+		hw_Config.engine_Calibration[ p_JoystickMid ] = 530;
+		hw_Config.engine_Calibration[ p_JoystickMax ] = 880;
+
+		hw_WriteConfigFlash();
+	}
+
+	// IO setup for SN65HVD234 CANBus driver.
+	// The wiring is different on different versions of the hardware.
+
+	// hw_Type					hw_LEDLAMP		hw_SWITCH
+	//--------------------------------------------------------------
+	// Slew Rate control pin	Pin  8 RB10		Pin 20 RA1
+	// Driver Enable			Pin  9 RB11		Pin 22 RB1
+	// CAN Tx					Pin 10 RB12		Pin 10 RB12
+	// CAN Rx					Pin 11 RB13		Pin 21 RB0
 
 #ifdef DEBUG
-		TRISAbits.TRISA2 = 0;				// Debug output port.
-		TRISBbits.TRISB14 = 0;				// Debug output port.
+	TRISAbits.TRISA2 = 0;				// Debug output port.
+	TRISBbits.TRISB14 = 0;				// Debug output port.
 #endif
 
-		hw_OutputPort( hw_CAN_EN );
-		hw_OutputPort( hw_CAN_RATE );
-	
-		hw_WritePort( hw_CAN_EN, 0 );		// Chip Enable = 0, go off bus.
-		hw_WritePort( hw_CAN_RATE, 0 );		// RS = 0 -> Not in sleep mode.
-	
-		// Peripheral mappings
-	
-		switch( hw_Type ) {
-	
-			case hw_LEDLAMP: {
-	
-				hw_OutputPort( hw_LED_RED );
-				hw_OutputPort( hw_LED_WHITE );
-	
-				PPSUnLock;
-				PPSOutput( PPS_OC1, PPS_RP20 ); 	// Red PWM to RP20.
-				PPSOutput( PPS_OC2, PPS_RP21 ); 	// White PWM to RP21.
-				RPOR6bits.RP12R = 0x10;				// CAN Transmit to RP12.
-				RPINR26bits.C1RXR = 13;				// CAN Receive from pin RP13.
-				PPSLock;
-				break;
+	hw_OutputPort( hw_CAN_EN );
+	hw_OutputPort( hw_CAN_RATE );
+
+	hw_WritePort( hw_CAN_EN, 0 );		// Chip Enable = 0, go off bus.
+	hw_WritePort( hw_CAN_RATE, 0 );		// RS = 0 -> Not in sleep mode.
+
+	// Peripheral mappings
+
+	switch( hw_Type ) {
+
+		case hw_LEDLAMP: {
+
+			hw_OutputPort( hw_LED_RED );
+			hw_OutputPort( hw_LED_WHITE );
+
+			PPSUnLock;
+			PPSOutput( PPS_OC1, PPS_RP20 ); 	// Red PWM to RP20.
+			PPSOutput( PPS_OC2, PPS_RP21 ); 	// White PWM to RP21.
+			RPOR6bits.RP12R = 0x10;				// CAN Transmit to RP12.
+			RPINR26bits.C1RXR = 13;				// CAN Receive from pin RP13.
+			PPSLock;
+			break;
+		}
+
+		case hw_SWITCH: {
+
+			hw_OutputPort( hw_LED_RED );
+			hw_OutputPort( hw_LED1 );
+			hw_OutputPort( hw_LED2 );
+			hw_OutputPort( hw_LED3 );
+
+			hw_WritePort( hw_LED1, 0 );
+			hw_WritePort( hw_LED2, 0 );
+			hw_WritePort( hw_LED3, 0 );
+
+			PPSUnLock;
+			PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to pin 41.
+			hw_PWMInverted = 1;
+			RPOR6bits.RP12R = 0x10;				// CAN Transmit to pin 10.
+			RPINR26bits.C1RXR = 0;				// CAN Receive from pin 21.
+
+			if( hw_Actuators_Installed ) {
+				PPSOutput( PPS_OC3, PPS_RP2 );	// Ch1: Throttle to pin 23.
+				PPSOutput( PPS_OC4, PPS_RP16 );	// Ch1: Gear box to pin 25.
+				hw_OutputPort( hw_SWITCH1 );
+				hw_WritePort( hw_SWITCH1, 0 );
+				hw_OutputPort( hw_SWITCH2 );
+				hw_WritePort( hw_SWITCH2, 0 );
 			}
-	
-			case hw_SWITCH: {
-	
-				hw_OutputPort( hw_LED_RED );
-				hw_OutputPort( hw_LED1 );
-				hw_OutputPort( hw_LED2 );
-				hw_OutputPort( hw_LED3 );
-	
-				hw_WritePort( hw_LED1, 0 );
-				hw_WritePort( hw_LED2, 0 );
-				hw_WritePort( hw_LED3, 0 );
-	
-				PPSUnLock;
-				PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to pin 41.
-				hw_PWMInverted = 1;
-				RPOR6bits.RP12R = 0x10;				// CAN Transmit to pin 10.
-				RPINR26bits.C1RXR = 0;				// CAN Receive from pin 21.
-	
-				if( hw_Actuators_Installed ) {
-					PPSOutput( PPS_OC3, PPS_RP2 );	// Ch1: Throttle to pin 23.
-					PPSOutput( PPS_OC4, PPS_RP16 );	// Ch1: Gear box to pin 25.
-					hw_OutputPort( hw_SWITCH1 );
-					hw_WritePort( hw_SWITCH1, 0 );
-					hw_OutputPort( hw_SWITCH2 );
-					hw_WritePort( hw_SWITCH2, 0 );
-				}
-	
-				PPSLock;
-				break;
-			}
+
+			PPSLock;
+			break;
 		}
 	}
 
