@@ -30,7 +30,7 @@ unsigned short led_FadeStep[led_MAX_NO_CHANNELS];		// Current step in the fade.
 unsigned short led_FadeSteps[led_MAX_NO_CHANNELS];		// Total steps in the fade.
 unsigned short led_NoChannels;
 unsigned short led_CurrentColor;
-unsigned char led_LastControlledFunction;
+unsigned char led_CurrentFunc;
 
 float led_PresetLevel[led_MAX_NO_CHANNELS];
 float led_FadeTargetLevel[led_MAX_NO_CHANNELS];
@@ -128,13 +128,13 @@ void led_SetLevel( unsigned char color, float level ) {
 		response.PGN = 0;
 		response.info = 0;
 		response.ctrlDev = hw_DeviceID;
-		response.ctrlFunc = led_LastControlledFunction;
+		response.ctrlFunc = led_CurrentFunc;
 		response.ctrlEvent = (level == 0.0) ? e_SWITCH_OFF : e_SWITCH_ON;
 
 		// No "off" response if other channel is still on.
 		if( response.ctrlEvent == e_SWITCH_OFF
 			&& led_CurrentLevel[1-color] > 0.0
-			&& led_LastControlledFunction == hw_LED_LIGHT
+			&& led_CurrentFunc == hw_LED_LIGHT
 		) return;
 
 		nmea_SendEvent( &response );
@@ -223,7 +223,7 @@ void led_FadeToLevel( unsigned char color, float level, float fadeSeconds ) {
 
 void led_ProcessEvent( event_t *event, unsigned char function ) {
 
-	led_LastControlledFunction = function;
+	led_CurrentFunc = function;
 
 	if( function != hw_LED_LIGHT ) led_CurrentColor = (function==hw_LED_RED) ? led_RED : led_WHITE;
 

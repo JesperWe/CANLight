@@ -10,8 +10,8 @@
 
 #define ctrlkey_MAX_NO_KEYS 3
 
-#define ctrlkey_HOLDING_THRESHOLD 300
-#define ctrlkey_DOUBLECLICK_THRESHOLD 500
+#define ctrlkey_HOLDING_THRESHOLD 400
+#define ctrlkey_DOUBLECLICK_THRESHOLD 350
 
 
 //---------------------------------------------------------------------------------------------

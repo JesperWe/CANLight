@@ -144,7 +144,7 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 			0xFFFF - (lastTimer - TMR1);
 
 	// Ignore Bounces.
-	if( elapsed < 5 ) goto done;
+	if( elapsed < 2 ) goto done;
 
 	currentState = ctrlkey_ReadKeys();
 

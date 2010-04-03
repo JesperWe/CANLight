@@ -148,6 +148,8 @@ void event_Task() {
 
 			case e_KEY_DOUBLECLICKED: 	{ nmea_SendKeyEvent( &event ); break; }
 
+			case e_KEY_TRIPLECLICKED: 	{ nmea_SendKeyEvent( &event ); break; }
+
 			case e_KEY_HOLDING: 		{ nmea_SendKeyEvent( &event ); break; }
 
 			case e_KEY_RELEASED: 		{ nmea_SendKeyEvent( &event ); break; }

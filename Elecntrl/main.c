@@ -99,7 +99,7 @@ int main (void)
 	}
 
 	if( hw_NoKeys > 0 ) {
-		schedule_AddTask( ctrlkey_task, 100 );
+		schedule_AddTask( ctrlkey_task, 50 );
 	}
 
 	schedule_Run();

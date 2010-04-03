@@ -11,7 +11,7 @@ extern float led_FadeFromLevel[];
 extern float led_CurrentLevel[];
 extern float led_LastLevel, led_CurFadeStep;
 
-extern unsigned char led_LastControlledFunction;
+extern unsigned char led_CurrentFunc;
 extern unsigned short led_NoChannels;
 extern unsigned short led_CurrentColor;
 extern unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];
