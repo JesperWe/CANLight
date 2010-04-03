@@ -97,20 +97,20 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 		ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
 		int func = srcGroup->functions[ linkedApp->id ];
 
-		if( func != ecsManager::UnknownSource ) {
+		if( func != ecsManager::hw_UNKNOWN ) {
 			painter->setFont( qApp->property( "buttonFont" ).value<QFont>() );
 
 			painter->setRenderHints( QPainter::Antialiasing | QPainter::SmoothPixmapTransform | QPainter::HighQualityAntialiasing );
 			painter->drawImage( QRectF(textPos.x(), textPos.y(), buttonSize, buttonSize), ecsManagerApp::inst()->eventSourceIcons[ func ] );
 
 			switch( func ) {
-			case ecsManager::Key0: {
+			case ecsManager::hw_KEY1: {
 					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "1", 0 );
 					break; }
-			case ecsManager::Key1: {
+			case ecsManager::hw_KEY2: {
 					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "2", 0 );
 					break; }
-			case ecsManager::Key2: {
+			case ecsManager::hw_KEY3: {
 					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
 					break; }
 			}

@@ -454,15 +454,15 @@ void MainWindow::onKeypress( int key ) {
 
 	int func = 0;
 	switch( key ) {
-	case Qt::Key_1: { func = ecsManager::Key0; break; }
-	case Qt::Key_2: { func = ecsManager::Key1; break; }
-	case Qt::Key_3: { func = ecsManager::Key2; break; }
-	case Qt::Key_A: { func = ecsManager::AnalogSignal; break; }
-	case Qt::Key_I: { func = ecsManager::ChangeNotifiation; break; }
-	case Qt::Key_R: { func = ecsManager::LightRed; break; }
-	case Qt::Key_W: { func = ecsManager::LightWhite; break; }
-	case Qt::Key_L: { func = ecsManager::LightAll; break; }
-	case Qt::Key_O: { func = ecsManager::ActuatorOut; break; }
+	case Qt::Key_1: { func = ecsManager::hw_KEY1; break; }
+	case Qt::Key_2: { func = ecsManager::hw_KEY2; break; }
+	case Qt::Key_3: { func = ecsManager::hw_KEY3; break; }
+	case Qt::Key_A: { func = ecsManager::hw_ANALOG; break; }
+	case Qt::Key_I: { func = ecsManager::hw_DIGITAL_IN; break; }
+	case Qt::Key_R: { func = ecsManager::hw_LED_RED; break; }
+	case Qt::Key_W: { func = ecsManager::hw_LED_WHITE; break; }
+	case Qt::Key_L: { func = ecsManager::hw_LED_LIGHT; break; }
+	case Qt::Key_O: { func = ecsManager::hw_PWM1; break; }
 	default:  { return; } // Ignore unknow keypress.
 	}
 

@@ -136,13 +136,11 @@ void SystemDescription::saveFile( QString toFile )
 }
 
 //-------------------------------------------------------------------------------------------------
-// This manager application has a data model which originates at the controlling appliance group.
-// The embedded controller code has a data model that originates at the listening appliances group.
-// Thus we need to shuffle the data around a bit to generate the binary config file before sending
-// it on the yacht network.
+// Shuffle the configuration data around a bit to generate the binary config file before sending
+// it on the yacht network. See Elecntrl/config.c for the syntax.
 
-#define END_GROUP_LISTENERS 0xFE
 #define END_GROUP_APPLIANCES 0xFE
+#define END_GROUP_EVENTS 0xFE
 #define END_GROUP 0xFE
 #define END_OF_FILE 0xFF
 
@@ -157,52 +155,51 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 	configFile[2] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion >> 8);
 	configFile[3] = (uint8_t)(ecsManagerApp::inst()->systemDescriptionVersion % 0xFF);
 
-	// Start with finding all listening target appliances.
+	// Go through all controller groups.
 
 	foreach( ecsControlGroup* cGroup, ecsManagerApp::inst()->cGroups->ecsControlGroups ) {
-		if( cGroup->itemType != ecsControlGroup::Activity ) continue;
 
-		configFile.append( (uint8_t)( cGroup->id )); // Start new listener group.
+		if( cGroup->itemType != ecsControlGroup::Controller ) continue;
 
-		// List all applicances/functions that are part of this listener group.
+		// Check that this group is fully configured before adding it.
+
+		if( cGroup->events.count() == 0 ) continue;
+		if( cGroup->events[0]->eventAction == 0 ) continue;
+		if( cGroup->events[0]->eventAction->targetGroups.count() == 0 ) continue;
+
+		configFile.append( (uint8_t)( cGroup->id )); // Start new group.
 
 		foreach( QGraphicsItem* link, cGroup->graphic->childItems() ) {
 			if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
 			ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
 			int func = cGroup->functions[ linkedApp->id ];
-
 			configFile.append( (uint8_t)( linkedApp->id ));
 			configFile.append( (uint8_t)( func ));
 		}
+		configFile.append( END_GROUP_APPLIANCES );
 
-		configFile.append( END_GROUP_LISTENERS );
+		// Now find our listening group.
+		// XXX Support multiple targets?
 
-		// Go through all actions that are controlling this group.
+		ecsControlGroup* listenGroup = cGroup->events[0]->eventAction->targetGroups[0]->srcGroup;
 
-		foreach( ecsAction* action, cGroup->controllers ) {
-			ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(action->parentItem());
-			Q_ASSERT_X( event != 0, "Create NMEA Config", "Action parent is not an Event." );
+		configFile.append( (uint8_t)( listenGroup->id )); // Start new group.
 
-			ecsControlGroupGraphic* controller = qgraphicsitem_cast<ecsControlGroupGraphic*>(event->parentItem());
-			Q_ASSERT_X( controller != 0, "Create NMEA Config", "Event parent is not a Control Group." );
-
-			// Two bytes for event and action type.
-
-			configFile.append( (uint8_t)( event->eventType ) );
-			configFile.append( (uint8_t)( action->actionType ) );
-
-			// Two bytes for each linked appliance id + function  in this controller group.
-
-			foreach( QGraphicsItem* link, controller->childItems() ) {
-				if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
-				ecsControlGroup* linkedAppliance = (ecsControlGroup*)(link->data(0).value<void*>());
-				Q_ASSERT_X( linkedAppliance != 0, "Create NMEA Config", "Can't find linked Appliance of Controller Group." );
-
-				configFile.append( (uint8_t)( linkedAppliance->id ) );
-				configFile.append( (uint8_t)( controller->srcGroup->functions[linkedAppliance->id] ) );
-			}
-			configFile.append( END_GROUP_APPLIANCES );
+		foreach( QGraphicsItem* link, listenGroup->graphic->childItems() ) {
+			if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
+			ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
+			int func = listenGroup->functions[ linkedApp->id ];
+			configFile.append( (uint8_t)( linkedApp->id ));
+			configFile.append( (uint8_t)( func ));
 		}
+		configFile.append( END_GROUP_APPLIANCES );
+
+		foreach( ecsEvent* event, cGroup->events ) {
+			configFile.append( (uint8_t)( event->eventType ) );
+			configFile.append( (uint8_t)( event->eventAction->actionType ) );
+		}
+		configFile.append( END_GROUP_EVENTS );
+
 		configFile.append( END_GROUP ); // End of the whole group.
 	}
 	configFile.append( END_OF_FILE );

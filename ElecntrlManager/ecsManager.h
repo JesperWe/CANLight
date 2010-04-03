@@ -44,16 +44,28 @@ public:
 	};
 
 	enum eventSources_e {
-		UnknownSource,
-		Key0,
-		Key1,
-		Key2,
-		AnalogSignal,
-		ChangeNotifiation,
-		LightRed,
-		LightWhite,
-		LightAll,
-		ActuatorOut
+		/* 00 */ hw_UNKNOWN,
+		/* 01 */ hw_CAN_RATE,
+		/* 02 */ hw_CAN_EN,
+		/* 03 */ hw_LED_RED,
+		/* 04 */ hw_LED_WHITE,
+		/* 05 */ hw_LED1,
+		/* 06 */ hw_LED2,
+		/* 07 */ hw_LED3,
+		/* 08 */ hw_SWITCH1,
+		/* 09 */ hw_SWITCH2,
+		/* 10 */ hw_SWITCH3,
+		/* 11 */ hw_SWITCH4,
+		/* 12 */ hw_KEY1,
+		/* 13 */ hw_KEY2,
+		/* 14 */ hw_KEY3,
+		/* 15 */ hw_LED_LIGHT,	// Composite port RED+WHITE
+		/* 16 */ hw_BACKLIGHT,	// Virtual Port.
+		/* 17 */ hw_ANALOG,
+		/* 18 */ hw_DIGITAL_IN,
+		/* 19 */ hw_PWM1,
+		/* 20 */ hw_PWM2,
+		/* 21 */ hw_NoFunctions
 	};
 
 	enum statuses_e  {
