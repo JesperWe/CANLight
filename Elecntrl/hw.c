@@ -37,8 +37,9 @@ unsigned short		hw_SleepTimer;	// Count ticks before we can go to sleep.
 //-------------------------------------------------------------------------------
 // Structures for hardware dependent I/O pin manipulation
 
-static const hw_Port_t hw_Port[hw_NoVariants][hw_NoPortNames] =
+static const hw_Port_t hw_Port[hw_NoVariants][hw_NoFunctions] =
 {{
+	{ &PORTA, &TRISA, 0 },  // Unused
 	{ &PORTB, &TRISB, 10 }, // CAN_RATE
 	{ &PORTB, &TRISB, 11 },	// CAN_EN
 	{ &PORTC, &TRISC, 4 },	// LED_RED
@@ -56,6 +57,7 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_NoPortNames] =
 },
 
 {
+	{ &PORTA, &TRISA, 0 },  // Unused
 	{ &PORTA, &TRISA, 1 },	// CAN_RATE
 	{ &PORTB, &TRISB, 1 },	// CAN_EN
 	{ &PORTB, &TRISB, 5 },	// LED_RED
@@ -70,37 +72,24 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_NoPortNames] =
 	{ &PORTC, &TRISC, 7 },	// KEY1
 	{ &PORTC, &TRISC, 5 },	// KEY2
 	{ &PORTC, &TRISC, 3 }	// KEY3
-},
-
-{
-	{ &PORTA, &TRISA, 0 },
-	{ &PORTA, &TRISA, 0 },
-	{ &PORTB, &TRISB, 0 },
-	{ &PORTB, &TRISB, 0 },
-	{ &PORTB, &TRISB, 0 },
-	{ &PORTB, &TRISB, 0 },
-	{ &PORTB, &TRISB, 0 },
-	{ &PORTB, &TRISB, 0 },
-	{ &PORTB, &TRISB, 0 },
-	{ &PORTB, &TRISB, 0 }
 }};
 
-const unsigned short hw_NoKeys[hw_NoVariants] = { 0, 3, 0 };
+const unsigned short hw_NoKeys[hw_NoVariants] = { 0, 3 };
 
 
-unsigned int hw_ReadPort(enum hw_PortNames port) {
+unsigned int hw_ReadPort(enum hw_Functions_e port) {
     return (*(hw_Port[hw_Type][port].port) >> hw_Port[hw_Type][port].bit) & 1;
 }
 
-void hw_OutputPort(enum hw_PortNames port) {
+void hw_OutputPort(enum hw_Functions_e port) {
 	*(hw_Port[hw_Type][port].tris) &= ~(1 << hw_Port[hw_Type][port].bit);
 }
 
-void hw_InputPort(enum hw_PortNames port) {
+void hw_InputPort(enum hw_Functions_e port) {
 	*(hw_Port[hw_Type][port].port) |= (1 << hw_Port[hw_Type][port].bit);
 }
 
-void hw_WritePort(enum hw_PortNames port, int value) {
+void hw_WritePort(enum hw_Functions_e port, int value) {
 	NOP;
 	if (value) *(hw_Port[hw_Type][port].port) |= (1 << hw_Port[hw_Type][port].bit);
 	else *(hw_Port[hw_Type][port].port) &= ~(1 << hw_Port[hw_Type][port].bit);

@@ -9,7 +9,6 @@
 
 #include "hw.h"
 #include "config.h"
-#include "config_groups.h"
 #include "queue.h"
 #include "events.h"
 #include "display.h"
@@ -38,6 +37,7 @@ void events_Initialize( void ) {
 void events_Push( 
 		unsigned char type,
 		unsigned short nmeaPGN, 
+		unsigned char groupId,
 		unsigned char ctrlDev, 
 		unsigned char ctrlFunc, 
 		unsigned char ctrlEvent,
@@ -53,7 +53,12 @@ void events_Push(
 	//	display_Write( line );
 	//}
 
+	// Check that the hardware that had the event is actually configured.
+
+	if( (type == e_IO_EVENT) && (groupId == 0) ) return;
+
 	newEvent.type = type;
+	newEvent.groupId = groupId;
 	newEvent.ctrlDev = ctrlDev;
 	newEvent.ctrlFunc = ctrlFunc;
 	newEvent.ctrlEvent = ctrlEvent;
@@ -66,76 +71,13 @@ void events_Push(
 
 
 //---------------------------------------------------------------------------------------------
-// Filter events based on the system configuration.
-// Returns a configuration event of this device
-// that is listening to the current event.
-// The fromAccept argument allows scanning to start anywhere in the
-// configuration, so multiple listeners can be processed one by one.
-
-config_Event_t* event_FindNextListener( config_Event_t *fromAccept, event_t* event ) {
-	config_Event_t *accept;
-
-	// The WDT Reset event does not have a corresponding cfg_Event, but
-	// we need to return some none zero value here.
-
-	if( event->type == e_FAST_HEARTBEAT ) return (config_Event_t*)1;
-
-	accept = fromAccept;
-
-	while( accept != 0 ) {
-		if( accept->ctrlDev != event->ctrlDev ) goto next;
-		if( accept->ctrlFunc != event->ctrlFunc ) goto next;
-
-		// For NMEA message events, look at the originating event type.
-
-		if( event->type == e_NMEA_MESSAGE ) {
-			if( accept->ctrlEvent != event->ctrlEvent ) goto next;
-		}
-		else {
-			if( accept->ctrlEvent != event->type ) goto next; 
-		}
-
-		// All filters matched, this event should be processed.
-		return accept;
-
-	next: accept = accept->next;
-	};
-
-	return (config_Event_t*)0;
-}
-
-
-//---------------------------------------------------------------------------------------------
-// The LoopbackMapper takes an event which originates from our current device,
-// and maps it to the target function on the current device that should be
-// affected by this event. This is used when the device is controlling local
-// (non NMEA) functions.
-
-void event_LoopbackMapper( event_t *event, unsigned char setting ) {
-
-	switch( hw_Type ) {
-
-		case hw_SWITCH: {
-
-			if( event->ctrlFunc == hw_KEY1 ) event->ctrlFunc = hw_LED1;
-			if( event->ctrlFunc == hw_KEY2 ) event->ctrlFunc = hw_LED2;
-			if( event->ctrlFunc == hw_KEY3 ) event->ctrlFunc = hw_LED3;
-
-			break;
-		}
-	}
-}
-
-
-//---------------------------------------------------------------------------------------------
-// The Event Task is the main bus event manager. It processes both local and NMEA bus events.
+// The Event Task is the main event manager. It processes both local and NMEA bus events.
 //
 // Send NMEA events on the bus if keys clicked,
 // and respond to incoming commands.
 
 void event_Task() {
-
-	config_Event_t *listenEvent;
+	unsigned char function;
 	static event_t event;
 
 	//if( led_SleepTimer > 250 ) hw_Sleep();
@@ -144,16 +86,7 @@ void event_Task() {
 
 		switch( event.type ) {
 
-			case e_KEY_CLICKED: 		{ nmea_SendKeyEvent( &event ); break; }
-
-			case e_KEY_DOUBLECLICKED: 	{ nmea_SendKeyEvent( &event ); break; }
-
-			case e_KEY_TRIPLECLICKED: 	{ nmea_SendKeyEvent( &event ); break; }
-
-			case e_KEY_HOLDING: 		{ nmea_SendKeyEvent( &event ); break; }
-
-			case e_KEY_RELEASED: 		{ nmea_SendKeyEvent( &event ); break; }
-
+			case e_IO_EVENT: 	{ nmea_SendKeyEvent( &event ); break; }
 
 			// When we get a NMEA message (that we are listening to!) we find
 			// out what function it controls, and take the appropriate action.
@@ -164,11 +97,13 @@ void event_Task() {
 
 				if( event.ctrlEvent == e_SET_THROTTLE ) {
 
-					// First save transmitted values for monitoring.
+					// Save transmitted values for monitoring.
 
-					engine_Throttle = event.data;
-					engine_Gear = event.ctrlFunc;
-					engine_LastJoystickLevel = event.info;
+					if( hw_I2C_Installed ) {
+						engine_Throttle = event.data;
+						engine_Gear = event.ctrlFunc;
+						engine_LastJoystickLevel = event.info;
+					}
 
 					// If we are a unit actually running an engine, do it!
 
@@ -189,26 +124,49 @@ void event_Task() {
 
 				// Only process event this device is listening for.
 
-				listenEvent = event_FindNextListener( config_MyEvents, &event );
-				if( listenEvent == 0 ) break;
+				for( function=0; function<hw_NoFunctions; function++ ) {
 
-				hw_SleepTimer = 0;
+					if( functionListenGroup[function] == event.groupId ) {
 
-				if( event.PGN != nmea_LIGHTING_COMMAND ) break; // Some other NMEA device?
+						switch( event.ctrlEvent ) {
+							case e_KEY_CLICKED: {
+								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
+								else switch_ProcessEvent( &event, function );
+								break;
+							}
+							case e_KEY_DOUBLECLICKED: {
+								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
+								break;
+							}
+							case e_KEY_TRIPLECLICKED: {
+								// Unused on all hardware for now...
+								break;
+							}
+							case e_KEY_HOLDING: {
+								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
+								break;
+							}
+							case e_KEY_RELEASED: {
+								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
+								break;
+							}
+							case e_SWITCH_ON: {
+								switch_ProcessEvent( &event, function );
+								break;
+							}
+							case e_SWITCH_OFF: {
+								switch_ProcessEvent( &event, function );
+								break;
+							}
+							case e_SWITCH_FAIL: {
+								switch_ProcessEvent( &event, function );
+								break;
+							}
+						}
 
-				do {
-
-					if( hw_IsPWM( listenEvent->function ) )
-
-						{ led_ProcessEvent( &event, listenEvent->function ); }
-
-					else
-						{ switch_ProcessEvent( &event, listenEvent->function ); }
-
-					listenEvent = event_FindNextListener( listenEvent->next, &event );
+						hw_SleepTimer = 0;
+					}
 				}
-				while ( listenEvent != 0 );
-
 				break;
 			}
 		}

@@ -71,7 +71,7 @@
 #define nmea_RX_QUEUE_SIZE			3
 #define nmea_TX_QUEUE_SIZE			3
 
-#define nmea_TX_IN_PROGRESS		C1TR01CONbits.TXREQ0
+#define nmea_TX_REQUEST_BIT		C1TR01CONbits.TXREQ0
 
 typedef unsigned short nmea_MsgBuffer_t[nmea_MSG_BUFFER_WORDS];
 

@@ -220,7 +220,7 @@ unsigned char nmea_SendEvent( event_t *event )
 {
 	unsigned char status;
 	nmea_MakePGN( 0, nmea_LIGHTING_COMMAND, 8 );
-	outPGN.data[0] = event->type;
+	outPGN.data[0] = event->groupId;
 	outPGN.data[1] = event->data;
 	outPGN.data[2] = (event->info&0xFF00) >> 8;
 	outPGN.data[3] = event->info&0x00FF;
@@ -231,9 +231,8 @@ unsigned char nmea_SendEvent( event_t *event )
 
 	if( loopbackEnabled ) {
 		events_Push(
-			e_NMEA_MESSAGE,
-			nmea_LIGHTING_COMMAND,
-			hw_DeviceID,
+			e_NMEA_MESSAGE, nmea_LIGHTING_COMMAND,
+			event->groupId, hw_DeviceID,
 			event->ctrlFunc,
 			event->ctrlEvent,
 			event->data,
@@ -283,7 +282,7 @@ unsigned char nmea_SendMessage()
 
 	memcpy( (&msg[3]), outPGN.data, outPGN.bytes );
 
-	if( nmea_TX_IN_PROGRESS ) {
+	if( nmea_TX_REQUEST_BIT ) {
 
 		if( nmea_TxQueueFull ) return nmea_TRANSMITTER_BUSY;
 
@@ -301,7 +300,7 @@ unsigned char nmea_SendMessage()
 
 	memcpy( &(nmea_MsgBuf[0]), &msg, nmea_MSG_BUFFER_BYTES );
 
-	nmea_TX_IN_PROGRESS = 1;
+	nmea_TX_REQUEST_BIT = 1;
 
 	return nmea_SUCCESS;
 }
@@ -409,7 +408,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 	if(C1INTFbits.IVRIF) {
 		C1INTFbits.IVRIF = 0;
 		nmea_invalidMsgCounter++;
-		nmea_TX_IN_PROGRESS = 0;	// Abort!
+		nmea_TX_REQUEST_BIT = 0;	// Abort!
 		goto done;
 	}
 
@@ -417,19 +416,17 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 		C1INTFbits.WAKIF = 0;
 	}
 
-	// Something to transmit?
+	// Message in TX buffer has been transmitted. Any more messages?
 
 	if( C1INTFbits.TBIF ) {
 		C1INTFbits.TBIF = 0;
-
-		// Any messages to send in the queue?
 
 		if( (nmea_TxQueueTail != nmea_TxQueueHead) || nmea_TxQueueFull ) {
 			memcpy( &(nmea_MsgBuf[0]), &(nmea_TxQueue[nmea_TxQueueHead]), nmea_MSG_BUFFER_BYTES );
 			nmea_TxQueueHead++;
 			nmea_TxQueueHead = nmea_TxQueueHead % nmea_NO_MSG_BUFFERS;
 			nmea_TxQueueFull = 0;
-			nmea_TX_IN_PROGRESS = 1;
+			nmea_TX_REQUEST_BIT = 1;
 		}
 	}
 
@@ -464,7 +461,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 
 			case nmea_LIGHTING_COMMAND: {
 				events_Push( e_NMEA_MESSAGE, inPDU.PGN,
-					inPDU.data[4], inPDU.data[5], inPDU.data[6],
+					inPDU.data[0], inPDU.data[4], inPDU.data[5], inPDU.data[6],
 					inPDU.data[1], timer );
 				break;
 			}
@@ -500,7 +497,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 				if( nmea_TPMessage_Bytes >= nmea_TPMessage_Size ) {
 					nmea_TPMessage_Complete = TRUE;
 					events_Push( e_NMEA_MESSAGE, nmea_TPMessage_PGN,
-						inPDU.SourceAddress, 0, e_CONFIG_FILE_UPDATE, 0, nmea_TPMessage_Size );
+						0, inPDU.SourceAddress, 0, e_CONFIG_FILE_UPDATE, 0, nmea_TPMessage_Size );
 				}
 
 				// If this is our first config file, we need to signal to the config task to

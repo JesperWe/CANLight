@@ -10,33 +10,40 @@
 
 #define events_QUEUESIZE	10
 
-enum event_Events {
-	/* 00 */ e_KEY_CLICKED,
-	/* 01 */ e_KEY_HOLDING,
-	/* 02 */ e_KEY_RELEASED,
-	/* 03 */ e_KEY_DOUBLECLICKED,
-	/* 04 */ e_KEY_TRIPLECLICKED,
-	/* 05 */ e_SWITCH_ON,
-	/* 06 */ e_SWITCH_OFF,
-	/* 07 */ e_SWITCH_FAIL,
-	/* 08 */ e_FADE_START,
-	/* 09 */ e_FADE_STOP,
-	/* 10 */ e_FAST_HEARTBEAT,
-	/* 11 */ e_NMEA_MESSAGE,
-	/* 12 */ e_NIGHTMODE,
-	/* 13 */ e_DAYLIGHTMODE,
-	/* 14 */ e_AMBIENT_LIGHT_LEVEL,
-	/* 15 */ e_BLACKOUT,
-	/* 16 */ e_SLOW_HEARTBEAT,
-	/* 17 */ e_THROTTLE_MASTER,
-	/* 18 */ e_SET_THROTTLE,
-	/* 19 */ e_CONFIG_FILE_UPDATE,
-	/* 20 */ e_NO_EVENTS
+enum event_Types_e {
+	/* 00 */ e_IO_EVENT,
+	/* 01 */ e_NMEA_MESSAGE
+};
+
+enum event_Events_e {
+	/* 00 */ e_UNKNOWN,
+	/* 01 */ e_KEY_CLICKED,
+	/* 02 */ e_KEY_HOLDING,
+	/* 03 */ e_KEY_RELEASED,
+	/* 04 */ e_KEY_DOUBLECLICKED,
+	/* 05 */ e_KEY_TRIPLECLICKED,
+	/* 06 */ e_SWITCH_ON,
+	/* 07 */ e_SWITCH_OFF,
+	/* 08 */ e_SWITCH_FAIL,
+	/* 09 */ e_FADE_START,
+	/* 10 */ e_FADE_STOP,
+	/* 11 */ e_FAST_HEARTBEAT,
+	/* 12 */ e_unused,
+	/* 13 */ e_NIGHTMODE,
+	/* 14 */ e_DAYLIGHTMODE,
+	/* 15 */ e_AMBIENT_LIGHT_LEVEL,
+	/* 16 */ e_BLACKOUT,
+	/* 17 */ e_SLOW_HEARTBEAT,
+	/* 18 */ e_THROTTLE_MASTER,
+	/* 19 */ e_SET_THROTTLE,
+	/* 20 */ e_CONFIG_FILE_UPDATE,
+	/* 21 */ e_NO_EVENTS
 };
 
 typedef struct {
 	unsigned char type;
 	unsigned short PGN;
+	unsigned char groupId;
 	unsigned char ctrlDev;
 	unsigned char ctrlFunc;
 	unsigned char ctrlEvent;
@@ -56,6 +63,7 @@ void events_Initialize( void );
 void events_Push( 
 		unsigned char eventType, 
 		unsigned short nmeaPGN, 
+		unsigned char groupId,
 		unsigned char ctrlDev, 
 		unsigned char ctrlFunc,
 		unsigned char ctrlEvent,

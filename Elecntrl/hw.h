@@ -38,31 +38,35 @@
 
 #define hw_DetectorADCChannel	0
 
-enum hw_PortNames {
-	hw_CAN_RATE,
-	hw_CAN_EN,
-	hw_LED_RED,
-	hw_LED_WHITE,
-	hw_LED1,
-	hw_LED2,
-	hw_LED3,
-	hw_SWITCH1,
-	hw_SWITCH2,
-	hw_SWITCH3,
-	hw_SWITCH4,
-	hw_KEY1,
-	hw_KEY2,
-	hw_KEY3,
-	hw_LED_LIGHT,	// Composite port RED+WHITE
-	hw_BACKLIGHT,	// Virtual Port.
-	hw_NoPortNames
+enum hw_Functions_e {
+	/* 00 */ hw_UNKNOWN,
+	/* 01 */ hw_CAN_RATE,
+	/* 02 */ hw_CAN_EN,
+	/* 03 */ hw_LED_RED,
+	/* 04 */ hw_LED_WHITE,
+	/* 05 */ hw_LED1,
+	/* 06 */ hw_LED2,
+	/* 07 */ hw_LED3,
+	/* 08 */ hw_SWITCH1,
+	/* 09 */ hw_SWITCH2,
+	/* 10 */ hw_SWITCH3,
+	/* 11 */ hw_SWITCH4,
+	/* 12 */ hw_KEY1,
+	/* 13 */ hw_KEY2,
+	/* 14 */ hw_KEY3,
+	/* 15 */ hw_LED_LIGHT,	// Composite port RED+WHITE
+	/* 16 */ hw_BACKLIGHT,	// Virtual Port.
+	/* 17 */ hw_ANALOG,
+	/* 18 */ hw_DIGITAL_IN,
+	/* 19 */ hw_PWM1,
+	/* 20 */ hw_PWM2,
+	/* 21 */ hw_NoFunctions
 };
 
 
 enum hw_Variants {
 	hw_LEDLAMP,
 	hw_SWITCH,
-	hw_UNKNOWN,
 	hw_NoVariants
 };
 
@@ -107,10 +111,10 @@ extern unsigned char 		hw_AmbientLevel;
 extern unsigned char 		hw_CanSleep;
 extern unsigned short		hw_SleepTimer;
 
-unsigned int hw_ReadPort(enum hw_PortNames port);
-void hw_InputPort(enum hw_PortNames port);
-void hw_OutputPort(enum hw_PortNames port);
-void hw_WritePort(enum hw_PortNames, int value);
+unsigned int hw_ReadPort(enum hw_Functions_e port);
+void hw_InputPort(enum hw_Functions_e port);
+void hw_OutputPort(enum hw_Functions_e port);
+void hw_WritePort(enum hw_Functions_e, int value);
 void hw_Initialize( void );
 void hw_WriteConfigFlash( void );
 unsigned char hw_IsPWM( unsigned short hw_Port );

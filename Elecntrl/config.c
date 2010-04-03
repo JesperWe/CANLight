@@ -10,105 +10,82 @@
 #include "menu.h"
 #include "nmea.h"
 
+/*------------------------------------------------------------------------------------
+
+The system config represents the entire system, and is stored in each appliance.
+The config "file" is actually a byte sequence sent from some master controller
+to all appliances on update. This "file" is stored in User Flash memory and parsed at runtime.
+
+A "appliance" in the system is a single piece of hardware with its own CPU.
+It has an address (Appliance ID) in the range 0-253.
+
+A "function" is one individually controllable I/O channel on this appliance. A function can also
+bundle several channels, like the "Lamp" function is a bundle of all colors of a lamp appliance.
+
+Controller Group (GID)
+        Appliance (AID)/Function
+
+>>> Sends: Listener Group + Event
+
+Bindings: [Event/Action], ...
+
+<<< Sends: Controller Group + Event
+
+Listener Group (GID)
+        Appliance (AID)/Function
+
+
+A "group" is a collection of functions on one or many appliances that listen to the same events.
+Group ID is also in the 0-253 range.
+A group can consist of only a single function of a single appliance.
+A function must be part of a group to be able to listen for events.
+
+The config "file" byte sequence follows this pattern:
+	<2 bytes magic number>
+	<2 bytes sequence number>
+	ControllerGroupID ApplianceID func [ ApplianceID func ] FE
+	ListenerGroupID ApplianceID func [ ApplianceID func ] FE
+	event action [event action] FE
+	FE
+	...
+	FF
+
+The events sent between the controllers and the listeners are always send as broadcast messages,
+but each message uses the group IDs to mark which groups are communicating.
+*/
+
+
 //-------------------------------------------------------------------------------
 // Globals
 
-config_Event_t *config_MyEvents;
 unsigned char cfg_MyDeviceId = 0;
 unsigned char config_Invalid = 0;
+unsigned char functionInGroup[ hw_NoFunctions ];
+unsigned char functionListenGroup[ hw_NoFunctions ];
+config_Event_t *config_MyEvents;
+
 
 //-------------------------------------------------------------------------------
-// The system config represents the entire system, and is stored in each appliance.
-// The config "file" is actually a byte sequence sent from some master controller
-// to all appliances on update. This "file" is stored in User Flash memory and parsed at runtime.
-//
-// A "appliance" in the system is a single piece of hardware with its own CPU.
-// It has an address (appliance id) in the range 0-253.
-//
-// A "function" is one individually controllable output on this appliance.
-//
-// A "group" is a collection of functions on one or many appliances that listen to the same events.
-// A group can consist of only a single function on a single appliance.
-// A function must be part of a group to be able to listen for events.
-//
-// The config "file" byte sequence follows this pattern:
-//   <2 bytes magic number>
-//   <2 bytes sequence number>
-//   group appliance func [ appliance func ] FE
-//   appliance func event [ event ] FE
-//   appliance func event [ event ] FE
 
-//  ^^^ change these to: event action appliance func [ appliance func ] FE
-// (Better fit with GUI data model?)
-
-//   FE
-//   group appliance func [ appliance func ] FE
-//   appliance func event [ event ] FE
-//   appliance func event [ event ] FE
-//   FE
-//   ...
-//   FF
 
 // The Configuration File lives in program memory.
 // The size limited to one Flash page, currently 1024 byte.
 
-
 const unsigned char __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2))) config_Data[_FLASH_PAGE*2];
-
-//-------------------------------------------------------------------------------
-// Utility functions to make config_Data navigation code more readable.
-
-unsigned char _findNextGroup( config_File_t* filePointer ) {
-	config_File_t tmpPointer = *filePointer;
-
-	while( (*tmpPointer != config_GroupEnd) || (*(tmpPointer+1) != config_GroupEnd) ) {
-		tmpPointer++;
-	}
-
-	tmpPointer += 2;
-	*filePointer = tmpPointer;
-
-	if( **filePointer == endConfig ) return FALSE;
-
-	return TRUE;
-}
-
-unsigned char _findNextTarget( config_File_t* filePointer ) {
-	(*filePointer) += 2;
-	if( **filePointer == config_GroupEnd ) return FALSE;
-	return TRUE;
-}
-
-unsigned char _findControllers( config_File_t* filePointer ) {
-	while( (**filePointer != config_GroupEnd) ) (*filePointer)++;
-	(*filePointer)++;
-	return TRUE;
-}
-
-config_File_t config_FileFindGroup( unsigned char groupId ) {
-	config_File_t configPtr;
-
-	configPtr = config_Data + 2;	// Skip sequence number.
-
-	do {
-		if( *configPtr == groupId ) return configPtr;
-	} while (
-		_findNextGroup( &configPtr )
-	);
-
-	return configPtr;
-}
-
 
 //-------------------------------------------------------------------------------
 // Initialize System Configuration.
 // The config_MyEvents dynamic list should contain all events that affect this device.
 
 void config_Initialize() {
-	config_File_t configPtr, targetPtr;
+	unsigned char* configPtr;
 	unsigned short configSequenceNumber;
-	unsigned char listenGroup;
-	unsigned char func;
+	unsigned char inGroupID;
+	unsigned char listenToGroupID;
+	unsigned char applianceID;
+	unsigned char functionID;
+	unsigned char event;
+	unsigned char action;
 
 	// First check if we don't we have a valid device Id.
 	// Device ID = 0xFF is not allowed. It indicates that the device was programmed
@@ -128,74 +105,91 @@ void config_Initialize() {
 
 	config_Invalid = FALSE;
 
-	config_MyEvents = 0;
+	config_MyEvents = 0; // XXX Memory leak if config initialized more than once after reset!
+
+	for( functionID=0; functionID<hw_NoFunctions; functionID++ ) {
+		functionListenGroup[ functionID ] = 0;
+		functionInGroup[ functionID ] = 0;
+	}
 
 	configSequenceNumber = ((short)config_Data[2])<<8 | config_Data[3];
 
 	// Now filter system config to find out what groups we belong to, and
 	// which devices messages we should listen to.
-
-	configPtr = config_Data+4;	// Skip magic and sequence numbers.
+	
+	configPtr = config_Data;
+	configPtr += 4;	// Skip magic and sequence numbers.
 
 	do {
-		listenGroup = *configPtr;
-		targetPtr = configPtr + 1;
 
+		// Controller Group Appliances
+
+		inGroupID = *configPtr++;
 		do {
-			if( *(targetPtr) == hw_DeviceID ) { // Is this group for me?
-				func = *(targetPtr+1);
-				config_AddMyControlEvents( listenGroup, configPtr, func );
+			applianceID = *configPtr++;
+			functionID = *configPtr++;
+
+			if( applianceID == hw_DeviceID ) {
+				functionInGroup[ functionID ] = inGroupID;
+			}
+		}
+		while( *configPtr != DELIMITER );
+
+		// Listener Group Appliances. These functions are "in" the listenToGroupID,
+		// but "listen" to the inGroupID.
+
+		configPtr++;
+		listenToGroupID = *configPtr++;
+		do {
+			applianceID = *configPtr++;
+			functionID = *configPtr++;
+
+			if( applianceID == hw_DeviceID ) {
+				functionInGroup[ functionID ] = listenToGroupID;
+				functionListenGroup[ functionID ] = inGroupID;
 			}
 		} 
-		while( _findNextTarget( &targetPtr ));
-	}
-	while( _findNextGroup( &configPtr ) );
-}
+		while( *configPtr != DELIMITER );
 
+		// Since the controlling group came first, we need to go through the functions
+		// in it and set their listening group for acknowledge events.
 
-void config_AddMyControlEvents( unsigned char listenGroup, config_File_t fromCfgPtr, unsigned char targetFunction ) {
-	unsigned short cntrlEvent;
-	unsigned short cntrlAction;
-	unsigned short cntrlDevice;
-	unsigned short cntrlFunction;
-
-	_findControllers( &fromCfgPtr ); // Make fromCfgPtr point to start of the groups controllers.
-
-	do {
-		cntrlEvent = *fromCfgPtr++;
-		cntrlAction = *fromCfgPtr++;
-		
-		while( *fromCfgPtr != config_GroupEnd ) {
-			cntrlDevice = *fromCfgPtr++;
-			cntrlFunction = *fromCfgPtr++;
-			config_AddControlEvent( cntrlDevice, cntrlFunction, cntrlEvent, cntrlAction, targetFunction );
+		for( functionID=0; functionID<hw_NoFunctions; functionID++ ) {
+			if( functionInGroup[ functionID ] == inGroupID ) {
+				functionListenGroup[ functionID ] = listenToGroupID;
+			}
 		}
-		*fromCfgPtr++;
-		
-	} while( *fromCfgPtr != config_GroupEnd );
 
-	return;
+		// Event / Action bindings
+
+		configPtr++;
+		do {
+			event = *configPtr++;
+			action = *configPtr++;
+			config_AddControlEvent( inGroupID, event, action );
+		}
+		while( *configPtr != DELIMITER );
+
+		while( *configPtr == DELIMITER ) { configPtr++; }
+	}
+	while( *configPtr != END_OF_FILE );
 }
 
 
 void config_AddControlEvent( 
-		const unsigned char ctrlDev,
-		const unsigned char ctrlFunc,
+		const unsigned char ctrlGroup,
 		const unsigned char ctrlEvent,
-		const unsigned char ctrlAction,
-		const unsigned char function )
+		const unsigned char ctrlAction )
 {
 
 	config_Event_t *newEvent;
 
 	newEvent = malloc( sizeof( config_Event_t ) );
-	newEvent->ctrlDev = ctrlDev;
-	newEvent->ctrlFunc = ctrlFunc;
+	newEvent->ctrlGroup = ctrlGroup;
 	newEvent->ctrlEvent = ctrlEvent;
 	newEvent->ctrlAction = ctrlAction;
-	newEvent->function = function;
 
-	// Insert new event at start of eventlist.
+	// Insert new event at start of event list.
 
 	newEvent->next = config_MyEvents;
 	config_MyEvents = newEvent;

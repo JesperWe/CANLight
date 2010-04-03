@@ -7,7 +7,6 @@
 
 #include "hw.h"
 #include "config.h"
-#include "config_groups.h"
 #include "events.h"
 #include "ctrlkey.h"
 #include "engine.h"
@@ -80,12 +79,14 @@ unsigned short ctrlkey_ReadKeys( void ) {
 void ctrlkey_task() {
 	unsigned char keyNo;
 	unsigned char event;
+	unsigned char function;
 
 	_CNIE = 0; // Disable interrupts while we process, otherwise confusion might ensue...
 
 	for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 
 		if( ctrlkey_Holding[ keyNo ] ) continue;
+		function = ctrlkey_Key2Function[ keyNo ];
 
 		if( ctrlkey_Releasetime[ keyNo ] ) {
 			if( (schedule_time - ctrlkey_Releasetime[ keyNo ]) > ctrlkey_DOUBLECLICK_THRESHOLD ) {
@@ -95,9 +96,10 @@ void ctrlkey_task() {
 				default: { event = e_KEY_CLICKED; break; }
 				}
 
-				events_Push( event, 0, hw_DeviceID,
-						ctrlkey_Key2Function[ keyNo ],
-						event, keyNo, (short)ctrlkey_Presstime[ keyNo ] );
+				events_Push( e_IO_EVENT, 0,
+						functionInGroup[function], hw_DeviceID,
+						function, event, keyNo,
+						(short)ctrlkey_Presstime[ keyNo ] );
 
 				ctrlkey_ClickCount[ keyNo ] = 0;
 				ctrlkey_Presstime[ keyNo ] = 0;
@@ -113,9 +115,10 @@ void ctrlkey_task() {
 			if( (schedule_time - ctrlkey_Presstime[ keyNo ]) > ctrlkey_HOLDING_THRESHOLD ) {
 				ctrlkey_Holding[ keyNo ] = TRUE;
 
-				events_Push( e_KEY_HOLDING, 0,
-					hw_DeviceID, ctrlkey_Key2Function[keyNo], e_KEY_HOLDING,
-					keyNo, schedule_time - ctrlkey_Presstime[ keyNo ] );
+				events_Push( e_IO_EVENT, 0,
+					functionInGroup[function], hw_DeviceID,
+					function, e_KEY_HOLDING, keyNo,
+					(short)(schedule_time - ctrlkey_Presstime[ keyNo ]) );
 			}
 		}
 	}
@@ -169,10 +172,11 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 			else {
 				if( ctrlkey_Holding[ keyNo ] ) {
 
-					events_Push( e_KEY_RELEASED, 0,
-							hw_DeviceID,
-							ctrlkey_Key2Function[keyNo],
-							e_KEY_RELEASED, keyNo,
+					unsigned char function = ctrlkey_Key2Function[ keyNo ];
+
+					events_Push( e_IO_EVENT, 0,
+							functionInGroup[function], hw_DeviceID,
+							function, e_KEY_RELEASED, keyNo,
 							(short)schedule_time );
 
 					ctrlkey_Presstime[ keyNo ] = 0;

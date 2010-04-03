@@ -36,6 +36,6 @@ void led_PowerOnTest();
 
 void led_TaskComplete();
 
-void led_CrossfadeTask();
+void led_FadeTask();
 
 #endif

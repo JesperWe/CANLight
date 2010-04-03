@@ -79,7 +79,7 @@ int main (void)
 
 	schedule_AddTask( event_Task, 1 );
 
-	schedule_AddTask( led_CrossfadeTask, 40 );
+	schedule_AddTask( led_FadeTask, 40 );
 
 	if( hw_I2C_Installed ) {
 		schedule_AddTask( display_Task, 300 );

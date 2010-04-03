@@ -118,7 +118,10 @@ void led_SetLevel( unsigned char color, float level ) {
 		case led_WHITE: { OC2RS = dutycycle; break; }
 	}
 
+	// Don't acknowledge if we are in POST or config update.
+
 	if( schedule_Running == FALSE ) return;
+	if( led_CurrentFunc == 0 ) return;
 
 	// Response message back to controller.
 	// Going to or from level=0 (off) from/to any other level triggers a response.
@@ -127,6 +130,7 @@ void led_SetLevel( unsigned char color, float level ) {
 	if( lastLevel == 0.0 || modLevel == 0.0 ) {
 		response.PGN = 0;
 		response.info = 0;
+		response.groupId = functionInGroup[ led_CurrentFunc ];
 		response.ctrlDev = hw_DeviceID;
 		response.ctrlFunc = led_CurrentFunc;
 		response.ctrlEvent = (level == 0.0) ? e_SWITCH_OFF : e_SWITCH_ON;
@@ -333,17 +337,25 @@ void led_TaskComplete() {
 //
 // Should run with an Interrupt Interval of 40ms.
 
-void led_CrossfadeTask() {
-	unsigned short i, curStep;
+void led_FadeTask() {
+	unsigned short i;
+	unsigned short curStep;
+	static unsigned char dimmerTicks;
+
 	float fadePos, multiplier, value;
 
 	hw_CanSleep = 1;
 	hw_SleepTimer++;
+	dimmerTicks++;
 
 	for( i=0; i<led_NoChannels; i++ ) {
 
+		// First check if any channel is under PWM. In that case we can't goto deep sleep.
+
 		if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
 			hw_CanSleep = 0;
+
+		// Now handle fades.
 
 		if( led_FadeInProgress[i] ) {
 
@@ -356,6 +368,20 @@ void led_CrossfadeTask() {
 			if( curStep >= led_FadeSteps[i] ) {
 				led_FadeInProgress[i] = DISABLE;
 			}
+		}
+	}
+
+	// If we are dimming, take care of that too.
+
+	if( led_CurFadeStep != 0.0 ) {
+		dimmerTicks++;
+		dimmerTicks = dimmerTicks % 5;
+		if( dimmerTicks == 0 ) {
+			value = led_CurrentLevel[led_CurrentColor];
+			value += led_CurFadeStep;
+			if( value > 1.0 ) { led_CurFadeStep = - led_CurFadeStep; value = 1.0; }
+			if( value < 0.0 ) { led_CurFadeStep = - led_CurFadeStep; value = 0.0; }
+			led_SetLevel( led_CurrentColor, value );
 		}
 	}
 }
