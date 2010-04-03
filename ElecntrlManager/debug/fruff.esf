@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<systemdescription version="6">
+<systemdescription version="8">
     <appliance id="1" description="Aft Cabin Port Switch"/>
     <appliance id="2" description="Aft Cabin Stbd Switch"/>
     <appliance id="3" description="Steering Port Switch 1"/>
@@ -9,16 +9,16 @@
     <appliance id="7" description="Steering Stbd Switch 1"/>
     <appliance id="8" description="Navtable Switch 1"/>
     <appliance id="9" description="Engine Room Box"/>
-    <appliance id="10" description="Aft Cabin Stbd Ceiling Light 1"/>
-    <appliance id="11" description="Aft Cabin Stbd Ceiling Light 2"/>
+    <appliance id="40" description="Aft Cabin Stbd Ceiling Light 1"/>
+    <appliance id="41" description="Aft Cabin Stbd Ceiling Light 2"/>
     <appliance id="12" description="*"/>
     <controlgroup id="2" description="Aft Cabin Port Light" type="2">
         <appliance-function id="6" function="8"/>
         <appliance-function id="5" function="8"/>
     </controlgroup>
     <controlgroup id="7" description="Aft Cabin Stbd Light" type="2">
-        <appliance-function id="10" function="8"/>
-        <appliance-function id="11" function="8"/>
+        <appliance-function id="40" function="0"/>
+        <appliance-function id="41" function="0"/>
     </controlgroup>
     <controlgroup id="5" description="Engine Actuators" type="2">
         <appliance-function id="9" function="9"/>

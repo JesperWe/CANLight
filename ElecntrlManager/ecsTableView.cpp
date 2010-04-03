@@ -33,9 +33,14 @@ void ecsTableView::on_customContextMenuRequested( QPoint pos )
 	QPoint globalPos = this->mapToGlobal( pos );
 
 	ecsControlGroupContextMenu->actions()[1]->setEnabled( false );
+	ecsControlGroupContextMenu->actions()[2]->setEnabled( false );
 
 	if( objectName() == "cGroupView"  && rowAt( pos.y() ) >= 0 ) {
 		ecsControlGroupContextMenu->actions()[1]->setEnabled(true);
+	}
+
+	if( rowAt( pos.y() ) >= 0 ) {
+		ecsControlGroupContextMenu->actions()[2]->setEnabled(true);
 	}
 
 	ecsControlGroupContextMenu->exec( globalPos );

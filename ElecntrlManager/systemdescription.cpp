@@ -141,7 +141,10 @@ void SystemDescription::saveFile( QString toFile )
 // Thus we need to shuffle the data around a bit to generate the binary config file before sending
 // it on the yacht network.
 
-#define DELIMITER 0xFE
+#define END_GROUP_LISTENERS 0xFE
+#define END_GROUP_APPLIANCES 0xFE
+#define END_GROUP 0xFE
+#define END_OF_FILE 0xFF
 
 void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 
@@ -159,7 +162,7 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 	foreach( ecsControlGroup* cGroup, ecsManagerApp::inst()->cGroups->ecsControlGroups ) {
 		if( cGroup->itemType != ecsControlGroup::Activity ) continue;
 
-		configFile.append( (uint8_t)( cGroup->id )); // Start new target group.
+		configFile.append( (uint8_t)( cGroup->id )); // Start new listener group.
 
 		// List all applicances/functions that are part of this listener group.
 
@@ -172,7 +175,7 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 			configFile.append( (uint8_t)( func ));
 		}
 
-		configFile.append( DELIMITER ); // End of group listeners.
+		configFile.append( END_GROUP_LISTENERS );
 
 		// Go through all actions that are controlling this group.
 
@@ -198,11 +201,11 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 				configFile.append( (uint8_t)( linkedAppliance->id ) );
 				configFile.append( (uint8_t)( controller->srcGroup->functions[linkedAppliance->id] ) );
 			}
-			configFile.append( DELIMITER ); // End of linked appliances.
+			configFile.append( END_GROUP_APPLIANCES );
 		}
-		configFile.append( DELIMITER ); // End of the whole group.
+		configFile.append( END_GROUP ); // End of the whole group.
 	}
-	configFile.append( 0xFF ); // End of config file.
+	configFile.append( END_OF_FILE );
 }
 
 //-------------------------------------------------------------------------------------------------

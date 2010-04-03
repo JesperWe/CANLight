@@ -204,4 +204,25 @@ void ecsControlGroupGraphic::updateLinkTexts() {
 		linkText->setData( 0, QVariant::fromValue( (void*) appliance ) );
 		linkText->setText( appliance->displayText() );
 	}
+
+	// If a linked appliance changed its ID, we need to find and remove the text item.
+
+	if( linkTexts.count() > srcGroup->links.count() ) {
+		bool found;
+		foreach( int id, linkTexts.keys() ) {
+			found = false;
+			foreach( ecsControlGroup* appliance, srcGroup->links ) {
+				if( appliance->id == id ) {
+					found = true;
+					break;
+				}
+			}
+			if( ! found ) {
+				QGraphicsSimpleTextItem* unusedItem = linkTexts[id];
+				unusedItem->scene()->removeItem( unusedItem );
+				linkTexts.remove(id);
+				delete unusedItem;
+			}
+		}
+	}
 }
