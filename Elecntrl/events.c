@@ -109,6 +109,22 @@ void event_Task() {
 					break;
 				}
 
+				if( (event.ctrlEvent == e_AMBIENT_LIGHT_LEVEL) && hw_AutoBacklightMode ) {
+					unsigned short blLevel;
+					blLevel = (2*event.info) + 10;
+					if( blLevel > 0xFF ) blLevel = 0xFF;
+
+					if( hw_I2C_Installed ) {
+						display_SetBrightness( blLevel );
+					}
+
+					if( hw_Type == hw_SWITCH ) {
+						// Turn off backlight during daytime.
+						if( event.info > 200 ) led_SetLevel( led_RED, 0.0 );
+						else led_SetLevel( led_RED, (float)(blLevel)/256.0 );
+					}
+				}
+
 				// Do I have a function listening to events from the controller group?
 				// XXX Also apply event filter here, it is unused at the moment!
 

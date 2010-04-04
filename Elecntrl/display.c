@@ -219,33 +219,22 @@ void display_BacklightTask() {
 
 	pvVoltage = ADC_Read( hw_DetectorADCChannel );
 
-	ambientLevel = 0.9*ambientLevel + 0.1*pvVoltage;
+	ambientLevel = 0.9*ambientLevel + 0.1*(float)pvVoltage;
 
 	pvVoltage = ((short)ambientLevel) >> 2;
 
-	if( hw_AmbientLevel != pvVoltage ) {
+	if( (hw_AmbientLevel != pvVoltage) && hw_AutoBacklightMode ) {
 
 		hw_AmbientLevel = pvVoltage;
 
 		ambientEvent.PGN = 0;
-		ambientEvent.info = 0;
-		ambientEvent.type = 0;
+		ambientEvent.data = 0;
+		ambientEvent.groupId = 0;
 		ambientEvent.ctrlDev = hw_DeviceID;
 		ambientEvent.ctrlFunc = hw_BACKLIGHT;
 		ambientEvent.ctrlEvent = e_AMBIENT_LIGHT_LEVEL;
-		ambientEvent.data = hw_AmbientLevel;
+		ambientEvent.info = hw_AmbientLevel;
 
 		nmea_SendEvent( &ambientEvent );
-
-		if( hw_I2C_Installed ) {
-			unsigned short blLevel;
-			blLevel = (2*hw_AmbientLevel) + 10;
-			if( blLevel > 0xFF ) blLevel = 0xFF;
-			//display_Home();
-			//sprintf( line1, "v = %04d, bl = %03d", hw_AmbientLevel, blLevel );
-			//display_Write( line1 );
-
-			display_SetBrightness( blLevel );
-		}
 	}
 }

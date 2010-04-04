@@ -25,6 +25,9 @@ unsigned char		hw_Photodetector_Installed = 0;
 unsigned char		hw_Throttle_Installed = 0;
 unsigned char		hw_Actuators_Installed = 0;
 unsigned char		hw_ConfigByte = 0;
+unsigned char		hw_DetectorADCChannel;
+unsigned char 		hw_AutoBacklightMode = TRUE;
+unsigned char		hw_AmbientLevel;
 
 unsigned char		hw_DeviceID;
 
@@ -234,7 +237,6 @@ void hw_Initialize( void ) {
 	// CAN Rx					Pin 11 RB13		Pin 21 RB0
 
 #ifdef DEBUG
-	TRISAbits.TRISA2 = 0;				// Debug output port.
 	TRISBbits.TRISB14 = 0;				// Debug output port.
 #endif
 
@@ -250,6 +252,9 @@ void hw_Initialize( void ) {
 
 		case hw_LEDLAMP: {
 
+			hw_DetectorADCChannel = 8;
+			if( hw_Photodetector_Installed ) AD1PCFGLbits.PCFG8 = 0;
+
 			hw_OutputPort( hw_LED_RED );
 			hw_OutputPort( hw_LED_WHITE );
 
@@ -263,6 +268,10 @@ void hw_Initialize( void ) {
 		}
 
 		case hw_SWITCH: {
+
+			hw_DetectorADCChannel = 0;
+			if( hw_Photodetector_Installed ) AD1PCFGLbits.PCFG0 = 0;
+			if( hw_Throttle_Installed ) AD1PCFGLbits.PCFG10 = 0;
 
 			hw_OutputPort( hw_LED_RED );
 			hw_OutputPort( hw_LED1 );
@@ -344,15 +353,8 @@ void hw_Sleep( void ) {
 //-------------------------------------------------------------------------------
 
 void ADC_Initialize(void) {
+
 	AD1CON1bits.ADON = 0;
-
-	if( hw_Photodetector_Installed ) {
-		AD1PCFGLbits.PCFG0 = 0;	// AN0 to Analog Mode.
-	}
-
-	if( hw_Throttle_Installed ) {
-		AD1PCFGLbits.PCFG10 = 0;		// AN4 to Analog Mode.
-	}
 
 	AD1CON1 = 0x00E0;			// Idle=Stop, 10bit, unsigned, Auto conversion.
 	AD1CON2bits.VCFG = 0x0;		// AVss/AVdd

@@ -67,25 +67,10 @@ void schedule_Run() {
 	schedule_ActiveTask = 0;
 	schedule_Running = TRUE;
 
-#ifdef DEBUG
-	_TRISA2 = 0;
-#endif
-
 	while(1) {
 
 		schedule_ActiveTask = (schedule_ActiveTask + 1) % schedule_NoTasks;
 
-#ifdef DEBUG
-		{
-			int i;
-			for( i=0; i<=schedule_ActiveTask; i++ ) {
-				_RA2 = 1;
-				NOP;
-				_RA2 = 0;
-				NOP;
-			}
-		}
-#endif
 		curTask = &schedule_Tasks[ schedule_ActiveTask ];
 
 		// Assuming sleep times will always be longer than the tasks interval.
@@ -103,19 +88,6 @@ void schedule_Run() {
 
 		curTask->sleepForTicks = 0;
 		curTask->waitedTicks = 0;
-
-#ifdef DEBUG
-		{
-			int i;
-			for( i=0; i<=20; i++ ) { 
-				_RA2 = 1;
-				NOP;
-			}
-			_RA2 = 0;
-			NOP;
-		}
-#endif
-
 		curTask->function();
 	}
 }

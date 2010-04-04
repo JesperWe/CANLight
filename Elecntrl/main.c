@@ -72,7 +72,6 @@ int main (void)
 	led_Initialize();
 
 
-
 	schedule_Initialize();
 
 	schedule_AddTask( config_Task, 1 );

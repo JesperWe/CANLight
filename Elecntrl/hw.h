@@ -36,7 +36,6 @@
 #define hw_SLOW_HEARTBEAT_MS	3000
 #define hw_FAST_HEARTBEAT_MS	300
 
-#define hw_DetectorADCChannel	0
 
 enum hw_Functions_e {
 	/* 00 */ hw_UNKNOWN,
@@ -106,6 +105,8 @@ extern unsigned char		hw_Throttle_Installed;
 extern unsigned char		hw_Actuators_Installed;
 extern unsigned char 		hw_DeviceID;
 extern unsigned short		hw_PWMInverted;
+extern unsigned char 		hw_DetectorADCChannel;
+extern unsigned char 		hw_AutoBacklightMode;
 extern const unsigned short hw_NoKeys[hw_NoVariants];
 extern unsigned char 		hw_AmbientLevel;
 extern unsigned char 		hw_CanSleep;
