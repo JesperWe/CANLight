@@ -221,7 +221,7 @@ void display_BacklightTask() {
 	if( ! hw_AutoBacklightMode ) return;
 
 	// Don't send events if we are shining our own light into the detector.
-	if( led_CurrentLevel[0]!=0 || led_CurrentLevel[0]!=0 ) return;
+	if( led_CurrentLevel[0]!=0 || led_CurrentLevel[1]!=0 ) return;
 
 	pvVoltage = ADC_Read( hw_DetectorADCChannel );
 
