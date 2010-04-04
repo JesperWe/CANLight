@@ -48,8 +48,17 @@ void led_Initialize( void ) {
 	int i;
 
 	switch( hw_Type ) {
-		case hw_LEDLAMP:	led_NoChannels = 2; break;
-		case hw_SWITCH:		led_NoChannels = 1; break;
+		case hw_LEDLAMP: {
+			led_NoChannels = 2;
+			led_PresetLevel[ led_RED ] = 1.0;
+			led_PresetLevel[ led_WHITE ] = 0.5;
+			break;
+		}
+		case hw_SWITCH:	{
+			led_NoChannels = 1;
+			led_PresetLevel[ led_RED ] = 1.0;
+			break;
+		}
 		default:			led_NoChannels = 0; return;
 	}
 
@@ -123,6 +132,7 @@ void led_SetLevel( unsigned char color, float level ) {
 
 	// Don't acknowledge if we are in POST or config update.
 
+	if( config_Invalid ) return;
 	if( schedule_Running == FALSE ) return;
 	if( led_CurrentFunc == 0 ) return;
 
@@ -296,8 +306,6 @@ void led_PowerOnTest() {
 	switch( hw_Type ) {
 
 		case hw_LEDLAMP: {
-			led_PresetLevel[ led_RED ] = 1.0;
-			led_PresetLevel[ led_WHITE ] = 0.5;
 			led_SetLevel( led_RED, 1.0 );
 			led_SetLevel( led_WHITE, 1.0 );
 			led_FadeToLevel( led_RED, 0.0, 2.0 );
@@ -316,7 +324,6 @@ void led_PowerOnTest() {
 			schedule_Sleep(500);
 			hw_WritePort( hw_LED3, 0 );
 
-			led_PresetLevel[ led_RED ] = 1.0;
 			led_SetLevel( led_RED, 1.0);
 			led_FadeToLevel( led_RED, 0.0, 2.0 );
 			break;

@@ -8,6 +8,7 @@
 #include "config.h"
 #include "events.h"
 #include "nmea.h"
+#include "led.h"
 
 unsigned char display_IsOn = 1;
 unsigned char display_CurrentAdjust = 0;
@@ -217,13 +218,18 @@ void display_BacklightTask() {
 	unsigned short pvVoltage;
 	event_t	ambientEvent;
 
+	if( ! hw_AutoBacklightMode ) return;
+
+	// Don't send events if we are shining our own light into the detector.
+	if( led_CurrentLevel[0]!=0 || led_CurrentLevel[0]!=0 ) return;
+
 	pvVoltage = ADC_Read( hw_DetectorADCChannel );
 
 	ambientLevel = 0.9*ambientLevel + 0.1*(float)pvVoltage;
 
 	pvVoltage = ((short)ambientLevel) >> 2;
 
-	if( (hw_AmbientLevel != pvVoltage) && hw_AutoBacklightMode ) {
+	if( hw_AmbientLevel != pvVoltage ) {
 
 		hw_AmbientLevel = pvVoltage;
 

@@ -68,10 +68,10 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_NoFunctions] =
 	{ &PORTA, &TRISA, 9 },	// LED1
 	{ &PORTC, &TRISC, 4 },	// LED2
 	{ &PORTC, &TRISC, 6 },	// LED3
-	{ &PORTA, &TRISA, 2 },	// SWITCH1
-	{ &PORTA, &TRISA, 8 },	// SWITCH2
-	{ &PORTB, &TRISB, 3 },	// SWITCH3
-	{ &PORTC, &TRISC, 1 },	// SWITCH4
+	{ &PORTA, &TRISA, 8 },	// SWITCH1
+	{ &PORTA, &TRISA, 2 },	// SWITCH2
+	{ &PORTB, &TRISC, 1 },	// SWITCH3
+	{ &PORTC, &TRISB, 3 },	// SWITCH4
 	{ &PORTC, &TRISC, 7 },	// KEY1
 	{ &PORTC, &TRISC, 5 },	// KEY2
 	{ &PORTC, &TRISC, 3 }	// KEY3
@@ -290,11 +290,9 @@ void hw_Initialize( void ) {
 
 			if( hw_Actuators_Installed ) {
 				PPSOutput( PPS_OC3, PPS_RP2 );	// Ch1: Throttle to pin 23.
-				PPSOutput( PPS_OC4, PPS_RP16 );	// Ch1: Gear box to pin 25.
-				hw_OutputPort( hw_SWITCH1 );
-				hw_WritePort( hw_SWITCH1, 0 );
-				hw_OutputPort( hw_SWITCH2 );
-				hw_WritePort( hw_SWITCH2, 0 );
+				PPSOutput( PPS_OC4, PPS_RP18 );	// Ch1: Gear box to pin 27.
+				hw_OutputPort( hw_SWITCH3 );
+				hw_WritePort( hw_SWITCH3, 0 );
 			}
 
 			PPSLock;
