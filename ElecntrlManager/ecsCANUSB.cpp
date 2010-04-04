@@ -171,7 +171,7 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 		case 7: eventName = "e_SWITCH_OFF"; break;
 		case 8: eventName = "e_SWITCH_FAIL"; break;
 		case 9: eventName = "e_FADE_START"; break;
-		case 10: eventName = "e_FADE_STOP"; break;
+		case 10: eventName = "e_FADE_MASTER"; break;
 		case 11: eventName = "e_FAST_HEARTBEAT"; break;
 		case 12: eventName = "e_NMEA_MESSAGE"; break;
 		case 13: eventName = "e_NIGHTMODE"; break;
@@ -180,12 +180,12 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 		case 16: eventName = "e_BLACKOUT"; break;
 		case 17: eventName = "e_SLOW_HEARTBEAT"; break;
 		case 18: eventName = "e_THROTTLE_MASTER"; break;
-		case 19: eventName = "e_SET_THROTTLE"; break;
+		case 19: eventName = "e_SET_LEVEL"; break;
 		case 20: eventName = "e_CONFIG_FILE_UPDATE"; break;
 		default: eventName = "<unknown>";
 		}
 
-		line += buf.sprintf( "Dev %02d: %ls/%ls  Type %03d, Data %d, Info %d",
+		line += buf.sprintf( "Dev %02d: %ls/%ls  Group %03d, Data %d, Info %d",
 								 msg->data[ 4 ], funcName.utf16(),  eventName.utf16(),
 								 msg->data[ 0 ], msg->data[ 1 ],
 								 msg->data[ 2 ] << 8 | msg->data[ 3 ] );
@@ -310,5 +310,4 @@ void ecsCANUSB::sendConfig( QByteArray &configFile ) {
 			return;
 		}
 	}
-
 }
