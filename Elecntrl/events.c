@@ -120,7 +120,7 @@ void event_Task() {
 
 					if( hw_Type == hw_SWITCH ) {
 						// Turn off backlight during daytime.
-						if( event.info > 200 ) led_SetLevel( led_RED, 0.0 );
+						if( event.info > 220 ) led_SetLevel( led_RED, 0.0 );
 						else led_SetLevel( led_RED, (float)(blLevel)/256.0 );
 					}
 				}
@@ -143,7 +143,7 @@ void event_Task() {
 								break;
 							}
 							case e_KEY_TRIPLECLICKED: {
-								// Unused on all hardware for now...
+								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
 								break;
 							}
 							case e_KEY_HOLDING: {

@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <math.h>
 
 #include "hw.h"
 #include "config.h"
@@ -112,9 +113,9 @@ void led_SetLevel( unsigned char color, float level ) {
 	led_CurrentLevel[color] = modLevel = level;
 
 	// Attempt to linearize light output as function of duty cycle.
-	// It turns out a square characteristic produces a nice feeling curve.
+	// It turns out a near square characteristic produces a nice feeling curve.
 
-	modLevel = level * level;
+	modLevel = pow(level, 1.8);
 
 	modLevel = modLevel * led_PWM_PERIOD;
 
@@ -291,6 +292,11 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			if( hw_Type == hw_LEDLAMP && function == hw_LED_LIGHT ) {
 				led_CurrentColor = (led_CurrentColor==led_RED) ? led_WHITE : led_RED;
 			}
+			break;
+		}
+		case e_KEY_TRIPLECLICKED: {
+			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) led_SetLevel( led_CurrentColor, 0.05 );
+			else led_SetLevel( led_CurrentColor, 1.0 );
 			break;
 		}
 	}
