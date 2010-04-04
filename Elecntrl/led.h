@@ -15,6 +15,9 @@ extern unsigned char led_CurrentFunc;
 extern unsigned short led_NoChannels;
 extern unsigned short led_CurrentColor;
 extern unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];
+extern unsigned char led_DimmerTicks;
+extern unsigned char led_FadeMaster;
+extern unsigned char led_LevelControlGroup;
 
 void led_Initialize( void );
 

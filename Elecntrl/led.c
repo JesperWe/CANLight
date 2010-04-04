@@ -30,7 +30,10 @@ unsigned short led_FadeStep[led_MAX_NO_CHANNELS];		// Current step in the fade.
 unsigned short led_FadeSteps[led_MAX_NO_CHANNELS];		// Total steps in the fade.
 unsigned short led_NoChannels;
 unsigned short led_CurrentColor;
+unsigned char led_DimmerTicks;
 unsigned char led_CurrentFunc;
+unsigned char led_FadeMaster;
+unsigned char led_LevelControlGroup;
 
 float led_PresetLevel[led_MAX_NO_CHANNELS];
 float led_FadeTargetLevel[led_MAX_NO_CHANNELS];
@@ -226,13 +229,41 @@ void led_FadeToLevel( unsigned char color, float level, float fadeSeconds ) {
 // Interrupt fade in progress.
 
 void led_ProcessEvent( event_t *event, unsigned char function ) {
+	event_t fadeEvent;
 
 	led_CurrentFunc = function;
 
 	if( function != hw_LED_LIGHT ) led_CurrentColor = (function==hw_LED_RED) ? led_RED : led_WHITE;
 
 	switch( event->ctrlEvent ) {
+		case e_FADE_MASTER: {
+
+			// We are not the master. Stop fade.
+			if( event->data != hw_DeviceID ) led_CurFadeStep = 0;
+
+			// We are master. Save controller group ID for set_level events.
+			else led_LevelControlGroup = event->groupId;
+
+			break;
+		}
+		case e_SET_LEVEL: {
+			float value;
+			led_DimmerTicks = 0;
+			value = event->info / 1000.0;
+			led_SetLevel( led_CurrentColor, value );
+			break;
+		}
 		case e_KEY_HOLDING: {
+
+			fadeEvent.groupId = functionInGroup[ function ];
+			fadeEvent.ctrlDev = hw_DeviceID;
+			fadeEvent.ctrlFunc = led_CurrentFunc;
+			fadeEvent.ctrlEvent = e_FADE_START;
+			fadeEvent.info = (unsigned short)(led_CurrentLevel[led_CurrentColor] * 1000);
+			fadeEvent.data = led_CurrentColor;
+
+			nmea_SendEvent( &fadeEvent );
+
 			if( led_CurrentLevel[led_CurrentColor] > 0.5 ) led_CurFadeStep = -0.05;
 			else led_CurFadeStep = 0.05;
 			break;
@@ -340,13 +371,13 @@ void led_TaskComplete() {
 void led_FadeTask() {
 	unsigned short i;
 	unsigned short curStep;
-	static unsigned char dimmerTicks;
+	event_t	levelEvent;
 
 	float fadePos, multiplier, value;
 
 	hw_CanSleep = 1;
 	hw_SleepTimer++;
-	dimmerTicks++;
+	led_DimmerTicks++;
 
 	for( i=0; i<led_NoChannels; i++ ) {
 
@@ -372,15 +403,29 @@ void led_FadeTask() {
 	}
 
 	// If we are dimming, take care of that too.
+	// Dimming multiple appliances simultaneously is problematic since they
+	// are stepping asynchronously. We make one device the master and have it publish
+	// the current level on the bus and have all others follow.
 
 	if( led_CurFadeStep != 0.0 ) {
-		dimmerTicks++;
-		dimmerTicks = dimmerTicks % 5;
-		if( dimmerTicks == 0 ) {
+		led_DimmerTicks++;
+		led_DimmerTicks = led_DimmerTicks % 5;
+		if( led_DimmerTicks == 0 ) {
+
 			value = led_CurrentLevel[led_CurrentColor];
 			value += led_CurFadeStep;
 			if( value > 1.0 ) { led_CurFadeStep = - led_CurFadeStep; value = 1.0; }
 			if( value < 0.0 ) { led_CurFadeStep = - led_CurFadeStep; value = 0.0; }
+
+			levelEvent.groupId = led_LevelControlGroup;
+			levelEvent.ctrlDev = hw_DeviceID;
+			levelEvent.ctrlEvent = e_SET_LEVEL;
+			levelEvent.ctrlFunc = hw_LED_LIGHT;
+			levelEvent.data = led_CurrentColor;
+			levelEvent.info = (short) (value * 1000);
+
+			nmea_SendEvent( &levelEvent );
+
 			led_SetLevel( led_CurrentColor, value );
 		}
 	}

@@ -294,7 +294,7 @@ void engine_JoystickTask() {
 		event.PGN = 0;
 		event.ctrlDev = hw_DeviceID;
 		event.ctrlFunc = engine_Gear;
-		event.ctrlEvent = e_SET_THROTTLE;
+		event.ctrlEvent = e_SET_LEVEL;
 		event.data = engine_Throttle;
 		event.info = engine_Joystick_Level;
 		nmea_SendEvent( &event );

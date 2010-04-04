@@ -25,11 +25,11 @@ bundle several channels, like the "Lamp" function is a bundle of all colors of a
 Controller Group (GID)
         Appliance (AID)/Function
 
->>> Sends: Listener Group + Event
+>>> Sends: Controller Group ID + Event
 
 Bindings: [Event/Action], ...
 
-<<< Sends: Controller Group + Event
+<<< Sends: Listener Group ID + Event
 
 Listener Group (GID)
         Appliance (AID)/Function
@@ -240,9 +240,7 @@ void config_Task() {
 		}
 	}
 
-
 	schedule_Running = TRUE;
-	schedule_AddTask( led_TaskComplete, 100 );
 	schedule_Finished();
 
 }
@@ -278,5 +276,7 @@ void config_Update( unsigned short configBytes ) {
 	}
 
 	config_Invalid = FALSE;
+	config_Initialize();
+	schedule_AddTask( led_TaskComplete, 100 );
 
 }

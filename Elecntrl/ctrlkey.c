@@ -11,6 +11,7 @@
 #include "ctrlkey.h"
 #include "engine.h"
 #include "schedule.h"
+#include "led.h"
 
 //---------------------------------------------------------------------------------------------
 // Globals
@@ -115,6 +116,8 @@ void ctrlkey_task() {
 			if( (schedule_time - ctrlkey_Presstime[ keyNo ]) > ctrlkey_HOLDING_THRESHOLD ) {
 				ctrlkey_Holding[ keyNo ] = TRUE;
 
+				led_FadeMaster = 0xFF;
+
 				events_Push( e_IO_EVENT, 0,
 					functionInGroup[function], hw_DeviceID,
 					function, e_KEY_HOLDING, keyNo,
@@ -183,6 +186,8 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 					ctrlkey_Releasetime[ keyNo ] = 0;
 					ctrlkey_Holding[ keyNo ] = FALSE;
 					ctrlkey_ClickCount[ keyNo ] = 0;
+
+					led_FadeMaster = 0;
 				}
 
 				else {

@@ -106,6 +106,8 @@ void hw_Initialize( void ) {
 
 	AD1PCFGL = 0x1FFF;				// ANx eats ECAN1 SNAFU!
 
+	RCONbits.SWDTEN = 0;			// No Watchdog for now...
+
 	// Set up clock oscillator. Nominal fOSC=7.37MHz
 	// This is too low for the ECAN unit to work well at 250kBit.
 	// So we use PLL to increase it to 14MHz.

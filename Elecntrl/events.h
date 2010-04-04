@@ -26,7 +26,7 @@ enum event_Events_e {
 	/* 07 */ e_SWITCH_OFF,
 	/* 08 */ e_SWITCH_FAIL,
 	/* 09 */ e_FADE_START,
-	/* 10 */ e_FADE_STOP,
+	/* 10 */ e_FADE_MASTER,
 	/* 11 */ e_FAST_HEARTBEAT,
 	/* 12 */ e_unused,
 	/* 13 */ e_NIGHTMODE,
@@ -35,7 +35,7 @@ enum event_Events_e {
 	/* 16 */ e_BLACKOUT,
 	/* 17 */ e_SLOW_HEARTBEAT,
 	/* 18 */ e_THROTTLE_MASTER,
-	/* 19 */ e_SET_THROTTLE,
+	/* 19 */ e_SET_LEVEL,
 	/* 20 */ e_CONFIG_FILE_UPDATE,
 	/* 21 */ e_NO_EVENTS
 };

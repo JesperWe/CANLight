@@ -69,6 +69,15 @@ void events_Push(
     queue_Send( events_Queue, &newEvent );
 }
 
+//---------------------------------------------------------------------------------------------
+
+void hw_AcknowledgeSwitch( unsigned char function, int setting ) {
+	switch( function ) {
+	case hw_KEY1: { hw_WritePort( hw_LED1, setting ); break; }
+	case hw_KEY2: { hw_WritePort( hw_LED2, setting ); break; }
+	case hw_KEY3: { hw_WritePort( hw_LED3, setting ); break; }
+	}
+}
 
 //---------------------------------------------------------------------------------------------
 // The Event Task is the main event manager. It processes both local and NMEA bus events.
@@ -93,28 +102,6 @@ void event_Task() {
 
 			case e_NMEA_MESSAGE: {
 
-				// Engine events are slightly special.
-
-				if( event.ctrlEvent == e_SET_THROTTLE ) {
-
-					// Save transmitted values for monitoring.
-
-					if( hw_I2C_Installed ) {
-						engine_Throttle = event.data;
-						engine_Gear = event.ctrlFunc;
-						engine_LastJoystickLevel = event.info;
-					}
-
-					// If we are a unit actually running an engine, do it!
-
-					if( hw_Actuators_Installed ) {
-						engine_RequestGear( event.ctrlFunc );
-						engine_RequestThrottle( event.data );
-					}
-
-					break;
-				}
-
 				// Always listen to config file updates.
 
 				if( event.ctrlEvent == e_CONFIG_FILE_UPDATE ) {
@@ -122,7 +109,8 @@ void event_Task() {
 					break;
 				}
 
-				// Only process event this device is listening for.
+				// Do I have a function listening to events from the controller group?
+				// XXX Also apply event filter here, it is unused at the moment!
 
 				for( function=0; function<hw_NoFunctions; function++ ) {
 
@@ -146,25 +134,75 @@ void event_Task() {
 								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
 								break;
 							}
+							case e_FADE_MASTER: {
+								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
+								break;
+							}
 							case e_KEY_RELEASED: {
 								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
 								break;
 							}
-							case e_SWITCH_ON: {
-								switch_ProcessEvent( &event, function );
-								break;
-							}
-							case e_SWITCH_OFF: {
-								switch_ProcessEvent( &event, function );
-								break;
-							}
-							case e_SWITCH_FAIL: {
-								switch_ProcessEvent( &event, function );
+							case e_SET_LEVEL: {
+								if( hw_IsPWM(function) ) {
+									led_ProcessEvent( &event, function );
+									break;
+								}
+
+								// If it is an engine event, save transmitted values for monitoring.
+			
+								if( hw_I2C_Installed ) {
+									engine_Throttle = event.data;
+									engine_Gear = event.ctrlFunc;
+									engine_LastJoystickLevel = event.info;
+								}
+			
+								// If we are a unit actually running an engine, do it!
+			
+								if( hw_Actuators_Installed ) {
+									engine_RequestGear( event.ctrlFunc );
+									engine_RequestThrottle( event.data );
+								}
 								break;
 							}
 						}
+					}
+				}
+				// hw_SleepTimer = 0;
 
-						hw_SleepTimer = 0;
+				// Now check for acknowledge events. Do I have a function that controls
+				// this listener group?
+
+				for( function=0; function<hw_NoFunctions; function++ ) {
+
+					if( functionListenGroup[function] == event.groupId ) {
+
+						switch( event.ctrlEvent ) {
+
+							// Fade Starts: If we are originating the fade, led_FadeMaster is 0xFF until
+							// the first response from a listener is received. This first responder becomes
+							// the master for the rest of the fade.
+
+							case e_FADE_START: {
+
+								if( led_FadeMaster != 0xFF ) break;
+
+								led_FadeMaster = event.ctrlDev;
+
+								event.groupId = functionInGroup[function];
+								event.ctrlDev = hw_DeviceID;
+								event.ctrlEvent = e_FADE_MASTER;
+								event.ctrlFunc = function;
+								event.data = led_FadeMaster;
+								event.info = 0;
+
+								nmea_SendEvent( &event );
+
+								break;
+							}
+							case e_SWITCH_ON: { hw_AcknowledgeSwitch( function, 1 ); break; }
+							case e_SWITCH_OFF: { hw_AcknowledgeSwitch( function, 0 ); break; }
+							case e_SWITCH_FAIL: { break; }
+						}
 					}
 				}
 				break;
