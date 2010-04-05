@@ -16,7 +16,6 @@
 //---------------------------------------------------------------------------------------------
 // Globals
 
-unsigned char ctrlkey_KeyState[ctrlkey_MAX_NO_KEYS];
 unsigned short ctrlkey_NoKeys;
 unsigned char ctrlkey_Holding[ ctrlkey_MAX_NO_KEYS ];
 unsigned long ctrlkey_Presstime[ ctrlkey_MAX_NO_KEYS ];

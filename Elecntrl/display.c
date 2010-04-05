@@ -215,17 +215,22 @@ void display_Task() {
 
 void display_BacklightTask() {
 	static float ambientLevel;
+	static char interval;
 	unsigned short pvVoltage;
 	event_t	ambientEvent;
 
 	if( ! hw_AutoBacklightMode ) return;
 
-	// Don't send events if we are shining our own light into the detector.
+	// Don't do anything if we are shining our own light into the detector.
 	if( led_CurrentLevel[0]!=0 || led_CurrentLevel[1]!=0 ) return;
 
 	pvVoltage = ADC_Read( hw_DetectorADCChannel );
 
 	ambientLevel = 0.9*ambientLevel + 0.1*(float)pvVoltage;
+	interval++;
+
+	if( interval < 15 ) return;
+	interval = 0;
 
 	pvVoltage = ((short)ambientLevel) >> 2;
 
