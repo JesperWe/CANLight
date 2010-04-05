@@ -96,7 +96,7 @@ void schedule_Run() {
 		}
 
 		if( idle ) {
-			_TRISA9 = 0;
+			_TRISB15 = 0;
 			hw_Sleep();
 		}
 	}

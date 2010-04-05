@@ -347,7 +347,7 @@ void hw_Sleep( void ) {
 
 	if( hw_SleepTimer > 0 ) return;
 
-	_RA9 = 1;
+	_RB15 = 1;
 	hw_WritePort( hw_CAN_RATE, 1 );
 	nmea_ControllerMode( hw_ECAN_MODE_DISABLE );
 
@@ -358,7 +358,7 @@ void hw_Sleep( void ) {
 		asm volatile ("PWRSAV #1");
 	}
 
-	_RA9 = 0;
+	_RB15 = 0;
 
 	nmea_ControllerMode( hw_ECAN_MODE_NORMAL );
 	hw_WritePort( hw_CAN_RATE, 0 );
