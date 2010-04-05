@@ -90,7 +90,7 @@ int main (void)
 	}
 
 	if( hw_Actuators_Installed ) {
-		schedule_AddTask( engine_ActuatorTask, 1 );
+		schedule_AddTask( engine_ActuatorTask, 10 );
 	}
 
 	if( hw_Throttle_Installed ) {

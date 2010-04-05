@@ -12,11 +12,14 @@
 
 #include "hw.h"
 #include "schedule.h"
-
+#include "config.h"
+#include "events.h"
+#include "nmea.h"
+#include "led.h"
 
 short schedule_NoTasks;
 schedule_Task_t schedule_Tasks[schedule_MAX_NO_TASKS];
-short schedule_ActiveTask;
+short schedule_Active;
 unsigned char schedule_Running = FALSE;
 unsigned long schedule_time = 0;
 
@@ -31,6 +34,7 @@ void schedule_Initialize() {
     PR1 = 0x1B70;					// Timer cycle. Set to Fcy / 1000.
     _T1IF = 0;
     IEC0bits.T1IE = 1;
+    T1CONbits.TSIDL = 0;			// Keep running in idle.
     T1CONbits.TON = 1;				// Start Timer.
 }
 
@@ -63,32 +67,38 @@ void schedule_ResetTaskTimer( void (*taskFunction)(void) ) {
 
 void schedule_Run() {
 	schedule_Task_t *curTask;
-
-	schedule_ActiveTask = 0;
+	unsigned char idle;
 	schedule_Running = TRUE;
 
 	while(1) {
+		idle = TRUE;
+		for( schedule_Active=0; schedule_Active < schedule_NoTasks; schedule_Active++ ) {
 
-		schedule_ActiveTask = (schedule_ActiveTask + 1) % schedule_NoTasks;
+			curTask = &schedule_Tasks[ schedule_Active ];
 
-		curTask = &schedule_Tasks[ schedule_ActiveTask ];
+			// Assuming sleep times will always be longer than the tasks interval.
 
-		// Assuming sleep times will always be longer than the tasks interval.
+			if( curTask->sleepForTicks > curTask->waitedTicks ) continue;
 
-		if( curTask->sleepForTicks > curTask->waitedTicks ) continue;
+			if( curTask->intervalTicks > curTask->waitedTicks ) continue;
 
-		if( curTask->intervalTicks > curTask->waitedTicks ) continue;
+			// If we are waking up from a sleep we return to execute the sleeping task
+			// at the point where it went to sleep.
 
-		// If we are waking up from a sleep we return to execute the sleeping task
-		// at the point where it went to sleep.
+			if( curTask->sleepForTicks ) { return; }
 
-		if( curTask->sleepForTicks ) { break; }
+			// No rest for the wicked...
 
-		// No rest for the wicked...
+			idle = FALSE;
+			curTask->sleepForTicks = 0;
+			curTask->waitedTicks = 0;
+			curTask->function();
+		}
 
-		curTask->sleepForTicks = 0;
-		curTask->waitedTicks = 0;
-		curTask->function();
+		if( idle ) {
+			_TRISA9 = 0;
+			hw_Sleep();
+		}
 	}
 }
 
@@ -98,7 +108,7 @@ void schedule_Run() {
 
 void schedule_Sleep( short forTicks ) {
 	schedule_Task_t *curTask;
-	curTask = &schedule_Tasks[ schedule_ActiveTask ];
+	curTask = &schedule_Tasks[ schedule_Active ];
 
 	curTask->waitedTicks = 0;
 	curTask->sleepForTicks = forTicks;
@@ -119,16 +129,15 @@ void schedule_Finished() {
 
 	// Are we the last task? If so, killing ourself is simple...
 
-	if( schedule_ActiveTask == (schedule_NoTasks - 1)) { return; }
+	if( schedule_Active == (schedule_NoTasks - 1)) { return; }
 
 	// No, other tasks have been added after ours.
 	// We need to compact the tasks vector before dying.
 
-	for( iTask = schedule_ActiveTask; iTask<schedule_NoTasks; iTask++ ) {
+	for( iTask = schedule_Active; iTask<schedule_NoTasks; iTask++ ) {
 		schedule_Tasks[ iTask ] = schedule_Tasks[ iTask+1 ];
 	}
 }
-
 
 //---------------------------------------------------------------------------------------------
 // Timer 1 Interrupt. All registered tasks have now waited 1 tick more...
@@ -142,6 +151,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	}
 
 	schedule_time++;
+	if( hw_SleepTimer > 0 ) hw_SleepTimer--;
 
     _T1IF = 0;
     _T1IE = 1;

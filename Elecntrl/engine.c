@@ -231,8 +231,14 @@ void engine_ActuatorTask() {
 	// and there is by coincidence a good match between typical engine revving down times
 	// and a cycle of 1 rpm/ms.
 
-	if( engine_TargetRPM > engine_CurrentRPM ) engine_CurrentRPM++;
-	if( engine_TargetRPM < engine_CurrentRPM ) engine_CurrentRPM--;
+	if( engine_TargetRPM > engine_CurrentRPM ) {
+		engine_CurrentRPM += 10;
+		if( engine_CurrentRPM > engine_TargetRPM ) engine_CurrentRPM = engine_TargetRPM;
+	}
+	else if( engine_TargetRPM < engine_CurrentRPM ) {
+		engine_CurrentRPM -= 10;
+		if( engine_CurrentRPM < engine_TargetRPM ) engine_CurrentRPM = engine_TargetRPM;
+	}
 
 	// Any gear change pending?
 

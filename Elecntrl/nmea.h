@@ -10,6 +10,9 @@
 
 #define __debug_pulse(pin)		pin = 1; NOP; pin = 0; NOP;
 
+#define nmea_INTERFACE_ENABLED		0
+#define nmea_INTERFACE_DISABLED	1
+
 // Return Codes.
 
 #define nmea_SUCCESS				0

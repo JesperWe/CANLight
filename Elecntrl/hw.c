@@ -301,6 +301,21 @@ void hw_Initialize( void ) {
 	}
 
 	hw_HeartbeatCounter = 0;
+
+	// Disable unused hardware. Keep Timers, Output Capture, ECAN, ADC and I2C running.
+
+	PMD1 = 0x0078; // Disable UART1, UART2, SPI1, SPI2
+
+	if( ! hw_I2C_Installed ) PMD1bits.I2C1MD = 1;
+
+	if( (!hw_Photodetector_Installed) && (!hw_Throttle_Installed) ) PMD1bits.AD1MD = 1;
+
+	PMD2 = 0xC300; // Disable all Input Captures.
+
+	PMD3bits.RTCCMD = 1;
+	PMD3bits.CRCMD = 1;
+	PMD3bits.PMPMD = 1;
+
 	return;
 }
 
@@ -330,21 +345,23 @@ unsigned char hw_IsPWM( unsigned short hw_Port ) {
 
 void hw_Sleep( void ) {
 
-	_RB14 = 1;
+	if( hw_SleepTimer > 0 ) return;
 
+	_RA9 = 1;
+	hw_WritePort( hw_CAN_RATE, 1 );
 	nmea_ControllerMode( hw_ECAN_MODE_DISABLE );
 
 	if( hw_CanSleep ) {
-		asm volatile ("PWRSAV #0");
+		asm volatile ("PWRSAV #1"); // Sleep mode selection needs work before we can deep sleep.
 	}
 	else { // Idle with PWM clocks still running.
 		asm volatile ("PWRSAV #1");
 	}
 
-	_RB14 = 0;
-	hw_SleepTimer = 0;
+	_RA9 = 0;
 
 	nmea_ControllerMode( hw_ECAN_MODE_NORMAL );
+	hw_WritePort( hw_CAN_RATE, 0 );
 }
 
 

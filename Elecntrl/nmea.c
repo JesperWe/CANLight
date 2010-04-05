@@ -249,7 +249,7 @@ unsigned char nmea_SendEvent( event_t *event )
 // has time to wake from sleep by sending a dummy event first.
 
 unsigned char nmea_SendKeyEvent( event_t *event ) {
-	hw_SleepTimer = 0;
+	hw_SleepTimer = 2;
 	nmea_Wakeup();
 	return nmea_SendEvent( event );
 }
@@ -414,6 +414,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 
 	if( C1INTFbits.WAKIF ) {
 		C1INTFbits.WAKIF = 0;
+		hw_SleepTimer = 2; // Stay awake for a while to look for traffic.
 	}
 
 	// Message in TX buffer has been transmitted. Any more messages?

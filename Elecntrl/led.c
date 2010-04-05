@@ -87,7 +87,6 @@ void led_Initialize( void ) {
 	T2CONbits.TON = 1;  		// Start Timer.
 
 	hw_CanSleep = 1;
-	hw_SleepTimer = 0;
 	led_SetLevel( 0, 0.0 );
 	led_SetLevel( 1, 0.0 );
 
@@ -108,6 +107,8 @@ void led_SetLevel( unsigned char color, float level ) {
 	float modLevel, lastLevel;
 	short dutycycle;
 	event_t response;
+
+	if( level != 0 ) hw_CanSleep = 0;
 
 	lastLevel = led_CurrentLevel[color];
 	led_CurrentLevel[color] = modLevel = level;
@@ -389,7 +390,6 @@ void led_FadeTask() {
 	float fadePos, multiplier, value;
 
 	hw_CanSleep = 1;
-	hw_SleepTimer++;
 	led_DimmerTicks++;
 
 	for( i=0; i<led_NoChannels; i++ ) {
