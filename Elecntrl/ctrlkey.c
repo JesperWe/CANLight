@@ -76,6 +76,9 @@ unsigned short ctrlkey_ReadKeys( void ) {
 // The Control Key Task monitors time elapsed between key clicks and determines
 // if the click is a single/double/tripple click, and sends bus events accordingly.
 
+#define ctrlkey_DOUBLECLICK_THRESHOLD schedule_SECOND * 0.4
+#define ctrlkey_HOLDING_THRESHOLD schedule_SECOND * 0.3
+
 void ctrlkey_task() {
 	unsigned char keyNo;
 	unsigned char event;
@@ -151,7 +154,7 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 			0xFFFF - (lastTimer - TMR1);
 
 	// Ignore Bounces.
-	if( elapsed < 2 ) goto done;
+	if( elapsed < 1 ) goto done;
 
 	currentState = ctrlkey_ReadKeys();
 
