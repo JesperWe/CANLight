@@ -156,6 +156,7 @@ void led_SetLevel( unsigned char color, float level ) {
 			&& led_CurrentFunc == hw_LED_LIGHT
 		) return;
 
+		nmea_Wakeup();
 		nmea_SendEvent( &response );
 	}
 

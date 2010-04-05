@@ -241,6 +241,7 @@ void display_BacklightTask() {
 		ambientEvent.ctrlEvent = e_AMBIENT_LIGHT_LEVEL;
 		ambientEvent.info = hw_AmbientLevel;
 
+		nmea_Wakeup();
 		nmea_SendEvent( &ambientEvent );
 	}
 }
