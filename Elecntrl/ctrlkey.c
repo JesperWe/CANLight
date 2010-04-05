@@ -144,7 +144,7 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 	_CNIE = 0;
 	_CNIF = 0;
 
-	hw_SleepTimer = 3; // Stay awake a few cycles to catch follow up action.
+	hw_SleepTimer = schedule_SECOND/10; // Stay awake a few cycles to catch follow up action.
 
 	elapsed = (TMR1>=lastTimer) ?
 			TMR1 - lastTimer :

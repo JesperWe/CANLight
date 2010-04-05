@@ -16,19 +16,15 @@
 #define DISABLE 		0
 #define CLEAR			0
 
-// FCY / 64 = 57 578 kHz
-// Divide by 576 to get PWM frequency = 100 Hz.
-// FCY / 256 = 14 395 kHz
-// Divide by 144 to get PWM frequency = 100 Hz.
-#define led_PWM_PERIOD	1200
+#define led_PWM_PERIOD	hw_FCY / 64 / 100 					// For 100Hz PWM with 1:64 prescaler.
 
-#define led_FADE_FREQ	25 // Match with T3CONbits.TCKPS and PR3 settings!
+#define led_FADE_FREQ	25
 
 // Globals
 
 unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];	// True if we are fading the channel.
-unsigned short led_FadeStep[led_MAX_NO_CHANNELS];		// Current step in the fade.
-unsigned short led_FadeSteps[led_MAX_NO_CHANNELS];		// Total steps in the fade.
+unsigned short led_FadeStep[led_MAX_NO_CHANNELS];			// Current step in the fade.
+unsigned short led_FadeSteps[led_MAX_NO_CHANNELS];			// Total steps in the fade.
 unsigned short led_NoChannels;
 unsigned short led_CurrentColor;
 unsigned char led_DimmerTicks;
@@ -103,7 +99,7 @@ void led_Initialize( void ) {
 // Set one of the LED channels to a percentage brightness.
 
 void led_SetLevel( unsigned char color, float level ) {
-
+	unsigned short i;
 	float modLevel, lastLevel;
 	short dutycycle;
 	event_t response;
@@ -130,6 +126,14 @@ void led_SetLevel( unsigned char color, float level ) {
 	switch( color ) {
 		case led_RED: { OC1RS = dutycycle; break;	}
 		case led_WHITE: { OC2RS = dutycycle; break; }
+	}
+
+	// Check if any channel is under PWM. In that case we can't goto deep sleep.
+
+	hw_CanSleep = 1;
+	for( i=0; i<led_NoChannels; i++ ) {
+		if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
+			hw_CanSleep = 0;
 	}
 
 	// Don't acknowledge if we are in POST or config update.
@@ -297,7 +301,7 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_KEY_TRIPLECLICKED: {
-			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) led_SetLevel( led_CurrentColor, 0.05 );
+			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) led_SetLevel( led_CurrentColor, 0.06 );
 			else led_SetLevel( led_CurrentColor, 1.0 );
 			break;
 		}
@@ -349,14 +353,14 @@ void led_PowerOnTest() {
 void led_TaskComplete() {
 	int i;
 
-	for( i=0; i<4; i++ ) {
+	for( i=0; i<3; i++ ) {
 		switch( hw_Type ) {
 
 			case hw_LEDLAMP: {
 				led_SetLevel( led_WHITE, 0.5 );
-				schedule_Sleep(300);
+				schedule_Sleep(schedule_SECOND/4);
 				led_SetLevel( led_WHITE, 0.0 );
-				schedule_Sleep(300);
+				schedule_Sleep(schedule_SECOND/4);
 				break;
 			}
 
@@ -364,11 +368,11 @@ void led_TaskComplete() {
 				hw_WritePort( hw_LED1, 1 );
 				hw_WritePort( hw_LED2, 0 );
 				hw_WritePort( hw_LED3, 1 );
-				schedule_Sleep(300);
+				schedule_Sleep(schedule_SECOND/4);
 				hw_WritePort( hw_LED1, 0 );
 				hw_WritePort( hw_LED2, 1 );
 				hw_WritePort( hw_LED3, 0 );
-				schedule_Sleep(300);
+				schedule_Sleep(schedule_SECOND/4);
 				hw_WritePort( hw_LED2, 0 );
 				break;
 			}
@@ -380,8 +384,6 @@ void led_TaskComplete() {
 
 //---------------------------------------------------------------------------------------------
 // Smooth lighting transitions.
-//
-// Should run with an Interrupt Interval of 40ms.
 
 void led_FadeTask() {
 	unsigned short i;
@@ -391,16 +393,8 @@ void led_FadeTask() {
 	float fadePos, multiplier, value;
 
 	hw_CanSleep = 1;
-	led_DimmerTicks++;
 
 	for( i=0; i<led_NoChannels; i++ ) {
-
-		// First check if any channel is under PWM. In that case we can't goto deep sleep.
-
-		if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
-			hw_CanSleep = 0;
-
-		// Now handle fades.
 
 		if( led_FadeInProgress[i] ) {
 
@@ -417,13 +411,12 @@ void led_FadeTask() {
 	}
 
 	// If we are dimming, take care of that too.
-	// Dimming multiple appliances simultaneously is problematic since they
-	// are stepping asynchronously. We make one device the master and have it publish
-	// the current level on the bus and have all others follow.
+	// If we have come here we are the master device for this fade and
+	// should update the network when we set levels.
 
 	if( led_CurFadeStep != 0.0 ) {
 		led_DimmerTicks++;
-		led_DimmerTicks = led_DimmerTicks % 5;
+		led_DimmerTicks = led_DimmerTicks % 5; // 5 steps/second if fade is 25 steps.
 		if( led_DimmerTicks == 0 ) {
 
 			value = led_CurrentLevel[led_CurrentColor];

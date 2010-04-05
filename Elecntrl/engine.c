@@ -232,11 +232,11 @@ void engine_ActuatorTask() {
 	// and a cycle of 1 rpm/ms.
 
 	if( engine_TargetRPM > engine_CurrentRPM ) {
-		engine_CurrentRPM += 10;
+		engine_CurrentRPM += 1000 / schedule_SECOND;
 		if( engine_CurrentRPM > engine_TargetRPM ) engine_CurrentRPM = engine_TargetRPM;
 	}
 	else if( engine_TargetRPM < engine_CurrentRPM ) {
-		engine_CurrentRPM -= 10;
+		engine_CurrentRPM -= 1000 / schedule_SECOND;
 		if( engine_CurrentRPM < engine_TargetRPM ) engine_CurrentRPM = engine_TargetRPM;
 	}
 
@@ -245,7 +245,7 @@ void engine_ActuatorTask() {
 	if( engine_CurrentGear != engine_TargetGear ) {
 		if( engine_CurrentRPM == engine_TargetRPM ) {
 
-			// Require at least 1 seconds between gear changes.
+			// Require at least 1 seconds between gear changes. XXX OLD CODE!
 
 			short interval;
 			interval = hw_HeartbeatCounter - engine_GearSwitchTime;
@@ -320,7 +320,7 @@ int engine_ThrottleMonitor() {
 	display_SetPosition(1,3);
 	display_Write("Gearbox:");
 
-	schedule_AddTask( engine_ThrottleMonitorUpdater, 500 );
+	schedule_AddTask( engine_ThrottleMonitorUpdater, schedule_SECOND/2 );
 	return menu_NO_DISPLAY_UPDATE;
 }
 

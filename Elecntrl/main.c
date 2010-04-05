@@ -74,31 +74,31 @@ int main (void)
 
 	schedule_Initialize();
 
-	schedule_AddTask( config_Task, 1 );
+	schedule_AddTask( config_Task, schedule_SECOND/100 );
 
-	schedule_AddTask( event_Task, 1 );
+	schedule_AddTask( event_Task, schedule_SECOND/100 );
 
-	schedule_AddTask( led_FadeTask, 40 );
+	schedule_AddTask( led_FadeTask, schedule_SECOND/25 );
 
 	if( hw_I2C_Installed ) {
-		schedule_AddTask( display_Task, 300 );
-		schedule_AddTask( menu_Task, 10 );
+		schedule_AddTask( display_Task, schedule_SECOND/3 );
+		schedule_AddTask( menu_Task, schedule_SECOND/100 );
 	}
 
 	if( hw_Photodetector_Installed ) {
-		schedule_AddTask( display_BacklightTask, 2000 );
+		schedule_AddTask( display_BacklightTask, 2*schedule_SECOND );
 	}
 
 	if( hw_Actuators_Installed ) {
-		schedule_AddTask( engine_ActuatorTask, 10 );
+		schedule_AddTask( engine_ActuatorTask, schedule_SECOND/10 );
 	}
 
 	if( hw_Throttle_Installed ) {
-		schedule_AddTask( engine_JoystickTask, 100 );
+		schedule_AddTask( engine_JoystickTask, schedule_SECOND/10 );
 	}
 
 	if( hw_NoKeys > 0 ) {
-		schedule_AddTask( ctrlkey_task, 50 );
+		schedule_AddTask( ctrlkey_task, schedule_SECOND/10 );
 	}
 
 	schedule_Run();

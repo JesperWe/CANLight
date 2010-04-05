@@ -29,9 +29,9 @@ void schedule_Initialize() {
     // Timer 1 will be our main task timer. Interval is 1ms.
 
     T1CONbits.TSIDL = 1;
-    T1CONbits.TCKPS = 0;			// Prescaler = 1
-    T1CONbits.TCS = 0;				// CLock Select = Fcy.
-    PR1 = 0x1B70;					// Timer cycle. Set to Fcy / 1000.
+    T1CONbits.TCKPS = 3;				// Prescaler = 256
+    T1CONbits.TCS = 0;					// CLock Select = Fcy.
+    PR1 = hw_FCY/256/schedule_SECOND;	// Timer cycle so that the timer will interrupt schedule_SECOND times per second.
     _T1IF = 0;
     IEC0bits.T1IE = 1;
     T1CONbits.TSIDL = 0;			// Keep running in idle.

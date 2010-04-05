@@ -207,7 +207,7 @@ void config_Task() {
 	short i;
 
 	if( ! config_Invalid ) {
-		schedule_AddTask( led_PowerOnTest, 100 );
+		schedule_AddTask( led_PowerOnTest, schedule_SECOND/10 );
 		schedule_Finished();
 		return;
 	}
@@ -222,7 +222,7 @@ void config_Task() {
 
 		if( hw_Type == hw_LEDLAMP ) led_SetLevel( led_WHITE, 0.0 );
 
-		timer = schedule_time + 800;
+		timer = schedule_time + schedule_SECOND;
 		while( schedule_time < timer );
 
 		// Number of flashes indicates type of config problem.
@@ -230,12 +230,12 @@ void config_Task() {
 		for( i=0; i< config_Invalid; i++ ) {
 			led_SetLevel( led_RED, 1.0);
 
-			timer = schedule_time + 200;
+			timer = schedule_time + schedule_SECOND/5;
 			while( schedule_time < timer );
 
 			led_SetLevel( led_RED, 0.0);
 
-			timer = schedule_time + 200;
+			timer = schedule_time + schedule_SECOND/5;
 			while( schedule_time < timer );
 		}
 	}
@@ -277,6 +277,6 @@ void config_Update( unsigned short configBytes ) {
 
 	config_Invalid = FALSE;
 	config_Initialize();
-	schedule_AddTask( led_TaskComplete, 100 );
+	schedule_AddTask( led_TaskComplete, schedule_SECOND/10 );
 
 }

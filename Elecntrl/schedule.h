@@ -11,6 +11,11 @@
 
 #define schedule_MAX_NO_TASKS	10
 
+// Number of scheduler ticks per second.
+// NB! You can't change this freely without checking if 16 bit timer
+// overflows will occur. Prescaling might need to be changed.
+#define schedule_SECOND		100
+
 typedef struct schedule_Task_s {
 	void (*function)(void);
 	short intervalTicks;

@@ -36,6 +36,7 @@
 #define hw_SLOW_HEARTBEAT_MS	3000
 #define hw_FAST_HEARTBEAT_MS	300
 
+#define hw_FCY					7024531
 
 enum hw_Functions_e {
 	/* 00 */ hw_UNKNOWN,
