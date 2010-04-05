@@ -327,13 +327,13 @@ void led_PowerOnTest() {
 
 		case hw_SWITCH: {
 			hw_WritePort( hw_LED1, 1 );
-			schedule_Sleep(500);
+			schedule_Sleep(schedule_SECOND/3);
 			hw_WritePort( hw_LED1, 0 );
 			hw_WritePort( hw_LED2, 1 );
-			schedule_Sleep(500);
+			schedule_Sleep(schedule_SECOND/3);
 			hw_WritePort( hw_LED2, 0 );
 			hw_WritePort( hw_LED3, 1 );
-			schedule_Sleep(500);
+			schedule_Sleep(schedule_SECOND/3);
 			hw_WritePort( hw_LED3, 0 );
 
 			led_SetLevel( led_RED, 1.0);
