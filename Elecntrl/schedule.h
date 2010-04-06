@@ -14,7 +14,7 @@
 // Number of scheduler ticks per second.
 // NB! You can't change this freely without checking if 16 bit timer
 // overflows will occur. Prescaling might need to be changed.
-#define schedule_SECOND		100
+#define schedule_SECOND		400
 
 typedef struct schedule_Task_s {
 	void (*function)(void);

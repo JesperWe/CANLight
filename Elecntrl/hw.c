@@ -28,6 +28,7 @@ unsigned char		hw_ConfigByte = 0;
 unsigned char		hw_DetectorADCChannel;
 unsigned char 		hw_AutoBacklightMode = TRUE;
 unsigned char		hw_AmbientLevel;
+unsigned char 		hw_LEDStatus;
 
 unsigned char		hw_DeviceID;
 
@@ -340,6 +341,33 @@ unsigned char hw_IsPWM( unsigned short hw_Port ) {
 	return 0;
 }
 
+
+//---------------------------------------------------------------------------------------------
+
+void hw_AcknowledgeSwitch( unsigned char function, int setting ) {
+
+
+	switch( function ) {
+	case hw_KEY1: {
+		hw_WritePort( hw_LED1, setting );
+		hw_LEDStatus = hw_LEDStatus & 6;
+		hw_LEDStatus = hw_LEDStatus | setting;
+		break;
+	}
+	case hw_KEY2: {
+		hw_WritePort( hw_LED2, setting );
+		hw_LEDStatus = hw_LEDStatus & 5;
+		hw_LEDStatus = hw_LEDStatus | setting<<1;
+		break;
+	}
+	case hw_KEY3: {
+		hw_WritePort( hw_LED3, setting );
+		hw_LEDStatus = hw_LEDStatus ^ 3;
+		hw_LEDStatus = hw_LEDStatus | setting<<2;
+		break;
+	}
+	}
+}
 
 //-------------------------------------------------------------------------------
 

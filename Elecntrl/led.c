@@ -47,31 +47,26 @@ void led_Initialize( void ) {
 	switch( hw_Type ) {
 		case hw_LEDLAMP: {
 			led_NoChannels = 2;
+			OC1CONbits.OCM = 6; // PWM mode.
+			OC1RS = led_PWM_PERIOD;
+			OC2CONbits.OCM = 6;
+			OC2RS = led_PWM_PERIOD;
 			led_PresetLevel[ led_RED ] = 1.0;
 			led_PresetLevel[ led_WHITE ] = 0.5;
 			break;
 		}
 		case hw_SWITCH:	{
 			led_NoChannels = 1;
+			OC1CONbits.OCM = 6;		// PWM mode.
+			OC1RS = led_PWM_PERIOD;
+			OC2CONbits.OCM = 5;		// Continuous Pulse Mode to get interrupt at OC2RS
+			OC2R = 0;
+			OC2RS = led_PWM_PERIOD;
 			led_PresetLevel[ led_RED ] = 1.0;
 			break;
 		}
 		default:			led_NoChannels = 0; return;
 	}
-
-	// OC Module defaults:
-	//	Run in idle mode.
-	//	Timer2 is input.
-
-	if( led_NoChannels > 0 ) {
-		OC1CONbits.OCM = 6; 		// PWM mode.
-		OC1RS = led_PWM_PERIOD;
-		if( led_NoChannels > 1 ) {
-			OC2CONbits.OCM = 6; 		// PWM mode.
-			OC2RS = led_PWM_PERIOD;
-		}
-	}
-
 
 	// So setup Timer 2.
 
@@ -382,6 +377,39 @@ void led_TaskComplete() {
 }
 
 
+//-------------------------------------------------------------------------------
+// Do bit-banging PWM on keypad indicator LEDs, since they are not on PWM outputs.
+
+#define led_PWM_RESOLUTION	15
+
+void led_PWMTask() {
+	static unsigned char tickCounter;
+	unsigned short level;
+
+	if( ! hw_LEDStatus ) return;
+	if( led_CurrentLevel[ led_RED ] == 0.0 ) return;
+	if( led_CurrentLevel[ led_RED ] == 1.0 ) return;
+
+	tickCounter++;
+	tickCounter = tickCounter % led_PWM_RESOLUTION;
+
+	if( tickCounter == 0 ) {
+		if( hw_LEDStatus & 1 ) hw_WritePort( hw_LED1, 1 );
+		if( hw_LEDStatus & 2 ) hw_WritePort( hw_LED2, 1 );
+		if( hw_LEDStatus & 4 ) hw_WritePort( hw_LED3, 1 );
+		return;
+	}
+
+	// We know here that we are a hw_SWITCH, and led_RED is back-light!
+
+	level = 1 + (short)(led_CurrentLevel[ led_RED ] * (float)led_PWM_RESOLUTION);
+	if( level == tickCounter ) {
+		hw_WritePort( hw_LED1, 0 );
+		hw_WritePort( hw_LED2, 0 );
+		hw_WritePort( hw_LED3, 0 );
+	}
+}
+
 //---------------------------------------------------------------------------------------------
 // Smooth lighting transitions.
 
@@ -436,4 +464,53 @@ void led_FadeTask() {
 			led_SetLevel( led_CurrentColor, value );
 		}
 	}
+}
+
+//---------------------------------------------------------------------------------------------
+// If we are running with dimmed back-light, we also need to dim the indicator LEDs.
+
+void led_IndicatorPWM( unsigned char run ) {
+	if( run ) {
+		OC2R = 0;
+		OC2RS = 3 * OC1RS;
+		_OC2IE = 1;
+		_T2IE = 1;
+		_OC2IF = 0;
+		_T2IF = 0;
+	}
+	else {
+		_OC2IE = 0;
+		_T2IE = 0;
+	}
+}
+
+//---------------------------------------------------------------------------------------------
+// Timer 2 Interrupt. Used when we are following the OC1 PWM for Status LED dimming.
+
+void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
+
+    _T2IF = 0;
+
+	if( ! hw_LEDStatus ) return;
+	if( led_CurrentLevel[ led_RED ] == 0.0 ) return;
+	if( led_CurrentLevel[ led_RED ] == 1.0 ) return;
+
+	if( hw_LEDStatus & 1 ) hw_WritePort( hw_LED1, 1 );
+	if( hw_LEDStatus & 2 ) hw_WritePort( hw_LED2, 1 );
+	if( hw_LEDStatus & 4 ) hw_WritePort( hw_LED3, 1 );
+}
+
+//---------------------------------------------------------------------------------------------
+// Output Compare 2 Interrupt. Used when we are following the OC1 PWM for Status LED dimming.
+// Note that when OC2 is in PWM mode it does not generate interrupts.
+
+void __attribute__((interrupt, no_auto_psv)) _OC2Interrupt(void) {
+
+    _OC2IF = 0;
+
+	if( ! hw_LEDStatus ) return;
+
+	hw_WritePort( hw_LED1, 0 );
+	hw_WritePort( hw_LED2, 0 );
+	hw_WritePort( hw_LED3, 0 );
 }

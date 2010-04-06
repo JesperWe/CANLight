@@ -70,16 +70,6 @@ void events_Push(
 }
 
 //---------------------------------------------------------------------------------------------
-
-void hw_AcknowledgeSwitch( unsigned char function, int setting ) {
-	switch( function ) {
-	case hw_KEY1: { hw_WritePort( hw_LED1, setting ); break; }
-	case hw_KEY2: { hw_WritePort( hw_LED2, setting ); break; }
-	case hw_KEY3: { hw_WritePort( hw_LED3, setting ); break; }
-	}
-}
-
-//---------------------------------------------------------------------------------------------
 // The Event Task is the main event manager. It processes both local and NMEA bus events.
 //
 // Send NMEA events on the bus if keys clicked,
@@ -119,9 +109,17 @@ void event_Task() {
 					}
 
 					if( hw_Type == hw_SWITCH ) {
-						// Turn off backlight during daytime.
-						if( event.info > 220 ) led_SetLevel( led_RED, 0.0 );
-						else led_SetLevel( led_RED, (float)(blLevel)/256.0 );
+
+						// Turn off back-light during daytime.
+
+						if( event.info > 220 ) {
+							led_SetLevel( led_RED, 0.0 );
+							led_IndicatorPWM( FALSE );
+						}
+						else {
+							led_SetLevel( led_RED, (float)(blLevel)/256.0 );
+							led_IndicatorPWM( TRUE );
+						}
 					}
 				}
 

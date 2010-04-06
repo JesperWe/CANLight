@@ -41,4 +41,8 @@ void led_TaskComplete();
 
 void led_FadeTask();
 
+void led_PWMTask();
+
+void led_IndicatorPWM( unsigned char run );
+
 #endif

@@ -110,6 +110,7 @@ extern unsigned char 		hw_DetectorADCChannel;
 extern unsigned char 		hw_AutoBacklightMode;
 extern const unsigned short hw_NoKeys[hw_NoVariants];
 extern unsigned char 		hw_AmbientLevel;
+extern unsigned char 		hw_LEDStatus;
 extern unsigned char 		hw_CanSleep;
 extern unsigned short		hw_SleepTimer;
 
@@ -121,6 +122,7 @@ void hw_Initialize( void );
 void hw_WriteConfigFlash( void );
 unsigned char hw_IsPWM( unsigned short hw_Port );
 void hw_Sleep( void );
+void hw_AcknowledgeSwitch( unsigned char function, int setting );
 
 void ADC_Initialize(void);
 unsigned int ADC_Read( unsigned char channel );
