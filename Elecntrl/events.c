@@ -92,13 +92,6 @@ void event_Task() {
 
 			case e_NMEA_MESSAGE: {
 
-				// Always listen to config file updates.
-
-				if( event.ctrlEvent == e_CONFIG_FILE_UPDATE ) {
-					config_Update( event.info );
-					break;
-				}
-
 				if( (event.ctrlEvent == e_AMBIENT_LIGHT_LEVEL) && hw_AutoBacklightMode ) {
 					unsigned short blLevel;
 					blLevel = (2*event.info) + 10;

@@ -482,12 +482,18 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 			case nmea_DATATRANSFER: {
 				short i;
 
-				if( nmea_TPMessage_Error ) break;
+				if( nmea_TPMessage_Error || nmea_TPMessage_Complete ) break;
 
 				nmea_TPMessage_LastPackage++;
 
 				if( inPDU.data[0] != nmea_TPMessage_LastPackage ) {
 					// Package was lost. Too bad...
+					nmea_TPMessage_Error = TRUE;
+					break;
+				}
+
+				if( nmea_TPMessage_Bytes > nmea_TPMessage_Size ) {
+					// We are getting more data than they said would come!
 					nmea_TPMessage_Error = TRUE;
 					break;
 				}
@@ -498,14 +504,9 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 
 				if( nmea_TPMessage_Bytes >= nmea_TPMessage_Size ) {
 					nmea_TPMessage_Complete = TRUE;
-					events_Push( e_NMEA_MESSAGE, nmea_TPMessage_PGN,
-						0, inPDU.SourceAddress, 0, e_CONFIG_FILE_UPDATE, 0, nmea_TPMessage_Size );
+
+					config_Update( nmea_TPMessage_Size );
 				}
-
-				// If this is our first config file, we need to signal to the config task to
-				// stop hanging in a waiting loop.
-
-				config_Invalid = FALSE;
 
 				break;
 			}

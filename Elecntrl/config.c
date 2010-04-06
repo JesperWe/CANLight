@@ -254,14 +254,21 @@ void config_Update( unsigned short configBytes ) {
 	int *newConfigData;
 	_prog_addressT config_FlashPage;
 
-		// Don't save the new config if it is the same we already have in flash.
+	// Does it have a magic number?
+
+	if( nmea_LargeBuffer[0] != 0x12 ||
+		nmea_LargeBuffer[1] != 0x69 ) return;
+
+	// Don't save the new config if it is the same we already have in flash.
 
 	if( nmea_LargeBuffer[2] == config_Data[2] &&
 		nmea_LargeBuffer[3] == config_Data[3] ) return;
 
-	// Save the config.
+	// Reality check on the length.
 
-	config_Invalid = TRUE;
+	if( configBytes < 10 || configBytes > 1024 ) return;
+
+	// Save the config.
 
 	_init_prog_address( config_FlashPage, config_Data );
 
