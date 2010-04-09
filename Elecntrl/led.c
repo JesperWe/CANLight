@@ -38,6 +38,14 @@ float led_FadeFromLevel[led_MAX_NO_CHANNELS];
 float led_CurrentLevel[led_MAX_NO_CHANNELS];
 float led_LastLevel, led_CurFadeStep;
 
+const char* led_ParamNames[] = {
+	"Light Calibration",
+	"Backlight Multiply",
+	"Backlight offset",
+	"Backlight Day Cutoff",
+	"Lamp Minimum Level",
+};
+
 //---------------------------------------------------------------------------------------------
 // Set up PWM timers and fade LEDs to off.
 
@@ -296,7 +304,7 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_KEY_TRIPLECLICKED: {
-			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) led_SetLevel( led_CurrentColor, 0.06 );
+			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) led_SetLevel( led_CurrentColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0 );
 			else led_SetLevel( led_CurrentColor, 1.0 );
 			break;
 		}
@@ -498,6 +506,19 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
 	if( hw_LEDStatus & 1 ) hw_WritePort( hw_LED1, 1 );
 	if( hw_LEDStatus & 2 ) hw_WritePort( hw_LED2, 1 );
 	if( hw_LEDStatus & 4 ) hw_WritePort( hw_LED3, 1 );
+}
+
+
+//--------------------------------------------------------------------------------------------
+
+int led_CalibrationParams() {
+
+	if( menu_ActiveHandler == 0 ) {
+		menu_ActiveHandler = led_CalibrationParams;
+		hw_ReadConfigFlash();
+	}
+
+	return menu_ParameterSetter( led_ParamNames, led_NO_CALIBRATION_PARAMS, &(hw_Config->led_ConfigStart) );
 }
 
 //---------------------------------------------------------------------------------------------

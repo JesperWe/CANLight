@@ -13,6 +13,8 @@
 #include "menu.h"
 #include "engine.h"
 #include "config.h"
+#include "events.h"
+#include "led.h"
 
 _psv(M_TITLE)		= "JM60 Control System";
 _psv(M_OK)			= "OK";
@@ -42,7 +44,7 @@ _psv(M_)			= "";
 //	{ ID, Parent, Text, SubmenuCount, Handler }
 //			{ Text, SubmenuID } ...
 
-menu_State_t menu_States[] = {
+const menu_State_t menu_States[] = {
 
 	{ S_HOMESCREEN, 0, M_TITLE, 3, 0, {
 			{ M_Lighting, S_LIGHTING },
@@ -59,7 +61,7 @@ menu_State_t menu_States[] = {
 			{ M_Backlight, S_BACKLIGHT }
 	} },
 
-	{ S_LIGHTCONFIG, S_LIGHTING, M_Lighting, 0, 0, {
+	{ S_LIGHTCONFIG, S_SAVE_CONFIG, M_Calibration, 0, led_CalibrationParams, {
 			{ 0,0 }
 	} },
 
@@ -76,17 +78,17 @@ menu_State_t menu_States[] = {
 			{ 0,0 }
 	} },
 
-	{ S_ENGINE_CALIBRATION, S_SAVE_CALIBRATION, M_Calibration, 0, engine_CalibrationParams, {
+	{ S_ENGINE_CALIBRATION, S_SAVE_CONFIG, M_Calibration, 0, engine_CalibrationParams, {
 			{ 0,0 }
 	} },
 
-	{ S_SAVE_CALIBRATION, -1, M_Ask_Save, 2, 0, {
-			{ M_YES, S_ENGINE_DO_SAVE },
-			{ M_NO, S_ENGINE }
+	{ S_SAVE_CONFIG, -1, M_Ask_Save, 2, 0, {
+			{ M_YES, S_CONFIG_DO_SAVE },
+			{ M_NO, S_HOMESCREEN }
 	} },
 
-	{ S_ENGINE_DO_SAVE, S_ENGINE, M_Saved, 1, menu_SaveCalibration, {
-			{ M_OK, S_ENGINE }
+	{ S_CONFIG_DO_SAVE, S_HOMESCREEN, M_Saved, 1, menu_SaveCalibration, {
+			{ M_OK, S_HOMESCREEN }
 	} },
 
 	{ S_TERMINATE, 0, 0, 0, 0, {
@@ -113,7 +115,6 @@ int (*menu_ActiveHandler)(void);
 
 int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, short parameters[] ) {
 	static short delta, step;
-	unsigned short paramIndex;
 	char line1[5];
 
 	// State machine lets key press through if it is not menu related, so we take care of it here.

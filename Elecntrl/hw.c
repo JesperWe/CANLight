@@ -230,7 +230,7 @@ void hw_Initialize( void ) {
 		hw_Config->led_BacklightMultiplier = 2;
 		hw_Config->led_BacklightOffset = 10;
 		hw_Config->led_BacklightDaylightCutoff = 220;
-		hw_Config->led_MinimumDimmedLevel = 0.06;
+		hw_Config->led_MinimumDimmedLevel = 6;
 
 		hw_WriteConfigFlash();
 

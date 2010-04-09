@@ -91,6 +91,7 @@ typedef union hw_Config_u {
 
 		short 	engine_Calibration[engine_NO_CALIBRATION_PARAMS];
 
+		short 	led_ConfigStart;
 		short 	led_BacklightMultiplier;
 		short 	led_BacklightOffset;
 		short 	led_BacklightDaylightCutoff;
