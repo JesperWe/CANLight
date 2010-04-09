@@ -94,7 +94,8 @@ void event_Task() {
 
 				if( (event.ctrlEvent == e_AMBIENT_LIGHT_LEVEL) && hw_AutoBacklightMode ) {
 					unsigned short blLevel;
-					blLevel = (2*event.info) + 10;
+					blLevel = hw_Config->led_BacklightMultiplier * event.info;
+					blLevel += hw_Config->led_BacklightOffset;
 					if( blLevel > 0xFF ) blLevel = 0xFF;
 
 					if( hw_I2C_Installed ) {
@@ -105,7 +106,7 @@ void event_Task() {
 
 						// Turn off back-light during daytime.
 
-						if( event.info > 220 ) {
+						if( event.info > hw_Config->led_BacklightDaylightCutoff ) {
 							led_SetLevel( led_RED, 0.0 );
 							led_IndicatorPWM( FALSE );
 						}

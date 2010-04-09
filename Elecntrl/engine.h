@@ -24,7 +24,7 @@ enum engine_CalibrationParameters {
 	/* 06 */ p_JoystickMin,
 	/* 07 */ p_JoystickMid,
 	/* 08 */ p_JoystickMax,
-	/* 09 */ p_NO_CALIBRATION_PARAMS
+	/* 09 */ engine_NO_CALIBRATION_PARAMS
 };
 
 extern short	engine_Calibration[];
@@ -66,5 +66,7 @@ void engine_JoystickTask();
 
 int engine_ThrottleMonitor();
 void engine_ThrottleMonitorUpdater();
+
+int engine_CalibrationParams();
 
 #endif /* ENGINE_H_ */

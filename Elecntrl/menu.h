@@ -20,7 +20,7 @@ enum menu_States_e {
 	S_LIGHTING,
 	S_ENGINE,
 	S_ENGINE_CALIBRATION,
-	S_ENGINE_SAVE_CALIBRATION,
+	S_SAVE_CALIBRATION,
 	S_ENGINE_DO_SAVE,
 	S_ENGINE_MONITOR,
 	S_LIGHTCONFIG,
@@ -58,8 +58,8 @@ void menu_Task();
 // Event Handler Prototypes
 
 int engine_ThrottleMonitor();
-int menu_EngineCalibrate();
-int menu_EngineSaveCalibration();
+int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, short parameters[] );
+int menu_SaveCalibration();
 
 void engine_ThrottleMonitorUpdater();
 

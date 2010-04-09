@@ -27,14 +27,6 @@ _psv(M_RARROW)		= "\366";
 _psv(M_LARROW)		= "\367";
 _psv(M_Settings)	= "Settings";
 _psv(M_Engine)		= "Engine";
-_psv(M_ThrottleMax)	= "Throttle Full";
-_psv(M_ThrottleMin)	= "Throttle Idle";
-_psv(M_GearNeutral)	= "Gear Neutral";
-_psv(M_GearForward)	= "Gear Forward";
-_psv(M_GearReverse)	= "Gear Reverse";
-_psv(M_JoystickMin)	= "Joystick Min";
-_psv(M_JoystickMid)	= "Joystick Center";
-_psv(M_JoystickMax)	= "Joystick Max";
 _psv(M_Lighting)	= "Lighting";
 _psv(M_Navigation)	= "Navigation";
 _psv(M_Config)		= "Config";
@@ -47,6 +39,8 @@ _psv(M_Group)		= "G";
 _psv(M_By)			= "By";
 _psv(M_)			= "";
 
+//	{ ID, Parent, Text, SubmenuCount, Handler }
+//			{ Text, SubmenuID } ...
 
 menu_State_t menu_States[] = {
 
@@ -65,7 +59,7 @@ menu_State_t menu_States[] = {
 			{ M_Backlight, S_BACKLIGHT }
 	} },
 
-	{ S_LIGHTCONFIG, S_LIGHTING, 0, 0, 0, {
+	{ S_LIGHTCONFIG, S_LIGHTING, M_Lighting, 0, 0, {
 			{ 0,0 }
 	} },
 
@@ -82,16 +76,16 @@ menu_State_t menu_States[] = {
 			{ 0,0 }
 	} },
 
-	{ S_ENGINE_CALIBRATION, S_ENGINE_SAVE_CALIBRATION, M_Calibration, 0, menu_EngineCalibrate, {
+	{ S_ENGINE_CALIBRATION, S_SAVE_CALIBRATION, M_Calibration, 0, engine_CalibrationParams, {
 			{ 0,0 }
 	} },
 
-	{ S_ENGINE_SAVE_CALIBRATION, S_ENGINE, M_Ask_Save, 2, 0, {
+	{ S_SAVE_CALIBRATION, -1, M_Ask_Save, 2, 0, {
 			{ M_YES, S_ENGINE_DO_SAVE },
 			{ M_NO, S_ENGINE }
 	} },
 
-	{ S_ENGINE_DO_SAVE, S_ENGINE, M_Saved, 1, menu_EngineSaveCalibration, {
+	{ S_ENGINE_DO_SAVE, S_ENGINE, M_Saved, 1, menu_SaveCalibration, {
 			{ M_OK, S_ENGINE }
 	} },
 
@@ -113,27 +107,27 @@ int (*menu_ActiveHandler)(void);
 
 
 //---------------------------------------------------------------------------------------------
-// Event handlers for menu items that have custom code.
+// General purpose handler for parameter modifications.
+// Each subsystem is responsible for maintaining its own menu texts etc.
+// paramNames[0] is a header text, the rest are names of parameters that can be set.
 
-int menu_EngineCalibrate() {
-	char* prompt;
+int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, short parameters[] ) {
 	static short delta, step;
+	unsigned short paramIndex;
 	char line1[5];
-
-	menu_ActiveHandler = menu_EngineCalibrate;
-
-	delta = 0;
 
 	// State machine lets key press through if it is not menu related, so we take care of it here.
 
 	switch( menu_Keypress ) {
 
 		case DISPLAY_KEY_UP: {
+			delta = 0;
 			step = 10;
 			break;
 		}
 
 		case DISPLAY_KEY_DOWN: {
+			delta = 0;
 			step = 1;
 			break;
 		}
@@ -149,78 +143,59 @@ int menu_EngineCalibrate() {
 		}
 
 		case DISPLAY_KEY_WEST: {
+			delta = 0;
 			if( menu_Parameter > 1 ) menu_Parameter--;
 			break;
 		}
 
 		case DISPLAY_KEY_EAST: {
-			if( menu_Parameter+1 < p_NO_CALIBRATION_PARAMS ) menu_Parameter++;
+			delta = 0;
+			if( menu_Parameter+1 < noParameters ) menu_Parameter++;
 			break;
 		}
 	}
 
-	// Now update display and actuator position based on keypress.
+	// Now update display and values based on key press.
 
-	switch( menu_Parameter ) {
-
-		case 0: {
+	if( menu_Parameter == 0 ) {
 			menu_Parameter = 1;
-			prompt = M_ThrottleMin;
 			step = 10;
-			break;
-		}
-
-		case 1: { prompt = M_ThrottleMin; break; }
-		case 2: { prompt = M_ThrottleMax; break; }
-		case 3: { prompt = M_GearNeutral; break; }
-		case 4: { prompt = M_GearForward; break; }
-		case 5: { prompt = M_GearReverse; break; }
-		case 6: { prompt = M_JoystickMin; break; }
-		case 7: { prompt = M_JoystickMid; break; }
-		case 8: { prompt = M_JoystickMax; break; }
-		default: { prompt = M_NA; break; }
+			delta = 0;
 	}
 
 	// No delta means new parameter. Update display!
 
 	if( delta == 0 ) {
 		display_Clear();
-		display_Write( M_Engine );
-		display_Write( M_SPACE );
-		display_Write( M_Calibration );
+		display_Write( paramNames[0] );
 		display_SetPosition(1,2);
-		display_Write( prompt );
+		display_Write( paramNames[ menu_Parameter ] );
 	}
 
 	else {
-		engine_Calibration[menu_Parameter] += delta;
-		if( engine_Calibration[menu_Parameter] < 0 ) engine_Calibration[menu_Parameter] = 0;
-	}
-
-	switch( menu_Parameter ) {
-		case 1: { engine_SetThrottle(0); break; }
-		case 2: { engine_SetThrottle(100); break; }
-		case 3: { engine_SetGear(0); break; }
-		case 4: { engine_SetGear(+1); break; }
-		case 5: { engine_SetGear(-1); break; }
+		if( ((short)(parameters[ menu_Parameter ]) + delta) < 0 ) {
+			parameters[ menu_Parameter ] = 0;
+		}
+		else if( ((short)(parameters[ menu_Parameter ]) + delta) > 9999 ) {
+				parameters[ menu_Parameter ] = 9999;
+		}
+		else {
+			parameters[ menu_Parameter ] += delta;
+		}
 	}
 
 	display_SetPosition(10,3);
-	display_NumberFormat( line1, 4, engine_Calibration[menu_Parameter] );
+	display_NumberFormat( line1, 4, parameters[ menu_Parameter ] );
 	display_Write( line1 );
 
 	return menu_NO_DISPLAY_UPDATE;
 }
 
-int menu_EngineSaveCalibration() {
-	int i;
-	for( i=0; i<p_NO_CALIBRATION_PARAMS; i++ ) {
-		hw_Config.engine_Calibration[i] = engine_Calibration[i];
-	}
+//---------------------------------------------------------------------------------------------
+
+int menu_SaveCalibration() {
 	hw_WriteConfigFlash();
-
-	menu_ActiveHandler = NULL;
-
+	menu_ActiveHandler = 0;
 	return 0;
 }
 
@@ -312,10 +287,10 @@ char menu_ProcessKey( unsigned char keypress ) {
 	switch( keypress ) {
 
 		case DISPLAY_KEY_STOP: {
-				menu_ActiveHandler = 0;
 				menu_Parameter = 0;
 				if( menu_CurState->id == S_HOMESCREEN ) return 1;
-				menu_NextStateId = menu_CurState->parent;
+				if( menu_CurState->parent > 0 )
+					menu_NextStateId = menu_CurState->parent;
 				menu_NextIndex = 0;
 				break;;
 			}
@@ -344,7 +319,7 @@ char menu_ProcessKey( unsigned char keypress ) {
 				break;
 			}
 
-		// Not part of the State Machine, just switch backlight on or off.
+		// Not part of the State Machine, just switch back-light on or off.
 		case DISPLAY_KEY_ONOFF: {
 				if( display_IsOn ) {
 					display_Off();

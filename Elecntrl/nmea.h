@@ -78,10 +78,6 @@
 
 typedef unsigned short nmea_MsgBuffer_t[nmea_MSG_BUFFER_WORDS];
 
-// NMEA Transport Protocol multi-packet messages need a buffer of up to 7*255=1785 bytes.
-
-extern unsigned char nmea_LargeBuffer[nmea_MAX_TP_PACKETS*nmea_TP_PACKET_BYTES];
-
 // NB!! Reversed byte order due to little endian storage.
 
 union nmea_PDU_UNION {

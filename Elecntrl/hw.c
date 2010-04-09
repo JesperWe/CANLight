@@ -10,10 +10,17 @@
 #include "events.h"
 #include "nmea.h"
 
-unsigned short __attribute__((space(prog),aligned(_FLASH_PAGE*2)))
-						hw_ConfigData[_FLASH_ROW];
+const short __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2)))
+						hw_ConfigData[_FLASH_PAGE*2];
 
-hw_Config_t hw_Config;
+// Define 1k of general purpose RAM. Note that theoretically some modules risk trying to
+// use this area simultaneously. For example sending a config file update on the NMEA bus
+// at the same time as the I2C display is editing config parameters will completely
+// mess up this buffer!
+
+unsigned char 		hw_1kBuffer[1024];
+
+hw_Config_t*		hw_Config;
 
 _prog_addressT		hw_ConfigPtr;
 unsigned short 	hw_HeartbeatCounter = 0;
@@ -162,7 +169,7 @@ void hw_Initialize( void ) {
 			__delay32(1500000);
 			_RC4 = 0;
 			_RB5 = 0;
-			__delay32(7000000);
+			__delay32(20000000);
 		}
 	}
 	
@@ -192,39 +199,42 @@ void hw_Initialize( void ) {
 	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
 	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
 
+	// Check configuration area, erase it if it seems corrupted.
 
-	// Check configuration area, erase it if it is non-zero but seems corrupted.
-	// This can happen if the code has been recompiled and the compiler
-	// has moved the hw_ConfigData area to a new address.
+	hw_Config = (hw_Config_t*) &hw_ConfigData;
 
-	_init_prog_address( hw_ConfigPtr, hw_ConfigData);
-	_memcpy_p2d16( &hw_Config, hw_ConfigPtr, _FLASH_ROW );
+	if( hw_Config->MagicWord != hw_CONFIG_MAGIC_WORD ) {
 
-	if( hw_Config.data[0] != hw_CONFIG_MAGIC_WORD ) {
+		hw_Config = (hw_Config_t*) &hw_1kBuffer;
 
-		hw_Config.data[0] = hw_CONFIG_MAGIC_WORD;
-		hw_Config.data[1] = nmea_ARBITRARY_ADDRESS;
-		hw_Config.data[2] = nmea_INDUSTRY_GROUP;
-		hw_Config.data[3] = nmea_VEHICLE_SYSTEM;
-		hw_Config.data[4] = nmea_FUNCTION_SWITCH;
-		hw_Config.data[5] = hw_DeviceID;
-		hw_Config.data[6] = nmea_MANUFACTURER_CODE;
-		hw_Config.data[7] = (unsigned short)((nmea_IDENTITY_NUMBER & 0x001F0000) >> 16);
-		hw_Config.data[8] = (unsigned short)(nmea_IDENTITY_NUMBER & 0xFFFF);
+		hw_Config->MagicWord = hw_CONFIG_MAGIC_WORD;
+		hw_Config->nmeaIndustryGroup = nmea_INDUSTRY_GROUP;
+		hw_Config->nmeaVehicleSystem = nmea_VEHICLE_SYSTEM;
+		hw_Config->nmeaFunction = nmea_FUNCTION_SWITCH;
+		hw_Config->nmeaArbitraryAddress = hw_DeviceID;
+		hw_Config->nmeaManufacturerCode = nmea_MANUFACTURER_CODE;
+		hw_Config->nmeaIdentityNumber = hw_DeviceID;
 
-		// Load some sensible values if we have lost engine calibration.
+		// Load some sensible values if we have lost calibrations.
 
-		hw_Config.engine_Calibration[ p_ThrottleMin ] = 212;
-		hw_Config.engine_Calibration[ p_ThrottleMax ] = 140;
-		hw_Config.engine_Calibration[ p_GearNeutral ] = 170;
-		hw_Config.engine_Calibration[ p_GearReverse ] = 216;
-		hw_Config.engine_Calibration[ p_GearForward ] = 140;
+		hw_Config->engine_Calibration[ p_ThrottleMin ] = 212;
+		hw_Config->engine_Calibration[ p_ThrottleMax ] = 140;
+		hw_Config->engine_Calibration[ p_GearNeutral ] = 170;
+		hw_Config->engine_Calibration[ p_GearReverse ] = 216;
+		hw_Config->engine_Calibration[ p_GearForward ] = 140;
 
-		hw_Config.engine_Calibration[ p_JoystickMin ] = 110;
-		hw_Config.engine_Calibration[ p_JoystickMid ] = 530;
-		hw_Config.engine_Calibration[ p_JoystickMax ] = 880;
+		hw_Config->engine_Calibration[ p_JoystickMin ] = 110;
+		hw_Config->engine_Calibration[ p_JoystickMid ] = 530;
+		hw_Config->engine_Calibration[ p_JoystickMax ] = 880;
+
+		hw_Config->led_BacklightMultiplier = 2;
+		hw_Config->led_BacklightOffset = 10;
+		hw_Config->led_BacklightDaylightCutoff = 220;
+		hw_Config->led_MinimumDimmedLevel = 0.06;
 
 		hw_WriteConfigFlash();
+
+		hw_Config = (hw_Config_t*) &hw_ConfigData; // Set pointer back to Flash data.
 	}
 
 	// IO setup for SN65HVD234 CANBus driver.
@@ -322,10 +332,22 @@ void hw_Initialize( void ) {
 
 
 //-------------------------------------------------------------------------------
+// Copy parameters from Flash to RAM
+
+void hw_ReadConfigFlash() {
+    _init_prog_address( hw_ConfigPtr, hw_ConfigData);
+    _memcpy_p2d16( &hw_1kBuffer, hw_ConfigPtr, _FLASH_ROW );
+
+    hw_Config = (hw_Config_t*)hw_1kBuffer;
+}
+
+
+//-------------------------------------------------------------------------------
 
 void hw_WriteConfigFlash() {
-	_erase_flash(hw_ConfigPtr);
-	_write_flash16(hw_ConfigPtr, hw_Config.data);
+    _init_prog_address( hw_ConfigPtr, hw_ConfigData);
+	_erase_flash( hw_ConfigPtr );
+	_write_flash16( hw_ConfigPtr, (int*)hw_1kBuffer );
 }
 
 

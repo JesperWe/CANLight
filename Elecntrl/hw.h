@@ -77,26 +77,33 @@ typedef struct hw_Port_s {
 } hw_Port_t;
 
 typedef union hw_Config_u {
-	int		data[_FLASH_ROW];
+	short		data[_FLASH_PAGE];
 	struct {
-		unsigned short MagicWord;
-		unsigned short nmeaArbitraryAddress;
-		unsigned short nmeaIndustryGroup;
-		unsigned short nmeaVehicleSystem;
-		unsigned short nmeaFunctionSwitch;
-		unsigned short nmeaFunctionInstance;
-		unsigned short nmeaManufacturerCode;
-		unsigned long  nmeaIdentityNumber;
-		short engine_Calibration[p_NO_CALIBRATION_PARAMS];
-		unsigned char cfgFile[];
+		short	MagicWord;
+
+		short	nmeaArbitraryAddress;
+		short	nmeaIndustryGroup;
+		short	nmeaVehicleSystem;
+		short	nmeaFunction;
+		short	nmeaFunctionInstance;
+		short	nmeaManufacturerCode;
+		long 	nmeaIdentityNumber;
+
+		short 	engine_Calibration[engine_NO_CALIBRATION_PARAMS];
+
+		short 	led_BacklightMultiplier;
+		short 	led_BacklightOffset;
+		short 	led_BacklightDaylightCutoff;
+		short	led_MinimumDimmedLevel;
 	};
 } hw_Config_t;
 
 
 //---------------------------------------------------------------------------------------------
 
-extern unsigned short __attribute__((space(prog),aligned(_FLASH_PAGE*2))) hw_ConfigData[];
-extern hw_Config_t 			hw_Config;
+extern const short __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2))) hw_ConfigData[];
+extern unsigned char 		hw_1kBuffer[1024];
+extern hw_Config_t*			hw_Config;
 extern _prog_addressT		hw_ConfigPtr;
 extern unsigned short		hw_HeartbeatCounter;
 extern unsigned short		hw_Type;
@@ -119,6 +126,7 @@ void hw_InputPort(enum hw_Functions_e port);
 void hw_OutputPort(enum hw_Functions_e port);
 void hw_WritePort(enum hw_Functions_e, int value);
 void hw_Initialize( void );
+void hw_ReadConfigFlash( void );
 void hw_WriteConfigFlash( void );
 unsigned char hw_IsPWM( unsigned short hw_Port );
 void hw_Sleep( void );

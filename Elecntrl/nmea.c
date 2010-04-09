@@ -16,8 +16,6 @@
 //---------------------------------------------------------------------------------------------
 // Globals
 
-unsigned char 		nmea_LargeBuffer[nmea_MAX_TP_PACKETS*nmea_TP_PACKET_BYTES];
-
 nmea_MsgBuffer_t	nmea_MsgBuf[nmea_NO_MSG_BUFFERS] __attribute__((space(dma),aligned(nmea_NO_MSG_BUFFERS*nmea_MSG_BUFFER_WORDS*2)));
 nmea_MsgBuffer_t	nmea_TxQueue[nmea_NO_MSG_BUFFERS];
 unsigned char		nmea_TxQueueHead;
@@ -63,16 +61,18 @@ void nmea_Initialize() {
 
 	// Build CA NAME.
 
-	nmea_CA_Name.arbitrary_addr = hw_Config.data[1];
-	nmea_CA_Name.industry_group = hw_Config.data[2];
-	nmea_CA_Name.vehicle_syst = hw_Config.data[3];
+	hw_Config = (hw_Config_t*) hw_ConfigData;
+
+	nmea_CA_Name.arbitrary_addr = hw_Config->nmeaArbitraryAddress;
+	nmea_CA_Name.industry_group = hw_Config->nmeaIndustryGroup;
+	nmea_CA_Name.vehicle_syst = hw_Config->nmeaVehicleSystem;
 	nmea_CA_Name.vehicle_syst_inst = 0;
 	nmea_CA_Name.reserved = 0;
-	nmea_CA_Name.function = hw_Config.data[4];
-	nmea_CA_Name.function_inst = hw_Config.data[5];
+	nmea_CA_Name.function = hw_Config->nmeaFunction;
+	nmea_CA_Name.function_inst = hw_Config->nmeaFunctionInstance;
 	nmea_CA_Name.ecu_inst = 5;
-	nmea_CA_Name.manufacturer = hw_Config.data[6];
-	nmea_CA_Name.identity = hw_Config.nmeaIdentityNumber;
+	nmea_CA_Name.manufacturer = hw_Config->nmeaManufacturerCode;
+	nmea_CA_Name.identity = hw_Config->nmeaIdentityNumber;
 
 	// Go to config mode.
 
@@ -171,7 +171,7 @@ void nmea_Initialize() {
 	C1CTRL1bits.REQOP = 0;
     while( C1CTRL1bits.OPMODE != 0 );
 
-	memset( nmea_LargeBuffer, 0xFF, sizeof(nmea_LargeBuffer) );
+	memset( hw_1kBuffer, 0xFF, sizeof(hw_1kBuffer) );
 
 	hw_WritePort( hw_CAN_EN, 1);	// Go on bus;
 }
@@ -499,7 +499,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 				}
 
 				for( i=1; i<8; i++ ) {
-					nmea_LargeBuffer[ nmea_TPMessage_Bytes++ ] = inPDU.data[i];
+					hw_1kBuffer[ nmea_TPMessage_Bytes++ ] = inPDU.data[i];
 				}
 
 				if( nmea_TPMessage_Bytes >= nmea_TPMessage_Size ) {

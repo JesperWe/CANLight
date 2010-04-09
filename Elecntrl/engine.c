@@ -14,8 +14,6 @@
 #include "display.h"
 #include "menu.h"
 
-short	engine_Calibration[p_NO_CALIBRATION_PARAMS];
-
 short	engine_ThrottlePW;
 short	engine_GearPW;
 short	engine_CurThrottlePW;
@@ -34,6 +32,18 @@ unsigned char	engine_TargetThrottle;
 
 char	engine_CurrentGear;
 char	engine_TargetGear;
+
+const char* engine_ParamNames[] = {
+	"Engine Calibration",
+	"Throttle Full",
+	"Throttle Idle",
+	"Gear Neutral",
+	"Gear Forward",
+	"Gear Reverse",
+	"Joystick Min",
+	"Joystick Center",
+	"Joystick Max",
+};
 
 //---------------------------------------------------------------------------------------------
 // Set up TIMER3 and TIMER4 to do old fashioned Hobby RC pulse control.
@@ -57,19 +67,11 @@ void engine_Initialize() {
 // Restore Joystick calibrations from Flash memory.
 
 void engine_ThrottleInitialize() {
-	int i;
-
-	for( i=0; i<p_NO_CALIBRATION_PARAMS; i++ ) {
-		engine_Calibration[i] = hw_Config.engine_Calibration[i];
-	}
-
 	engine_LastJoystickLevel = engine_UNKNOWN_JOYSTICK;
 	engine_CurrentGear = engine_UNKNOWN_GEAR;
-
 	engine_SetGear(0);		// Gear to neutral.
 	engine_SetThrottle(0);	// Throttle to idle.
 }
-
 
 //---------------------------------------------------------------------------------------------
 // Read throttle settings and return True if there was any activity.
@@ -98,12 +100,12 @@ unsigned char engine_ReadThrottleLevel() {
 	// individual joystick.
 
 	fLevel = (float)engine_Joystick_Level;
-	fLevel -= engine_Calibration[ p_JoystickMid ];
+	fLevel -= hw_Config->engine_Calibration[ p_JoystickMid ];
 
 	if( fLevel < 0 ) {
-		range = engine_Calibration[ p_JoystickMid ] - engine_Calibration[ p_JoystickMin ];
+		range = hw_Config->engine_Calibration[ p_JoystickMid ] - hw_Config->engine_Calibration[ p_JoystickMin ];
 	} else {
-		range = engine_Calibration[ p_JoystickMax ] - engine_Calibration[ p_JoystickMid ];
+		range = hw_Config->engine_Calibration[ p_JoystickMax ] - hw_Config->engine_Calibration[ p_JoystickMid ];
 	}
 
 	fLevel = fLevel / (float)range;
@@ -174,10 +176,10 @@ void engine_SetThrottle( unsigned char level ) {
 
 	fLevel = ((float)level) / 100.0;
 
-	range = engine_Calibration[ p_ThrottleMax ] - engine_Calibration[ p_ThrottleMin ];
+	range = hw_Config->engine_Calibration[ p_ThrottleMax ] - hw_Config->engine_Calibration[ p_ThrottleMin ];
 	fLevel = fLevel * (float)range;
 
-	engine_ThrottlePW = engine_Calibration[ p_ThrottleMin ] + (short)fLevel;
+	engine_ThrottlePW = hw_Config->engine_Calibration[ p_ThrottleMin ] + (short)fLevel;
 	engine_UpdateActuators();
 }
 
@@ -207,9 +209,9 @@ void engine_RequestGear( char direction ) {
 void engine_SetGear( char direction ) {
 
 	switch( direction ) {
-		case 0: { engine_GearPW = engine_Calibration[ p_GearNeutral ]; break; }
-		case 1: { engine_GearPW = engine_Calibration[ p_GearForward ]; break; }
-		case 2: { engine_GearPW = engine_Calibration[ p_GearReverse ]; break; }
+		case 0: { engine_GearPW = hw_Config->engine_Calibration[ p_GearNeutral ]; break; }
+		case 1: { engine_GearPW = hw_Config->engine_Calibration[ p_GearForward ]; break; }
+		case 2: { engine_GearPW = hw_Config->engine_Calibration[ p_GearReverse ]; break; }
 	}
 
 	// Now do the gear change.
@@ -353,4 +355,16 @@ void engine_ThrottleMonitorUpdater() {
 
 	display_HorizontalBar( 10, 3, gear );
 	return;
+}
+
+//--------------------------------------------------------------------------------------------
+
+int engine_CalibrationParams() {
+
+	if( menu_ActiveHandler == 0 ) {
+		menu_ActiveHandler = engine_CalibrationParams;
+		hw_ReadConfigFlash();
+	}
+
+	return menu_ParameterSetter( engine_ParamNames, engine_NO_CALIBRATION_PARAMS, hw_Config->engine_Calibration );
 }

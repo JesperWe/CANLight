@@ -256,13 +256,13 @@ void config_Update( unsigned short configBytes ) {
 
 	// Does it have a magic number?
 
-	if( nmea_LargeBuffer[0] != 0x12 ||
-		nmea_LargeBuffer[1] != 0x69 ) return;
+	if( hw_1kBuffer[0] != 0x12 ||
+		hw_1kBuffer[1] != 0x69 ) return;
 
 	// Don't save the new config if it is the same we already have in flash.
 
-	if( nmea_LargeBuffer[2] == config_Data[2] &&
-		nmea_LargeBuffer[3] == config_Data[3] ) return;
+	if( hw_1kBuffer[2] == config_Data[2] &&
+		hw_1kBuffer[3] == config_Data[3] ) return;
 
 	// Reality check on the length.
 
@@ -274,7 +274,7 @@ void config_Update( unsigned short configBytes ) {
 
 	_erase_flash( config_FlashPage );
 
-	newConfigData = (int*)nmea_LargeBuffer;
+	newConfigData = (int*)hw_1kBuffer;
 
 	for( i = 0; i < (_FLASH_PAGE / _FLASH_ROW); i++ ) {
 		_write_flash16( config_FlashPage, newConfigData );
