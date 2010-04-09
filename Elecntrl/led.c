@@ -107,7 +107,7 @@ void led_SetLevel( unsigned char color, float level ) {
 	// Attempt to linearize light output as function of duty cycle.
 	// It turns out a near square characteristic produces a nice feeling curve.
 
-	modLevel = pow(level, 1.8);
+	modLevel = (0.1 + 0.9*level) * level;
 
 	modLevel = modLevel * led_PWM_PERIOD;
 
