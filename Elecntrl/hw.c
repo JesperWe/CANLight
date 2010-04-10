@@ -332,7 +332,8 @@ void hw_Initialize( void ) {
 
 
 //-------------------------------------------------------------------------------
-// Copy parameters from Flash to RAM
+// Copy parameters from Flash to RAM.
+// Not that if hw_CONFIG_SIZE exceeds 64 more rows will need to be read.
 
 void hw_ReadConfigFlash() {
     _init_prog_address( hw_ConfigPtr, hw_ConfigData);
@@ -343,6 +344,8 @@ void hw_ReadConfigFlash() {
 
 
 //-------------------------------------------------------------------------------
+// Copy parameters from RAM to Flash.
+// Note that only one row is written although the whole page is erased.
 
 void hw_WriteConfigFlash() {
     _init_prog_address( hw_ConfigPtr, hw_ConfigData);

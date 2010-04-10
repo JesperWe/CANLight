@@ -32,5 +32,6 @@ void schedule_Finished();
 
 extern unsigned char schedule_Running;
 extern unsigned long schedule_time;
+extern short schedule_Parameter; // Used if we want to tell some one-time task something
 
 #endif /* SCHEDULE_H_ */

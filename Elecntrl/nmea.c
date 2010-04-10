@@ -38,7 +38,7 @@ unsigned long 		ContentionWaitTime;
 unsigned char 		nmea_CA_Address = 0x55;
 nmea_FLAG    		nmea_Flags;
 nmea_MsgBuffer_t	inMessage;
-nmea_PDU_t 			inPDU, outPGN;
+nmea_PDU_t 			inPDU, nmea_OutgoingPDU;
 
 nmea_CA_NAME_t		nmea_CA_Name;
 
@@ -220,13 +220,13 @@ unsigned char nmea_SendEvent( event_t *event )
 {
 	unsigned char status;
 	nmea_MakePGN( 0, nmea_LIGHTING_COMMAND, 8 );
-	outPGN.data[0] = event->groupId;
-	outPGN.data[1] = event->data;
-	outPGN.data[2] = (event->info&0xFF00) >> 8;
-	outPGN.data[3] = event->info&0x00FF;
-	outPGN.data[4] = event->ctrlDev;
-	outPGN.data[5] = event->ctrlFunc;
-	outPGN.data[6] = event->ctrlEvent;
+	nmea_OutgoingPDU.data[0] = event->groupId;
+	nmea_OutgoingPDU.data[1] = event->data;
+	nmea_OutgoingPDU.data[2] = (event->info&0xFF00) >> 8;
+	nmea_OutgoingPDU.data[3] = event->info&0x00FF;
+	nmea_OutgoingPDU.data[4] = event->ctrlDev;
+	nmea_OutgoingPDU.data[5] = event->ctrlFunc;
+	nmea_OutgoingPDU.data[6] = event->ctrlEvent;
 	status = nmea_SendMessage();
 
 	if( loopbackEnabled ) {
@@ -255,6 +255,7 @@ unsigned char nmea_SendKeyEvent( event_t *event ) {
 }
 
 //---------------------------------------------------------------------------------------------
+// Send the message contained in nmea_OutgoingPDU.
 
 unsigned char nmea_SendMessage()
 {
@@ -268,19 +269,19 @@ unsigned char nmea_SendMessage()
 
 	memset( &msg, 0, nmea_MSG_BUFFER_BYTES );
 
-	SID = outPGN.Priority << 8;
-	SID = SID | (outPGN.PDUFormat & 0xFC) >> 2;
+	SID = nmea_OutgoingPDU.Priority << 8;
+	SID = SID | (nmea_OutgoingPDU.PDUFormat & 0xFC) >> 2;
 
-	SIDExt = ((unsigned long)(outPGN.PDUFormat & 0x03)) << 16;
-	SIDExt = SIDExt | ((unsigned long)outPGN.PDUSpecific) << 8;
-	SIDExt = SIDExt | outPGN.SourceAddress;
+	SIDExt = ((unsigned long)(nmea_OutgoingPDU.PDUFormat & 0x03)) << 16;
+	SIDExt = SIDExt | ((unsigned long)nmea_OutgoingPDU.PDUSpecific) << 8;
+	SIDExt = SIDExt | nmea_OutgoingPDU.SourceAddress;
 
 
 	msg[0] = (SID << 2) | nmea_NORMAL_MSG | nmea_EXTENDED_ID;
 	msg[1] = (SIDExt & 0x3FFC0) >> 6;
-	msg[2] = ( (SIDExt & 0x3F) << 10 ) | nmea_NORMAL_MSG | outPGN.bytes;
+	msg[2] = ( (SIDExt & 0x3F) << 10 ) | nmea_NORMAL_MSG | nmea_OutgoingPDU.bytes;
 
-	memcpy( (&msg[3]), outPGN.data, outPGN.bytes );
+	memcpy( (&msg[3]), nmea_OutgoingPDU.data, nmea_OutgoingPDU.bytes );
 
 	if( nmea_TX_REQUEST_BIT ) {
 
@@ -317,14 +318,14 @@ void nmea_MakePGN(
 
 	// Build NMEA PGN
 
-	outPGN.PGN				= pgn_no;
-	outPGN.PDUFormat 		= (pgn_no & 0xFF00) >> 8;
-	outPGN.PDUSpecific 		= pgn_no & 0x00FF;
-	outPGN.Datapage			= 0;
-	outPGN._Reserved		= 0;
-	outPGN.Priority			= pgn_priority;
-	outPGN.SourceAddress 	= nmea_CA_Address;
-	outPGN.bytes		 	= msg_bytes;
+	nmea_OutgoingPDU.PGN				= pgn_no;
+	nmea_OutgoingPDU.PDUFormat 		= (pgn_no & 0xFF00) >> 8;
+	nmea_OutgoingPDU.PDUSpecific 		= pgn_no & 0x00FF;
+	nmea_OutgoingPDU.Datapage			= 0;
+	nmea_OutgoingPDU._Reserved		= 0;
+	nmea_OutgoingPDU.Priority			= pgn_priority;
+	nmea_OutgoingPDU.SourceAddress 	= nmea_CA_Address;
+	nmea_OutgoingPDU.bytes		 	= msg_bytes;
 }
 
 //---------------------------------------------------------------------------------------------
@@ -363,22 +364,23 @@ void nmea_SendMultipacket( unsigned char *msgBuffer, unsigned short msgLength, l
 
 	// First tell the bus we are about to transmit a multi-packet message.
 
+	nmea_Wakeup();
 	nmea_MakePGN( 1, nmea_CM_BAM, 8 );
 
-	outPGN.data[0] = 0x20; // TP.CM_BAM
-	outPGN.data[1] = (msgLength & 0xFF00) >> 8;
-	outPGN.data[2] = msgLength & 0x00FF;
-	outPGN.data[3] = noPackets;
-	outPGN.data[4] = 0xFF; // Reserved
-	outPGN.data[5] = (containedPGN & 0xFF0000) >> 16;
-	outPGN.data[6] = (containedPGN & 0x00FF00) >> 8;
-	outPGN.data[7] =  containedPGN & 0x0000FF;
+	nmea_OutgoingPDU.data[0] = 0x20; // TP.CM_BAM
+	nmea_OutgoingPDU.data[1] = (msgLength & 0xFF00) >> 8;
+	nmea_OutgoingPDU.data[2] = msgLength & 0x00FF;
+	nmea_OutgoingPDU.data[3] = noPackets;
+	nmea_OutgoingPDU.data[4] = 0xFF; // Reserved
+	nmea_OutgoingPDU.data[5] = (containedPGN & 0xFF0000) >> 16;
+	nmea_OutgoingPDU.data[6] = (containedPGN & 0x00FF00) >> 8;
+	nmea_OutgoingPDU.data[7] =  containedPGN & 0x0000FF;
 
 	status = nmea_SendMessage();
 
 	// Now send data packages.
 
-	packetCount = 0;
+	packetCount = 1; // Sequence numbers should start at 1.
 	byteOffset = 0;
 	nmea_MakePGN( 1, nmea_DATATRANSFER, 8 );
 
@@ -386,17 +388,28 @@ void nmea_SendMultipacket( unsigned char *msgBuffer, unsigned short msgLength, l
 
 	while( byteOffset < msgLength ) {
 		for( i=1; i<bytesLeft; i++ ) {
-			outPGN.data[i] = msgBuffer[byteOffset++];
+			nmea_OutgoingPDU.data[i] = msgBuffer[byteOffset++];
 		}
 
-		outPGN.data[0] = ++packetCount; // Sequence numbers should start at 1.
+		nmea_OutgoingPDU.data[0] = packetCount;
+		packetCount++;
 
-		status = nmea_SendMessage();
+		do {
+			status = nmea_SendMessage();
+			if( status == nmea_TRANSMITTER_BUSY ) __delay32( 10000 ); // Yeah yeah...
+		} while( status == nmea_TRANSMITTER_BUSY );
 
-		if( packetCount == noPackets ) bytesLeft = msgLength - byteOffset;
+		if( packetCount == noPackets ) bytesLeft = msgLength - byteOffset + 1;
 	}
 }
 
+//---------------------------------------------------------------------------------------------
+
+int nmea_DistributeSettings() {
+	hw_ReadConfigFlash();
+	nmea_SendMultipacket( hw_1kBuffer, hw_CONFIG_SIZE, nmea_CONFIGURATION );
+	return 0;
+}
 
 //---------------------------------------------------------------------------------------------
 // ECAN event interrupt. Called both for read and write operations.
@@ -473,7 +486,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 				nmea_TPMessage_Complete = FALSE;
 				nmea_TPMessage_Error = FALSE;
 				nmea_TPMessage_Size = inPDU.data[1]<<8 | inPDU.data[2];
-				nmea_TPMessage_PGN = ((long)inPDU.data[5])<<16 | ((long)inPDU.data[6])<<8 | inPDU.data[2];
+				nmea_TPMessage_PGN = ((long)inPDU.data[5])<<16 | ((long)inPDU.data[6])<<8 | inPDU.data[7];
 				nmea_TPMessage_Bytes = 0;
 				nmea_TPMessage_LastPackage = 0;
 				break;
@@ -505,7 +518,29 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 				if( nmea_TPMessage_Bytes >= nmea_TPMessage_Size ) {
 					nmea_TPMessage_Complete = TRUE;
 
-					config_Update( nmea_TPMessage_Size );
+					switch( nmea_TPMessage_PGN ) {
+						case nmea_LIGHTING_DATA: {
+							config_Update( nmea_TPMessage_Size );
+							break;
+						}
+						case nmea_CONFIGURATION: {
+
+							// Validation
+
+							if( nmea_TPMessage_Size != hw_CONFIG_SIZE ) break;
+
+							if( hw_1kBuffer[0] != hw_CONFIG_MAGIC_WORD_1 // NB Little Endian
+									|| hw_1kBuffer[1] != hw_CONFIG_MAGIC_WORD_0 ) break;
+
+							hw_WriteConfigFlash();
+
+							schedule_Parameter = 2;
+							schedule_AddTask( led_TaskComplete, 10 );
+
+							break;
+						}
+					}
+
 				}
 
 				break;

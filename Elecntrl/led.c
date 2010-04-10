@@ -356,7 +356,7 @@ void led_PowerOnTest() {
 void led_TaskComplete() {
 	int i;
 
-	for( i=0; i<3; i++ ) {
+	for( i=0; i<schedule_Parameter; i++ ) {
 		switch( hw_Type ) {
 
 			case hw_LEDLAMP: {
@@ -381,6 +381,7 @@ void led_TaskComplete() {
 			}
 		}
 	}
+	schedule_Parameter = 0;
 	schedule_Finished();
 }
 

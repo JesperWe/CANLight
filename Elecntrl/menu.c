@@ -15,6 +15,7 @@
 #include "config.h"
 #include "events.h"
 #include "led.h"
+#include "nmea.h"
 
 _psv(M_TITLE)		= "JM60 Control System";
 _psv(M_OK)			= "OK";
@@ -39,6 +40,8 @@ _psv(M_Saved)		= "Settings Saved!";
 _psv(M_Monitor)		= "Monitor";
 _psv(M_Group)		= "G";
 _psv(M_By)			= "By";
+_psv(M_Upload)		= "Upload";
+_psv(M_Distribute)	= "Distribute";
 _psv(M_)			= "";
 
 //	{ ID, Parent, Text, SubmenuCount, Handler }
@@ -50,10 +53,6 @@ const menu_State_t menu_States[] = {
 			{ M_Lighting, S_LIGHTING },
 			{ M_Engine, S_ENGINE },
 			{ M_Settings, S_SETTINGS }
-	} },
-
-	{ S_SETTINGS, S_HOMESCREEN, M_Settings, 0, 0, {
-			{ 0,0 }
 	} },
 
 	{ S_LIGHTING, S_HOMESCREEN, M_Lighting, 2, 0, {
@@ -91,6 +90,14 @@ const menu_State_t menu_States[] = {
 			{ M_OK, S_HOMESCREEN }
 	} },
 
+	{ S_SETTINGS, S_HOMESCREEN, M_Settings, 1, 0, {
+			{ M_Distribute, S_SETTINGSDIST }
+	} },
+
+	{ S_SETTINGSDIST, S_SETTINGS, M_Distribute, 1, nmea_DistributeSettings, {
+			{ M_OK, S_HOMESCREEN }
+	} },
+
 	{ S_TERMINATE, 0, 0, 0, 0, {
 			{ 0,0 }
 	} }
@@ -99,7 +106,8 @@ const menu_State_t menu_States[] = {
 
 
 unsigned short menu_CurStateId, menu_NextStateId, menu_ParentStateId, menu_HandlerStateId;
-unsigned char menu_NextIndex, menu_NoNext;
+unsigned char menu_NextIndex;
+unsigned char menu_SubItemCount;
 unsigned char menu_Parameter = 0;
 unsigned char menu_Keypress = 0;
 unsigned char menu_HandlerInControl;
@@ -200,7 +208,6 @@ int menu_SaveCalibration() {
 	return 0;
 }
 
-
 //---------------------------------------------------------------------------------------------
 // The 3 functions below handle the menu state machine.
 
@@ -215,21 +222,22 @@ void menu_Initialize() {
 
 void menu_SetState( unsigned char state ) {
 	int result;
-	short i;
+	short StateIndex;
 
 	// Find the right index in the states vector.
 
-	i = 0;
-	while( menu_States[i].id != S_TERMINATE ) {
-		if( menu_States[i].id == state ) break;
-		i++;
+	StateIndex = 0;
+	while( menu_States[StateIndex].id != S_TERMINATE ) {
+		if( menu_States[StateIndex].id == state ) break;
+		StateIndex++;
 	}
 
-	menu_CurState = &(menu_States[ i ]);
+	menu_CurState = &(menu_States[ StateIndex ]);
 	menu_CurStateId = menu_CurState->id;
 
 	// Execute our handler if there is one.
 
+	result = 0;
 	if( menu_CurState->handler != NULL ) {
 		menu_HandlerStateId = menu_CurStateId;
 		result = menu_CurState->handler();
@@ -237,7 +245,7 @@ void menu_SetState( unsigned char state ) {
 			menu_CurStateId = S_TERMINATE;
 	}
 
-	menu_NoNext = menu_CurState->noEvents;
+	menu_SubItemCount = menu_CurState->noEvents;
 
 	// Any text to display for this state?
 
@@ -256,7 +264,7 @@ void menu_SetState( unsigned char state ) {
 			display_Write( menu_CurState->events[ menu_NextIndex ].descr );
 		}
 
-		if( menu_CurState->events[menu_NextIndex+1].id ) {
+		if( menu_CurState->noEvents > menu_NextIndex+1 ) {
 
 			unsigned char textLength =
 					strlen( menu_CurState->events[ menu_NextIndex+1 ].descr );
@@ -297,7 +305,7 @@ char menu_ProcessKey( unsigned char keypress ) {
 			}
 
 		case DISPLAY_KEY_PLAY: { // Show more available commands if there are any.
-				if( menu_NextIndex+2 < menu_NoNext )
+				if( menu_NextIndex+2 < menu_SubItemCount )
 					{ menu_NextIndex += 2;	}
 				else
 					{ menu_NextIndex = 0; }
@@ -320,7 +328,7 @@ char menu_ProcessKey( unsigned char keypress ) {
 				break;
 			}
 
-		// Not part of the State Machine, just switch back-light on or off.
+		// Not part of the State Machine, just switch backlight on or off.
 		case DISPLAY_KEY_ONOFF: {
 				if( display_IsOn ) {
 					display_Off();

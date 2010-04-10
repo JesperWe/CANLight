@@ -32,6 +32,8 @@
 #define hw_ECAN_MODE_DISABLE	0x1
 
 #define hw_CONFIG_MAGIC_WORD	4713
+#define hw_CONFIG_MAGIC_WORD_0	0x12	// MSB
+#define hw_CONFIG_MAGIC_WORD_1	0x69	// LSB
 
 #define hw_SLOW_HEARTBEAT_MS	3000
 #define hw_FAST_HEARTBEAT_MS	300
@@ -75,6 +77,15 @@ typedef struct hw_Port_s {
    volatile unsigned int *tris;
    int bit;
 } hw_Port_t;
+
+// The config union defines the location in the config Flash page for the
+// various parameters. hw_CONFIG_SIZE should be set to the number of bytes
+// to be transmitted/received when a network wide config update is requested.
+// NB! Flash read/write functions will need modification if the byte size
+// exceeds 1 Flash row (64 bytes).
+
+
+#define hw_CONFIG_SIZE	44
 
 typedef union hw_Config_u {
 	short		data[_FLASH_PAGE];

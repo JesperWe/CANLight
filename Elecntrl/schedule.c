@@ -22,6 +22,7 @@ schedule_Task_t schedule_Tasks[schedule_MAX_NO_TASKS];
 short schedule_Active;
 unsigned char schedule_Running = FALSE;
 unsigned long schedule_time = 0;
+short schedule_Parameter;
 
 void schedule_Initialize() {
 	schedule_NoTasks = 0;

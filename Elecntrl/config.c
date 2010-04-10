@@ -284,6 +284,7 @@ void config_Update( unsigned short configBytes ) {
 
 	config_Invalid = FALSE;
 	config_Initialize();
+	schedule_Parameter = 4;
 	schedule_AddTask( led_TaskComplete, schedule_SECOND/10 );
 
 }

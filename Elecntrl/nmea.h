@@ -141,7 +141,7 @@ extern unsigned char	RXQueueCount;
 extern nmea_MsgBuffer_t	nmea_MsgBuf[nmea_NO_MSG_BUFFERS] __attribute__((space(dma)));
 extern nmea_CA_NAME_t 	nmea_CA_Name;
 extern nmea_MsgBuffer_t	inMessage;
-extern nmea_PDU_t 		inPDU, outPGN;
+extern nmea_PDU_t 		inPDU, nmea_OutgoingPDU;
 extern nmea_MsgBuffer_t	nmea_TxQueue[nmea_NO_MSG_BUFFERS];
 extern unsigned char	nmea_TxQueueHead;
 extern unsigned char	nmea_TxQueueTail;
@@ -173,6 +173,8 @@ unsigned char nmea_SendEvent( event_t *event );
 unsigned char nmea_SendKeyEvent( event_t *event );
 
 unsigned char nmea_SendMessage();
+
+int nmea_DistributeSettings();
 
 void nmea_ControllerMode( unsigned char mode );
 

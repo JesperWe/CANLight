@@ -25,6 +25,7 @@ enum menu_States_e {
 	S_ENGINE_MONITOR,
 	S_LIGHTCONFIG,
 	S_BACKLIGHT,
+	S_SETTINGSDIST,
 	menu_NO_STATES
 };
 
