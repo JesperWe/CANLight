@@ -43,7 +43,10 @@ QVariant ecsControlGroup::typeIcon() const {
 //------------------------------------------------------------------------------------
 
 QString ecsControlGroup::displayText() {
-	return QString::number( id ) + " - " + description;
+	QString idStr;
+	if( id == -1 ) idStr = "Any - ";
+	else idStr = QString::number( id ) + " - ";
+	return idStr + description;
 }
 
 //------------------------------------------------------------------------------------
