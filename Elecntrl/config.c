@@ -156,6 +156,7 @@ void config_Initialize() {
 
 			if( applianceID == hw_DEVICE_ANY ) {
 				functionInGroup[lastUsedFunction] = hw_DEVICE_ANY;
+				functionListenGroup[ functionID ] = hw_DEVICE_ANY;
 			}
 
 		} 

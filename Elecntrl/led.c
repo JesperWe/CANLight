@@ -295,6 +295,8 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_KEY_CLICKED: {
+			if( event->groupId == hw_DEVICE_ANY && hw_Type != hw_SWITCH ) break;
+			if( event->groupId == hw_DEVICE_ANY ) led_CurrentColor = led_RED;   // Backlight
 			led_LastLevel = led_CurrentLevel[led_CurrentColor];
 			led_Toggle( led_CurrentColor, 3.0 );
 			break;
@@ -306,8 +308,19 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_KEY_TRIPLECLICKED: {
-			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) led_SetLevel( led_CurrentColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
-			else led_SetLevel( led_CurrentColor, 1.0, led_NO_ACK );
+
+			if( event->groupId == hw_DEVICE_ANY && hw_Type == hw_SWITCH ) {
+				led_SetLevel( led_RED, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
+				break;
+			}
+
+			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) {
+				led_SetLevel( led_CurrentColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
+			}
+
+			else {
+				led_SetLevel( led_CurrentColor, 1.0, led_NO_ACK );
+			}
 			break;
 		}
 	}
