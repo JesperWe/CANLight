@@ -139,8 +139,24 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 			 (unsigned int)(msg->id),
 			 pgn );
 
-	if( msg->len ) {
+	switch( pgn ) {
 
+	case nmea_CM_BAM: {
+			line += buf.sprintf( "TransferProtocol %d bytes, %d packages, Contained PGN %d",
+									 msg->data[ 1 ]<<8 | msg->data[2],
+									 msg->data[ 3 ],
+									 msg->data[ 5 ] << 16 | msg->data[ 6 ]<<8 | msg->data[7] );
+			break;
+		}
+
+	case nmea_DATATRANSFER: {
+			line += buf.sprintf( "TP Data Packet %d: %02x %02x %02x %02x %02x %02x %02x",
+								 msg->data[ 0 ], msg->data[ 1 ], msg->data[ 2 ], msg->data[ 3 ],
+								 msg->data[ 4 ], msg->data[ 5 ], msg->data[ 6 ], msg->data[ 7 ] );
+			break;
+		}
+
+	case nmea_LIGHTING_COMMAND: {
 		switch( msg->data[ 5 ] ) {
 		case 1: funcName = "hw_CAN_RATE"; break;
 		case 2: funcName = "hw_CAN_EN"; break;
@@ -189,6 +205,8 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 								 msg->data[ 4 ], funcName.utf16(),  eventName.utf16(),
 								 msg->data[ 0 ], msg->data[ 1 ],
 								 msg->data[ 2 ] << 8 | msg->data[ 3 ] );
+		break;
+	}
 	}
 
 	ecsManagerApp::inst()->canusb_Instance->readCallback( line );
