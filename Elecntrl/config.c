@@ -78,7 +78,7 @@ const unsigned char __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2))) conf
 // The config_MyEvents dynamic list should contain all events that affect this device.
 
 void config_Initialize() {
-	unsigned char* configPtr;
+	const unsigned char* configPtr;
 	unsigned short configSequenceNumber;
 	unsigned char inGroupID;
 	unsigned char listenToGroupID;
@@ -86,6 +86,7 @@ void config_Initialize() {
 	unsigned char functionID;
 	unsigned char event;
 	unsigned char action;
+	unsigned char lastUsedFunction;
 
 	// First check if we don't we have a valid device Id.
 	// Device ID = 0xFF is not allowed. It indicates that the device was programmed
@@ -131,6 +132,7 @@ void config_Initialize() {
 
 			if( applianceID == hw_DeviceID ) {
 				functionInGroup[ functionID ] = inGroupID;
+				lastUsedFunction = functionID;
 			}
 		}
 		while( *configPtr != DELIMITER );
@@ -148,6 +150,14 @@ void config_Initialize() {
 				functionInGroup[ functionID ] = listenToGroupID;
 				functionListenGroup[ functionID ] = inGroupID;
 			}
+
+			// Special case: If we are processing a group where the listeners
+			//listen to any controller, mark this for the controlling function too.
+
+			if( applianceID == hw_DEVICE_ANY ) {
+				functionInGroup[lastUsedFunction] = hw_DEVICE_ANY;
+			}
+
 		} 
 		while( *configPtr != DELIMITER );
 
@@ -174,7 +184,6 @@ void config_Initialize() {
 	}
 	while( *configPtr != END_OF_FILE );
 }
-
 
 void config_AddControlEvent( 
 		const unsigned char ctrlGroup,
@@ -220,7 +229,7 @@ void config_Task() {
 
 		schedule_Running = FALSE;
 
-		if( hw_Type == hw_LEDLAMP ) led_SetLevel( led_WHITE, 0.0 );
+		if( hw_Type == hw_LEDLAMP ) led_SetLevel( led_WHITE, 0.0, led_NO_ACK );
 
 		timer = schedule_time + schedule_SECOND;
 		while( schedule_time < timer );
@@ -228,12 +237,12 @@ void config_Task() {
 		// Number of flashes indicates type of config problem.
 
 		for( i=0; i< config_Invalid; i++ ) {
-			led_SetLevel( led_RED, 1.0);
+			led_SetLevel( led_RED, 1.0, led_NO_ACK );
 
 			timer = schedule_time + schedule_SECOND/5;
 			while( schedule_time < timer );
 
-			led_SetLevel( led_RED, 0.0);
+			led_SetLevel( led_RED, 0.0, led_NO_ACK);
 
 			timer = schedule_time + schedule_SECOND/5;
 			while( schedule_time < timer );

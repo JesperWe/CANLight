@@ -21,6 +21,7 @@ unsigned char ctrlkey_Holding[ ctrlkey_MAX_NO_KEYS ];
 unsigned long ctrlkey_Presstime[ ctrlkey_MAX_NO_KEYS ];
 unsigned long ctrlkey_Releasetime[ ctrlkey_MAX_NO_KEYS ];
 unsigned char ctrlkey_ClickCount[ ctrlkey_MAX_NO_KEYS ];
+unsigned char ctrlkey_BacklightKey;
 
 static const unsigned char ctrlkey_Key2Function[] = { hw_KEY1, hw_KEY2, hw_KEY3 };
 
@@ -120,10 +121,21 @@ void ctrlkey_task() {
 
 				led_FadeMaster = 0xFF;
 
-				events_Push( e_IO_EVENT, 0,
-					functionInGroup[function], hw_DeviceID,
-					function, e_KEY_HOLDING, keyNo,
-					(short)(schedule_time - ctrlkey_Presstime[ keyNo ]) );
+				if( functionInGroup[function] != hw_DEVICE_ANY ) {
+					events_Push( e_IO_EVENT, 0,
+						functionInGroup[function], hw_DeviceID,
+						function, e_KEY_HOLDING, keyNo,
+						(short)(schedule_time - ctrlkey_Presstime[ keyNo ]) );
+				}
+				else {
+					// Everyone is listening to this key, send levels based on controllers level
+					// rather than any listeners. (Avoids bus overloads caused by a large number
+					// of listeners fighting to become fade masters.
+
+					ctrlkey_BacklightKey = keyNo;
+					schedule_AddTask( ctrlkey_SendBackligtLevelTask, schedule_SECOND/4 );
+				}
+
 			}
 		}
 	}
@@ -131,6 +143,14 @@ void ctrlkey_task() {
 	_CNIE = 1;
 }
 
+//---------------------------------------------------------------------------------------------
+
+void ctrlkey_SendBackligtLevelTask() {
+	static float backlightStep;
+	if( backlightStep == 0 ) backlightStep = 0.05;
+	led_StepDimmer( &backlightStep, led_RED, hw_LED_RED, e_SET_BACKLIGHT_LEVEL );
+	if( ! ctrlkey_Holding[ ctrlkey_BacklightKey ] ) schedule_Finished();
+}
 
 //---------------------------------------------------------------------------------------------
 // Input Change ISR

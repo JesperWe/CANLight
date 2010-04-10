@@ -43,7 +43,7 @@ void display_Keypress( unsigned char key );
 
 void display_Initialize();
 unsigned char display_Address( unsigned char read );
-unsigned char display_Write( char *str );
+unsigned char display_Write( const char *str );
 unsigned char display_Sendbytes( int nBytes, ... );
 
 void display_Clear();

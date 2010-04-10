@@ -65,7 +65,10 @@ int main (void)
 		engine_ThrottleInitialize();
 	}
 
-	ctrlkey_Initialize();
+	if( hw_Type != hw_LEDLAMP ) {
+		ctrlkey_Initialize();
+	}
+
 	nmea_Initialize();
 	config_Initialize();
 	events_Initialize();

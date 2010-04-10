@@ -1,9 +1,9 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define 	END_OF_FILE	0xFF
-#define 	DELIMITER	0xFE	// End of Group Entry
-
+#define 	END_OF_FILE		0xFF
+#define 	DELIMITER		0xFE	// End of Group Entry
+#define 	hw_DEVICE_ANY	0xFF
 typedef struct cfg_Event_s {
 	unsigned char ctrlGroup;
 	unsigned char ctrlEvent;

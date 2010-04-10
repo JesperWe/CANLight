@@ -86,8 +86,8 @@ void led_Initialize( void ) {
 	T2CONbits.TON = 1;  		// Start Timer.
 
 	hw_CanSleep = 1;
-	led_SetLevel( 0, 0.0 );
-	led_SetLevel( 1, 0.0 );
+	led_SetLevel( 0, 0.0, led_NO_ACK );
+	led_SetLevel( 1, 0.0, led_NO_ACK );
 
 	for( i=0; i<led_NoChannels; i++ ) {
 		led_CurrentLevel[i] = led_FadeFromLevel[i] = led_GetPWMLevel( i );
@@ -101,7 +101,7 @@ void led_Initialize( void ) {
 //---------------------------------------------------------------------------------------------
 // Set one of the LED channels to a percentage brightness.
 
-void led_SetLevel( unsigned char color, float level ) {
+void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 	unsigned short i;
 	float modLevel, lastLevel;
 	short dutycycle;
@@ -139,11 +139,7 @@ void led_SetLevel( unsigned char color, float level ) {
 			hw_CanSleep = 0;
 	}
 
-	// Don't acknowledge if we are in POST or config update.
-
-	if( config_Invalid ) return;
-	if( schedule_Running == FALSE ) return;
-	if( led_CurrentFunc == 0 ) return;
+	if( ! sendAck ) return;
 
 	// Response message back to controller.
 	// Going to or from level=0 (off) from/to any other level triggers a response.
@@ -166,7 +162,6 @@ void led_SetLevel( unsigned char color, float level ) {
 		nmea_Wakeup();
 		nmea_SendEvent( &response );
 	}
-
 }
 
 
@@ -250,6 +245,8 @@ void led_FadeToLevel( unsigned char color, float level, float fadeSeconds ) {
 
 void led_ProcessEvent( event_t *event, unsigned char function ) {
 	event_t fadeEvent;
+	float value;
+
 
 	led_CurrentFunc = function;
 
@@ -266,11 +263,16 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 
 			break;
 		}
+		case e_SET_BACKLIGHT_LEVEL: {
+			if( hw_Type == hw_LEDLAMP ) break; // Doesn't have backlight.
+			value = event->info / 1000.0;
+			led_SetLevel( led_RED, value, led_NO_ACK );
+			break;
+		}
 		case e_SET_LEVEL: {
-			float value;
 			led_DimmerTicks = 0;
 			value = event->info / 1000.0;
-			led_SetLevel( led_CurrentColor, value );
+			led_SetLevel( led_CurrentColor, value, led_NO_ACK );
 			break;
 		}
 		case e_KEY_HOLDING: {
@@ -304,8 +306,8 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_KEY_TRIPLECLICKED: {
-			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) led_SetLevel( led_CurrentColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0 );
-			else led_SetLevel( led_CurrentColor, 1.0 );
+			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) led_SetLevel( led_CurrentColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
+			else led_SetLevel( led_CurrentColor, 1.0, led_NO_ACK );
 			break;
 		}
 	}
@@ -321,8 +323,8 @@ void led_PowerOnTest() {
 	switch( hw_Type ) {
 
 		case hw_LEDLAMP: {
-			led_SetLevel( led_RED, 1.0 );
-			led_SetLevel( led_WHITE, 1.0 );
+			led_SetLevel( led_RED, 1.0, led_NO_ACK );
+			led_SetLevel( led_WHITE, 1.0, led_NO_ACK );
 			led_FadeToLevel( led_RED, 0.0, 2.0 );
 			led_FadeToLevel( led_WHITE, 0.0, 2.0 );
 			break;
@@ -339,7 +341,7 @@ void led_PowerOnTest() {
 			schedule_Sleep(schedule_SECOND/3);
 			hw_WritePort( hw_LED3, 0 );
 
-			led_SetLevel( led_RED, 1.0);
+			led_SetLevel( led_RED, 1.0, led_NO_ACK);
 			led_FadeToLevel( led_RED, 0.0, 2.0 );
 			break;
 		}
@@ -360,9 +362,9 @@ void led_TaskComplete() {
 		switch( hw_Type ) {
 
 			case hw_LEDLAMP: {
-				led_SetLevel( led_WHITE, 0.5 );
+				led_SetLevel( led_WHITE, 0.5, led_NO_ACK );
 				schedule_Sleep(schedule_SECOND/4);
-				led_SetLevel( led_WHITE, 0.0 );
+				led_SetLevel( led_WHITE, 0.0, led_NO_ACK );
 				schedule_Sleep(schedule_SECOND/4);
 				break;
 			}
@@ -420,12 +422,36 @@ void led_PWMTask() {
 }
 
 //---------------------------------------------------------------------------------------------
+// Do one dimmer step, change direction if 0% or 100% reached.
+// Update calling parameter with new direction in that case.
+
+void led_StepDimmer( float *step, unsigned char color, unsigned char function, unsigned char event ) {
+	float value;
+	event_t	levelEvent;
+
+	value = led_CurrentLevel[color];
+	value += *step;
+	if( value > 1.0 ) { *step = - *step; value = 1.0; }
+	if( value < 0.0 ) { *step = - *step; value = 0.0; }
+
+	levelEvent.groupId = led_LevelControlGroup;
+	levelEvent.ctrlDev = hw_DeviceID;
+	levelEvent.ctrlEvent = event;
+	levelEvent.ctrlFunc = function;
+	levelEvent.data = color;
+	levelEvent.info = (short) (value * 1000);
+
+	nmea_SendEvent( &levelEvent );
+
+	if( event == e_SET_BACKLIGHT_LEVEL ) led_SetLevel( color, value, led_NO_ACK );
+}
+
+//---------------------------------------------------------------------------------------------
 // Smooth lighting transitions.
 
 void led_FadeTask() {
 	unsigned short i;
 	unsigned short curStep;
-	event_t	levelEvent;
 
 	float fadePos, multiplier, value;
 
@@ -439,7 +465,7 @@ void led_FadeTask() {
 			fadePos = (float)curStep / (float)led_FadeSteps[i];
 			multiplier = led_SmoothStep( fadePos );
 			value = led_FadeFromLevel[i] + multiplier * (led_FadeTargetLevel[i] - led_FadeFromLevel[i]);
-			led_SetLevel( i, value );
+			led_SetLevel( i, value, led_SEND_ACK );
 
 			if( curStep >= led_FadeSteps[i] ) {
 				led_FadeInProgress[i] = DISABLE;
@@ -454,26 +480,11 @@ void led_FadeTask() {
 	if( led_CurFadeStep != 0.0 ) {
 		led_DimmerTicks++;
 		led_DimmerTicks = led_DimmerTicks % 5; // 5 steps/second if fade is 25 steps.
-		if( led_DimmerTicks == 0 ) {
 
-			value = led_CurrentLevel[led_CurrentColor];
-			value += led_CurFadeStep;
-			if( value > 1.0 ) { led_CurFadeStep = - led_CurFadeStep; value = 1.0; }
-			if( value < 0.0 ) { led_CurFadeStep = - led_CurFadeStep; value = 0.0; }
-
-			levelEvent.groupId = led_LevelControlGroup;
-			levelEvent.ctrlDev = hw_DeviceID;
-			levelEvent.ctrlEvent = e_SET_LEVEL;
-			levelEvent.ctrlFunc = hw_LED_LIGHT;
-			levelEvent.data = led_CurrentColor;
-			levelEvent.info = (short) (value * 1000);
-
-			nmea_SendEvent( &levelEvent );
-
-			led_SetLevel( led_CurrentColor, value );
-		}
+		if( led_DimmerTicks == 0 ) led_StepDimmer( &led_CurFadeStep, led_CurrentColor, hw_LED_LIGHT, e_SET_LEVEL );
 	}
 }
+
 
 //---------------------------------------------------------------------------------------------
 // If we are running with dimmed back-light, we also need to dim the indicator LEDs.

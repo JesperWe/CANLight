@@ -74,7 +74,7 @@ unsigned char display_Address( unsigned char read ) {
 	return status;
 }
 
-unsigned char display_Write( char *str ) {
+unsigned char display_Write( const char *str ) {
 	unsigned char status;
 	status = display_Address(0);
 	if( status != 0 ) return status;

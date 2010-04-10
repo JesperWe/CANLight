@@ -4,6 +4,8 @@
 #define led_MAX_NO_CHANNELS	2
 #define led_RED				0
 #define led_WHITE				1
+#define led_NO_ACK				0
+#define led_SEND_ACK			1
 
 extern float led_PresetLevel[];
 extern float led_FadeTargetLevel[];
@@ -34,7 +36,7 @@ extern short	engine_Calibration[];
 
 void led_Initialize( void );
 
-void led_SetLevel( unsigned char color, float level );
+void led_SetLevel( unsigned char color, float level, unsigned char sendAck );
 
 void led_FadeToLevel( unsigned char color, float level, float fadeSeconds );
 
@@ -51,6 +53,8 @@ void led_ProcessEvent( event_t *event, unsigned char function );
 void led_PowerOnTest();
 
 void led_TaskComplete();
+
+void led_StepDimmer( float *step, unsigned char color, unsigned char function, unsigned char event );
 
 void led_FadeTask();
 

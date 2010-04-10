@@ -107,11 +107,11 @@ void event_Task() {
 						// Turn off back-light during daytime.
 
 						if( event.info > hw_Config->led_BacklightDaylightCutoff ) {
-							led_SetLevel( led_RED, 0.0 );
+							led_SetLevel( led_RED, 0.0, led_NO_ACK );
 							led_IndicatorPWM( FALSE );
 						}
 						else {
-							led_SetLevel( led_RED, (float)(blLevel)/256.0 );
+							led_SetLevel( led_RED, (float)(blLevel)/256.0, led_NO_ACK );
 							led_IndicatorPWM( TRUE );
 						}
 					}
@@ -147,6 +147,10 @@ void event_Task() {
 								break;
 							}
 							case e_KEY_RELEASED: {
+								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
+								break;
+							}
+							case e_SET_BACKLIGHT_LEVEL: {
 								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
 								break;
 							}
