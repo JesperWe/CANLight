@@ -47,7 +47,7 @@ void ecsControlGroupGraphic::recalcBoxSize()
 	rx = -rw / 2;
 	ry = -rh / 2;
 
-	// Make shure we center vertically around box + displayText
+	// Make sure we center vertically around box + displayText
 	ry = ry + (ecsManager::GroupNameFontSize + ecsManager::GroupNameOffset)/2;
 
 	boxSize.setRect( rx, ry, rw, rh );
@@ -76,6 +76,8 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 		painter->drawRect( selectBox );
 	}
 
+	// Surrounding box
+
 	painter->setBrush( qApp->property( "cGroupBrush" ).value<QBrush>() );
 	painter->setPen( qApp->property( "cGroupPen" ).value<QPen>() );
 	painter->setFont( qApp->property( "headerFont" ).value<QFont>() );
@@ -89,13 +91,15 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 
 	float buttonSize = ecsManager::CtrlButtonSize;
 
+	// Contained Appliances
+
+	int linkNumber = 0;
 	foreach( QGraphicsItem* link, childItems() ) {
 		if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
 		textPos = link->pos();
 		textPos.setX( textPos.x() + link->boundingRect().width() + 10 );
 
-		ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
-		int func = srcGroup->functions[ linkedApp->id ];
+		int func = srcGroup->functions[ linkNumber ];
 
 		if( func != ecsManager::hw_UNKNOWN ) {
 			painter->setFont( qApp->property( "buttonFont" ).value<QFont>() );
@@ -115,6 +119,7 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 					break; }
 			}
 		}
+		linkNumber++;
 	}
 
 	// Now draw the output line to our events.
@@ -172,12 +177,9 @@ void ecsControlGroupGraphic::dropEvent( QGraphicsSceneDragDropEvent *event ) {
 	appsModel = ((MainWindow*)(qApp->activeWindow()))->applianceModel;
 	appliance = appsModel->findItem( applianceId );
 
-	// For now we do not support adding multiple functions from the same appliance to a control group.
-	if( srcGroup->functions.contains( appliance->id ) ) return;
-
 	prepareGeometryChange();
 	srcGroup->links.append( appliance );
-	srcGroup->functions[applianceId] = ecsManager::NoEventType;
+	srcGroup->functions.append( ecsManager::NoEventType );
 
 	qApp->activeWindow()->setWindowModified( true );
 }
@@ -187,9 +189,10 @@ void ecsControlGroupGraphic::dropEvent( QGraphicsSceneDragDropEvent *event ) {
 void ecsControlGroupGraphic::updateLinkTexts() {
 	QGraphicsSimpleTextItem* linkText;
 
+	int linkNumber = 0;
 	foreach( ecsControlGroup* appliance, srcGroup->links ) {
-		if( linkTexts.contains( appliance->id ) ) {
-			linkText = linkTexts[ appliance->id ];
+		if( linkTexts.count() > linkNumber ) {
+			linkText = linkTexts[ linkNumber ];
 		}
 		else {
 			linkText = new QGraphicsSimpleTextItem( appliance->displayText() );
@@ -198,31 +201,21 @@ void ecsControlGroupGraphic::updateLinkTexts() {
 			linkText->setFlag( QGraphicsItem::ItemIsSelectable, true );
 			linkText->setParentItem( this );
 
-			linkTexts[ appliance->id ] = linkText;
+			linkTexts.append( linkText );
 		}
 
 		linkText->setData( 0, QVariant::fromValue( (void*) appliance ) );
 		linkText->setText( appliance->displayText() );
+
+		linkNumber++;
 	}
 
-	// If a linked appliance changed its ID, we need to find and remove the text item.
+	// If a linked appliance was deleted, we need to remove a text item.
 
 	if( linkTexts.count() > srcGroup->links.count() ) {
-		bool found;
-		foreach( int id, linkTexts.keys() ) {
-			found = false;
-			foreach( ecsControlGroup* appliance, srcGroup->links ) {
-				if( appliance->id == id ) {
-					found = true;
-					break;
-				}
-			}
-			if( ! found ) {
-				QGraphicsSimpleTextItem* unusedItem = linkTexts[id];
+				QGraphicsSimpleTextItem* unusedItem = linkTexts.last();
 				unusedItem->scene()->removeItem( unusedItem );
-				linkTexts.remove(id);
+				linkTexts.removeLast();
 				delete unusedItem;
-			}
-		}
 	}
 }

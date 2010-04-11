@@ -89,11 +89,13 @@ void SystemDescription::saveFile( QString toFile )
 		out.writeAttribute( "description", group->description );
 		out.writeAttribute( "type", QString::number( group->itemType) );
 
+		int linkNumber = 0;
 		foreach( ecsControlGroup* linkedapp,  group->links ) {
 			out.writeStartElement( "appliance-function" );
 			out.writeAttribute( "id", QString::number( linkedapp->id ) );
-			out.writeAttribute( "function", QString::number( group->functions[linkedapp->id] ) );
+			out.writeAttribute( "function", QString::number( group->functions[linkNumber] ) );
 			out.writeEndElement();
+			linkNumber++;
 		}
 		out.writeEndElement();
 	}
@@ -105,11 +107,13 @@ void SystemDescription::saveFile( QString toFile )
 		out.writeAttribute( "description", group->description );
 		out.writeAttribute( "type", QString::number( group->itemType) );
 
+		int linkNumber = 0;
 		foreach( ecsControlGroup* linkedapp,  group->links ) {
 			out.writeStartElement( "appliance-function" );
 			out.writeAttribute( "id", QString::number( linkedapp->id ) );
-			out.writeAttribute( "function", QString::number( group->functions[linkedapp->id] ) );
+			out.writeAttribute( "function", QString::number( group->functions[linkNumber] ) );
 			out.writeEndElement();
+			linkNumber++;
 		}
 
 		foreach( ecsEvent* e, group->events ) {
@@ -169,12 +173,14 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 
 		configFile.append( (uint8_t)( cGroup->id )); // Start new group.
 
+		int linkNumber = 0;
 		foreach( QGraphicsItem* link, cGroup->graphic->childItems() ) {
 			if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
 			ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
-			int func = cGroup->functions[ linkedApp->id ];
+			int func = cGroup->functions[ linkNumber ];
 			configFile.append( (uint8_t)( linkedApp->id ));
 			configFile.append( (uint8_t)( func ));
+			linkNumber++;
 		}
 		configFile.append( END_GROUP_APPLIANCES );
 
@@ -185,12 +191,14 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 
 		configFile.append( (uint8_t)( listenGroup->id )); // Start new group.
 
+		linkNumber = 0;
 		foreach( QGraphicsItem* link, listenGroup->graphic->childItems() ) {
 			if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
 			ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
-			int func = listenGroup->functions[ linkedApp->id ];
+			int func = listenGroup->functions[ linkNumber ];
 			configFile.append( (uint8_t)( linkedApp->id ));
 			configFile.append( (uint8_t)( func ));
+			linkNumber++;
 		}
 		configFile.append( END_GROUP_APPLIANCES );
 
@@ -274,7 +282,7 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 		ecsControlGroup* app = appliances->findItem(attrs.value("id").toInt());
 		if( app ) {
 			currentGraphic->srcGroup->links.append( app );
-			currentGraphic->srcGroup->functions[ app->id ] = attrs.value("function").toInt();
+			currentGraphic->srcGroup->functions.append( attrs.value("function").toInt() );
 		}
 	}
 

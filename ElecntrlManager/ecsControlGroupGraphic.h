@@ -63,7 +63,7 @@ public:
 	float          longestChildWidth;
 
 	QRectF boxSize, selectBox;
-	QHash<int, QGraphicsSimpleTextItem*> linkTexts;
+	QList<QGraphicsSimpleTextItem*> linkTexts;
 
 	ecsControlGroup* srcGroup;
 };

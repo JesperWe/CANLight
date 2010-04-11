@@ -44,7 +44,7 @@ public:
 	int             itemType;
 
 	QList<ecsControlGroup*> links;
-	QHash<int, int> functions;
+	QList<int> functions;
 	QList<ecsEvent*> events;
 	ecsControlGroupGraphic* graphic;
 	QList<ecsAction*> controllers;

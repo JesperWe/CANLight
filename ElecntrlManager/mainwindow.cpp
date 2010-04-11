@@ -4,6 +4,8 @@
  * $Date$
  */
 
+#include "assert.h"
+
 #include <QtGui>
 #include <QtSvg>
 
@@ -448,7 +450,8 @@ void MainWindow::onKeypress( int key ) {
 	}
 	}
 
-	if( selection[0]->type() != QGraphicsSimpleTextItem::Type ) return;
+	QGraphicsItem* selectedItem = selection[0];
+	if( selectedItem->type() != QGraphicsSimpleTextItem::Type ) return;
 
 	 link = qgraphicsitem_cast<QGraphicsSimpleTextItem *>(selection[0]);
 
@@ -468,7 +471,11 @@ void MainWindow::onKeypress( int key ) {
 
 	ecsControlGroup* linkedapp = (ecsControlGroup*)(link->data(0).value<void*>());
 	ecsControlGroupGraphic* groupGraphic = (ecsControlGroupGraphic*)(link->parentItem());
-	groupGraphic->srcGroup->functions[ linkedapp->id ] = func;
+
+	int linkNumber = groupGraphic->linkTexts.indexOf( link );
+	assert( linkNumber != -1 );
+	groupGraphic->srcGroup->functions[ linkNumber ] = func;
+
 	link->setSelected( false );
 	setWindowModified( true );
 }
