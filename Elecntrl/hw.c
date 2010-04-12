@@ -7,7 +7,6 @@
 
 #include "hw.h"
 #include "config.h"
-#include "events.h"
 #include "nmea.h"
 
 const short __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2)))
@@ -73,13 +72,13 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_NoFunctions] =
 	{ &PORTB, &TRISB, 1 },	// CAN_EN
 	{ &PORTB, &TRISB, 5 },	// LED_RED
 	{ &PORTB, &TRISB, 0 },	// LED_WHITE
-	{ &PORTA, &TRISA, 9 },	// LED1
+	{ &PORTC, &TRISC, 6 },	// LED1
 	{ &PORTC, &TRISC, 4 },	// LED2
-	{ &PORTC, &TRISC, 6 },	// LED3
+	{ &PORTA, &TRISA, 9 },	// LED3
 	{ &PORTA, &TRISA, 8 },	// SWITCH1
 	{ &PORTA, &TRISA, 2 },	// SWITCH2
-	{ &PORTB, &TRISC, 1 },	// SWITCH3
-	{ &PORTC, &TRISB, 3 },	// SWITCH4
+	{ &PORTC, &TRISC, 1 },	// SWITCH3
+	{ &PORTB, &TRISB, 3 },	// SWITCH4
 	{ &PORTC, &TRISC, 7 },	// KEY1
 	{ &PORTC, &TRISC, 5 },	// KEY2
 	{ &PORTC, &TRISC, 3 }	// KEY3
@@ -361,6 +360,18 @@ unsigned char hw_IsPWM( unsigned short hw_Port ) {
 	if( hw_Port == hw_LED_RED ||
 		hw_Port == hw_LED_WHITE ||
 		hw_Port == hw_LED_LIGHT
+	) return 1;
+
+	return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+
+unsigned char hw_IsActuator( unsigned short hw_Port ) {
+
+	if( hw_Port == hw_PWM1 ||
+		hw_Port == hw_PWM2
 	) return 1;
 
 	return 0;

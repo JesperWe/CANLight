@@ -12,8 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "engine.h"
 #include "queue.h"
+#include "config.h"
+#include "events.h"
+#include "engine.h"
 
 #ifndef HW_H_
 #define HW_H_
@@ -134,17 +136,29 @@ extern unsigned char 		hw_CanSleep;
 extern unsigned short		hw_SleepTimer;
 
 unsigned int hw_ReadPort(enum hw_Functions_e port);
+
 void hw_InputPort(enum hw_Functions_e port);
+
 void hw_OutputPort(enum hw_Functions_e port);
+
 void hw_WritePort(enum hw_Functions_e, int value);
+
 void hw_Initialize( void );
+
 void hw_ReadConfigFlash( void );
+
 void hw_WriteConfigFlash( void );
+
 unsigned char hw_IsPWM( unsigned short hw_Port );
+
+unsigned char hw_IsActuator( unsigned short hw_Port );
+
 void hw_Sleep( void );
+
 void hw_AcknowledgeSwitch( unsigned char function, int setting );
 
 void ADC_Initialize(void);
+
 unsigned int ADC_Read( unsigned char channel );
 
 #endif /* HW_H_ */

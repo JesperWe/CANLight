@@ -127,6 +127,7 @@ void event_Task() {
 						switch( event.ctrlEvent ) {
 							case e_KEY_CLICKED: {
 								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
+								if( hw_IsActuator(function) ) engine_ProcessEvent( &event, function );
 								else switch_ProcessEvent( &event, function );
 								break;
 							}
@@ -155,24 +156,21 @@ void event_Task() {
 								break;
 							}
 							case e_SET_LEVEL: {
+								if( hw_IsActuator(function) ) {
+									engine_ProcessEvent( &event, function );
+									break;
+								}
 								if( hw_IsPWM(function) ) {
 									led_ProcessEvent( &event, function );
 									break;
 								}
 
-								// If it is an engine event, save transmitted values for monitoring.
+								// Capture engine events, save transmitted values for monitoring.
 			
 								if( hw_I2C_Installed ) {
 									engine_Throttle = event.data;
 									engine_Gear = event.ctrlFunc;
 									engine_LastJoystickLevel = event.info;
-								}
-			
-								// If we are a unit actually running an engine, do it!
-			
-								if( hw_Actuators_Installed ) {
-									engine_RequestGear( event.ctrlFunc );
-									engine_RequestThrottle( event.data );
 								}
 								break;
 							}
@@ -211,9 +209,25 @@ void event_Task() {
 
 								break;
 							}
-							case e_SWITCH_ON: { hw_AcknowledgeSwitch( function, 1 ); break; }
-							case e_SWITCH_OFF: { hw_AcknowledgeSwitch( function, 0 ); break; }
-							case e_SWITCH_FAIL: { break; }
+
+							case e_SWITCH_ON: {
+								hw_AcknowledgeSwitch( function, 1 );
+								break;
+							}
+
+							case e_SWITCH_OFF: {
+								hw_AcknowledgeSwitch( function, 0 );
+								break;
+							}
+
+							case e_SWITCH_FAIL: { // XXX !
+								break;
+							}
+
+							case e_THROTTLE_MASTER: {
+								if( hw_Throttle_Installed ) engine_SetMaster( &event );
+								break;
+							}
 						}
 					}
 				}

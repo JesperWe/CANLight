@@ -78,7 +78,7 @@ unsigned short ctrlkey_ReadKeys( void ) {
 // if the click is a single/double/tripple click, and sends bus events accordingly.
 
 #define ctrlkey_DOUBLECLICK_THRESHOLD schedule_SECOND * 0.4
-#define ctrlkey_HOLDING_THRESHOLD schedule_SECOND * 0.3
+#define ctrlkey_HOLDING_THRESHOLD schedule_SECOND * 0.5
 
 void ctrlkey_task() {
 	unsigned char keyNo;
@@ -89,8 +89,26 @@ void ctrlkey_task() {
 
 	for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 
-		if( ctrlkey_Holding[ keyNo ] ) continue;
 		function = ctrlkey_Key2Function[ keyNo ];
+
+		// If holding, check that we still are. This event is somehow missed sometimes?
+
+		if( ctrlkey_Holding[ keyNo ] ) {
+
+			if( hw_ReadPort( function ) == 0 ) continue;
+
+			events_Push( e_IO_EVENT, 0,
+					functionInGroup[function], hw_DeviceID,
+					function, e_KEY_RELEASED, keyNo,
+					(short)schedule_time );
+
+			ctrlkey_Presstime[ keyNo ] = 0;
+			ctrlkey_Releasetime[ keyNo ] = 0;
+			ctrlkey_Holding[ keyNo ] = FALSE;
+			ctrlkey_ClickCount[ keyNo ] = 0;
+
+			led_FadeMaster = 0;
+		}
 
 		if( ctrlkey_Releasetime[ keyNo ] ) {
 			if( (schedule_time - ctrlkey_Releasetime[ keyNo ]) > ctrlkey_DOUBLECLICK_THRESHOLD ) {

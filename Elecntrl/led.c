@@ -146,6 +146,11 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 	// If the composite lamp is addressed, only consider it off if both channels are off.
 
 	if( lastLevel == 0.0 || modLevel == 0.0 ) {
+
+		// If we can't find what group we are in the event was a hw_DEVICE_ANY event.
+		// Don't acknowledge in this case.
+		if( functionInGroup[ led_CurrentFunc ] == 0) return;
+
 		response.PGN = 0;
 		response.info = 0;
 		response.groupId = functionInGroup[ led_CurrentFunc ];

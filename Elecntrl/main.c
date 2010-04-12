@@ -101,7 +101,7 @@ int main (void)
 	}
 
 	if( hw_Throttle_Installed ) {
-		schedule_AddTask( engine_JoystickTask, schedule_SECOND/10 );
+		schedule_AddTask( engine_JoystickTask, schedule_SECOND/25 );
 	}
 
 	if( hw_NoKeys > 0 ) {

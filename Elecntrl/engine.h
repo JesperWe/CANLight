@@ -34,19 +34,20 @@ extern short 	engine_GearPW;
 extern short	engine_CurThrottlePW;
 extern short	engine_CurGearPW;
 
-extern short	engine_LastJoystickLevel;
+extern short			engine_LastJoystickLevel;
 extern unsigned char	engine_CurMasterDevice;
-extern short 	engine_CurrentRPM;
-extern short 	engine_TargetRPM;
-extern short 	engine_GearSwitchTime;
+extern short 			engine_CurrentRPM;
+extern short 			engine_TargetRPM;
+extern unsigned long	engine_GearSwitchTime;
 extern unsigned char	engine_TargetThrottle;
+extern short			engine_ThrottleTimeSteps;
 
-extern char	engine_CurrentGear;
-extern char	engine_TargetGear;
+extern char			engine_CurrentGear;
+extern char			engine_TargetGear;
 
-extern short	engine_Joystick_Level;
-extern short	engine_Gear;
-extern unsigned char	engine_Throttle;
+extern short			engine_Joystick_Level;
+extern short			engine_Gear;
+extern char			engine_Throttle;
 
 void engine_Initialize();
 void engine_ThrottleInitialize();
@@ -68,5 +69,9 @@ int engine_ThrottleMonitor();
 void engine_ThrottleMonitorUpdater();
 
 int engine_CalibrationParams();
+
+int engine_ProcessEvent( event_t *event, unsigned char function );
+
+void engine_SetMaster( event_t *event );
 
 #endif /* ENGINE_H_ */
