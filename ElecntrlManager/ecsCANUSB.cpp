@@ -130,7 +130,7 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 	QString buf;
 	QString eventName;
 	QString funcName;
-
+	short data;
 	pgn = (msg->id & 0xFFFF00) >> 8;
 
 	line += (msg->flags & CANMSG_EXTENDED)   ?   "E" : "S";
@@ -157,57 +157,67 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 		}
 
 	case nmea_LIGHTING_COMMAND: {
-		switch( msg->data[ 5 ] ) {
-		case 1: funcName = "hw_CAN_RATE"; break;
-		case 2: funcName = "hw_CAN_EN"; break;
-		case 3: funcName = "hw_LED_RED"; break;
-		case 4: funcName = "hw_LED_WHITE"; break;
-		case 5: funcName = "hw_LED1"; break;
-		case 6: funcName = "hw_LED2"; break;
-		case 7: funcName = "hw_LED3"; break;
-		case 8: funcName = "hw_SWITCH1"; break;
-		case 9: funcName = "hw_SWITCH2"; break;
-		case 10: funcName = "hw_SWITCH3"; break;
-		case 11: funcName = "hw_SWITCH4"; break;
-		case 12: funcName = "hw_KEY1"; break;
-		case 13: funcName = "hw_KEY2"; break;
-		case 14: funcName = "hw_KEY3"; break;
-		case 15: funcName = "hw_LED_LIGHT"; break;
-		case 16: funcName = "hw_BACKLIGHT"; break;
-		default: funcName = "<unknown>";
-		}
+			data = msg->data[ 1 ] ;
 
-		switch( msg->data[ 6 ] ) {
-		case 1: eventName = "e_KEY_CLICKED"; break;
-		case 2: eventName = "e_KEY_HOLDING"; break;
-		case 3: eventName = "e_KEY_RELEASED"; break;
-		case 4: eventName = "e_KEY_DOUBLECLICKED"; break;
-		case 5: eventName = "e_KEY_TRIPLECLICKED"; break;
-		case 6: eventName = "e_SWITCH_ON"; break;
-		case 7: eventName = "e_SWITCH_OFF"; break;
-		case 8: eventName = "e_SWITCH_FAIL"; break;
-		case 9: eventName = "e_FADE_START"; break;
-		case 10: eventName = "e_FADE_MASTER"; break;
-		case 11: eventName = "e_FAST_HEARTBEAT"; break;
-		case 12: eventName = "e_NMEA_MESSAGE"; break;
-		case 13: eventName = "e_NIGHTMODE"; break;
-		case 14: eventName = "e_DAYLIGHTMODE"; break;
-		case 15: eventName = "e_AMBIENT_LIGHT_LEVEL"; break;
-		case 16: eventName = "e_BLACKOUT"; break;
-		case 17: eventName = "e_SLOW_HEARTBEAT"; break;
-		case 18: eventName = "e_THROTTLE_MASTER"; break;
-		case 19: eventName = "e_SET_LEVEL"; break;
-		case 20: eventName = "e_CONFIG_FILE_UPDATE"; break;
-		case 21: eventName = "e_SET_BACKLIGHT_LEVEL"; break;
-		default: eventName = "<unknown>";
-		}
+			switch( msg->data[ 5 ] ) {
+			case 1: funcName = "hw_CAN_RATE"; break;
+			case 2: funcName = "hw_CAN_EN"; break;
+			case 3: funcName = "hw_LED_RED"; break;
+			case 4: funcName = "hw_LED_WHITE"; break;
+			case 5: funcName = "hw_LED1"; break;
+			case 6: funcName = "hw_LED2"; break;
+			case 7: funcName = "hw_LED3"; break;
+			case 8: funcName = "hw_SWITCH1"; break;
+			case 9: funcName = "hw_SWITCH2"; break;
+			case 10: funcName = "hw_SWITCH3"; break;
+			case 11: funcName = "hw_SWITCH4"; break;
+			case 12: funcName = "hw_KEY1"; break;
+			case 13: funcName = "hw_KEY2"; break;
+			case 14: funcName = "hw_KEY3"; break;
+			case 15: funcName = "hw_LED_LIGHT"; break;
+			case 16: funcName = "hw_BACKLIGHT"; break;
+			case 17: {
+					funcName = "hw_ANALOG";
+					if( data > 127 ) 	data = data - 256; // Convert from unsigned char to signed.
+					break;
+				}
+			case 18: funcName = "hw_DIGITAL_IN"; break;
+			case 19: funcName = "hw_PWM1"; break;
+			case 20: funcName = "hw_PWM2"; break;
+			default: funcName = "<unknown>";
+			}
 
-		line += buf.sprintf( "Dev %02d: %ls/%ls  Group %03d, Data %d, Info %d",
+			switch( msg->data[ 6 ] ) {
+			case 1: eventName = "e_KEY_CLICKED"; break;
+			case 2: eventName = "e_KEY_HOLDING"; break;
+			case 3: eventName = "e_KEY_RELEASED"; break;
+			case 4: eventName = "e_KEY_DOUBLECLICKED"; break;
+			case 5: eventName = "e_KEY_TRIPLECLICKED"; break;
+			case 6: eventName = "e_SWITCH_ON"; break;
+			case 7: eventName = "e_SWITCH_OFF"; break;
+			case 8: eventName = "e_SWITCH_FAIL"; break;
+			case 9: eventName = "e_FADE_START"; break;
+			case 10: eventName = "e_FADE_MASTER"; break;
+			case 11: eventName = "e_FAST_HEARTBEAT"; break;
+			case 12: eventName = "e_NMEA_MESSAGE"; break;
+			case 13: eventName = "e_NIGHTMODE"; break;
+			case 14: eventName = "e_DAYLIGHTMODE"; break;
+			case 15: eventName = "e_AMBIENT_LIGHT_LEVEL"; break;
+			case 16: eventName = "e_BLACKOUT"; break;
+			case 17: eventName = "e_SLOW_HEARTBEAT"; break;
+			case 18: eventName = "e_THROTTLE_MASTER"; break;
+			case 19: eventName = "e_SET_LEVEL"; break;
+			case 20: eventName = "e_CONFIG_FILE_UPDATE"; break;
+			case 21: eventName = "e_SET_BACKLIGHT_LEVEL"; break;
+			default: eventName = "<unknown>";
+			}
+
+			line += buf.sprintf( "Dev %02d: %ls/%ls  Group %03d, Data %d, Info %d",
 								 msg->data[ 4 ], funcName.utf16(),  eventName.utf16(),
-								 msg->data[ 0 ], msg->data[ 1 ],
+								 msg->data[ 0 ], data,
 								 msg->data[ 2 ] << 8 | msg->data[ 3 ] );
-		break;
-	}
+			break;
+		}
 	}
 
 	ecsManagerApp::inst()->canusb_Instance->readCallback( line );
