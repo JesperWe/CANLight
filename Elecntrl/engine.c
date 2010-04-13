@@ -48,9 +48,10 @@ const char* engine_ParamNames[] = {
 };
 
 //---------------------------------------------------------------------------------------------
-// Set up TIMER3 and TIMER4 to do old fashioned Hobby RC pulse control.
+// Set up OC3 and OC4 to do old fashioned Hobby RC pulse control.
 // The pulse train is somewhat arbitrary in frequency, only pulse length counts.
 // 0-100% is represented by pulse length 1ms to 2ms, and 50% is 1.5ms.
+// We use the same timer (TMR2) as the LED PWM functions.
 
 void engine_Initialize() {
 
@@ -238,7 +239,7 @@ void engine_ActuatorTask() {
 
 		// Require at least 1 seconds between gear changes.
 
-		short interval;
+		long interval;
 		interval = schedule_time - engine_GearSwitchTime;
 		if( interval > schedule_SECOND ) {
 

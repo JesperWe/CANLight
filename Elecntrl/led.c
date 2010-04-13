@@ -16,7 +16,7 @@
 #define DISABLE 		0
 #define CLEAR			0
 
-#define led_PWM_PERIOD	hw_FCY / 64 / 100 					// For 100Hz PWM with 1:64 prescaler.
+#define led_PWM_PERIOD	hw_FCY / 8 / 100 					// For 100Hz PWM with 1:8 prescaler.
 
 #define led_FADE_FREQ	25
 
@@ -81,7 +81,7 @@ void led_Initialize( void ) {
 	T2CONbits.T32 = 0;  		// 16 bits.
 	T2CONbits.TCS = 0;  		// Internal Clock.
 	T2CONbits.TSIDL = 0;  		// Don't stop in idle.
-	T2CONbits.TCKPS = 2;  		// Divide by 64 Prescaler.
+	T2CONbits.TCKPS = 1;  		// Divide by 8 Prescaler.
 	PR2 = led_PWM_PERIOD;
 	T2CONbits.TON = 1;  		// Start Timer.
 
