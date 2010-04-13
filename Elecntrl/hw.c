@@ -222,9 +222,9 @@ void hw_Initialize( void ) {
 		hw_Config->engine_Calibration[ p_GearReverse ] = 216;
 		hw_Config->engine_Calibration[ p_GearForward ] = 140;
 
-		hw_Config->engine_Calibration[ p_JoystickMin ] = 110;
-		hw_Config->engine_Calibration[ p_JoystickMid ] = 530;
-		hw_Config->engine_Calibration[ p_JoystickMax ] = 880;
+		hw_Config->engine_Calibration[ p_JoystickMin ] = 100;
+		hw_Config->engine_Calibration[ p_JoystickMid ] = 390;
+		hw_Config->engine_Calibration[ p_JoystickMax ] = 660;
 
 		hw_Config->led_BacklightMultiplier = 2;
 		hw_Config->led_BacklightOffset = 10;

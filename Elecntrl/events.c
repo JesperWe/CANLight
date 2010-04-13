@@ -24,6 +24,8 @@ queue_t* events_Queue;
 event_t *eventPtr;
 
 unsigned char loopbackEnabled = 1;
+short events_LastLevelSetInfo;
+unsigned char events_LastLevelSetData;
 
 //---------------------------------------------------------------------------------------------
 
@@ -116,6 +118,15 @@ void event_Task() {
 						}
 					}
 				}
+
+				// We intercept and store set level commands so we can show them in the
+				// calibration display, regardless of configuration.
+
+				if( event.ctrlEvent == e_SET_LEVEL ) {
+					events_LastLevelSetInfo = event.info;
+					events_LastLevelSetData = event.data;
+				}
+
 
 				// Do I have a function listening to events from the controller group?
 				// XXX Also apply event filter here, it is unused at the moment!

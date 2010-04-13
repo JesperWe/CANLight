@@ -122,7 +122,10 @@ int (*menu_ActiveHandler)(void);
 // paramNames[0] is a header text, the rest are names of parameters that can be set.
 
 int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, short parameters[] ) {
-	static short delta, step;
+	static char delta;
+	static char step;
+	static char newParameter;
+
 	char line1[5];
 
 	// State machine lets key press through if it is not menu related, so we take care of it here.
@@ -153,12 +156,14 @@ int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, 
 
 		case DISPLAY_KEY_WEST: {
 			delta = 0;
+			newParameter = TRUE;
 			if( menu_Parameter > 1 ) menu_Parameter--;
 			break;
 		}
 
 		case DISPLAY_KEY_EAST: {
 			delta = 0;
+			newParameter = TRUE;
 			if( menu_Parameter+1 < noParameters ) menu_Parameter++;
 			break;
 		}
@@ -170,11 +175,13 @@ int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, 
 			menu_Parameter = 1;
 			step = 10;
 			delta = 0;
+			newParameter = TRUE;
 	}
 
-	// No delta means new parameter. Update display!
 
-	if( delta == 0 ) {
+	if( newParameter ) {
+		newParameter = FALSE;
+
 		display_Clear();
 		display_Write( paramNames[0] );
 		display_SetPosition(1,2);
@@ -301,6 +308,7 @@ char menu_ProcessKey( unsigned char keypress ) {
 				if( menu_CurState->parent > 0 )
 					menu_NextStateId = menu_CurState->parent;
 				menu_NextIndex = 0;
+				engine_JoystickCalibrationMonitor = FALSE;
 				break;;
 			}
 
@@ -356,6 +364,20 @@ char menu_ProcessKey( unsigned char keypress ) {
 
 void menu_Task() {
 	char key;
+
+	// First see if there are any special display tricks to be done.
+
+	if( engine_JoystickCalibrationMonitor ) {
+		char line1[5];
+		static short lastLevel;
+
+		if( lastLevel != events_LastLevelSetInfo ) {
+			display_SetPosition(10,4);
+			display_NumberFormat( line1, 4, events_LastLevelSetInfo );
+			display_Write( line1 );
+			lastLevel = events_LastLevelSetInfo;
+		}
+	}
 
 	// Any keys pressed?
 

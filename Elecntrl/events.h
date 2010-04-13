@@ -78,6 +78,8 @@ event_t* events_Pop( void );
 // our own event queue. This feature can be enabled or disabled.
 
 extern unsigned char loopbackEnabled;
+extern short events_LastLevelSetInfo;
+extern unsigned char events_LastLevelSetData;
 
 unsigned char event_Discard( event_t* event );
 config_Event_t* event_FindNextListener( config_Event_t *fromAccept, event_t* event );

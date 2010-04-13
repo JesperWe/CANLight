@@ -12,6 +12,7 @@
 #include "display.h"
 #include "menu.h"
 #include "engine.h"
+#include "events.h"
 
 short	engine_ThrottlePW;
 short	engine_GearPW;
@@ -27,6 +28,7 @@ unsigned long	engine_GearSwitchTime;
 short 			engine_CurrentRPM;
 short 			engine_TargetRPM;
 short			engine_ThrottleTimeSteps;
+unsigned char engine_JoystickCalibrationMonitor;
 
 unsigned char	engine_TargetThrottle;
 
@@ -79,6 +81,7 @@ void engine_ThrottleInitialize() {
 
 unsigned char engine_ReadThrottleLevel() {
 	short diff;
+	short calibratedLevel;
 
 	engine_Joystick_Level = ADC_Read( engine_JOYSTICK_AD_CHANNEL );
 
@@ -97,21 +100,24 @@ unsigned char engine_ReadThrottleLevel() {
 
 	// Scale A/D Converted level down to -100 --  +100 integer, calibrated.
 
-	engine_Joystick_Level = engine_Joystick_Level - hw_Config->engine_Calibration[ p_JoystickMid ];
+	calibratedLevel = engine_Joystick_Level - hw_Config->engine_Calibration[ p_JoystickMid ];
 
-	if( engine_Joystick_Level < engine_IDLE_DEADBAND && (-engine_Joystick_Level < engine_IDLE_DEADBAND) ) {
+	if( calibratedLevel < engine_IDLE_DEADBAND && (-calibratedLevel < engine_IDLE_DEADBAND) ) {
 		engine_Throttle = 0;
 	}
-	else if( engine_Joystick_Level > 0  ) {
-		engine_Throttle = 100.0 * (float)(engine_Joystick_Level - engine_IDLE_DEADBAND) /
+	else if( calibratedLevel > 0  ) {
+		engine_Throttle = 100.0 * (float)(calibratedLevel - engine_IDLE_DEADBAND) /
 				(float)( hw_Config->engine_Calibration[ p_JoystickMax ] -
 						  hw_Config->engine_Calibration[ p_JoystickMid ] );
 	}
 	else {
-		engine_Throttle = 100.0 * (float)(engine_Joystick_Level + engine_IDLE_DEADBAND) /
+		engine_Throttle = 100.0 * (float)(calibratedLevel + engine_IDLE_DEADBAND) /
 				(float)( hw_Config->engine_Calibration[ p_JoystickMid ] -
 						  hw_Config->engine_Calibration[ p_JoystickMin ] );
 	}
+
+	if( engine_Throttle > 100 ) engine_Throttle = 100;
+	if( engine_Throttle < -100 ) engine_Throttle = -100;
 
 	return 1;
 }
@@ -293,7 +299,7 @@ int engine_ThrottleMonitor() {
 }
 
 void engine_ThrottleMonitorUpdater() {
-	unsigned char gear, throttle;
+	char gear, throttle;
 	char numberString[5];
 
 	if( menu_CurStateId != menu_HandlerStateId ) {
@@ -303,20 +309,28 @@ void engine_ThrottleMonitorUpdater() {
 
 	// First show exact joystick levels read.
 
-	display_NumberFormat( numberString, 4, engine_LastJoystickLevel );
+	display_NumberFormat( numberString, 4, events_LastLevelSetInfo );
 	display_SetPosition( 17,1 );
 	display_Write( numberString );
 
 	// Now show a graphical representation of the resulting actuator positions.
 
-	throttle = engine_Throttle>>1; // Scale from 0-100 to 0-50
+	gear = 0;
+	throttle = events_LastLevelSetData;
+	if( throttle > 0 ) gear = 1;
+	if( throttle < 0 ) {
+		gear = -1;
+		throttle = -throttle;
+	}
+
+	throttle = throttle / 2; // Scale from 0-100 to 0-50
 
 	display_HorizontalBar( 10, 2, throttle );
 
-	switch( engine_Gear ) {
-		case 0: { gear = 25; break; }
-		case 1: { gear = 49; break; }
-		case 2: { gear =  1; break; }
+	switch( gear ) {
+		case 0:  { gear = 25; break; }
+		case 1:  { gear = 49; break; }
+		case -1: { gear =  1; break; }
 	}
 
 	display_HorizontalBar( 10, 3, gear );
@@ -332,6 +346,8 @@ int engine_CalibrationParams() {
 		hw_ReadConfigFlash();
 	}
 
+	engine_JoystickCalibrationMonitor = TRUE;
+
 	return menu_ParameterSetter( engine_ParamNames, engine_NO_CALIBRATION_PARAMS, hw_Config->engine_Calibration );
 }
 
@@ -339,27 +355,31 @@ int engine_CalibrationParams() {
 
 int engine_ProcessEvent( event_t *event, unsigned char function ) {
 	event_t masterEvent;
+	char	throttle;
 
 	if( ! hw_Actuators_Installed ) return 0;
 
 	switch( event->ctrlEvent ) {
 
 	case e_SET_LEVEL: {
+
+		throttle = event->data; // Make a signed value from event->data which is unsigned.
+
 		if( event->ctrlDev != engine_CurMasterDevice ) break;
 
-		if( event->data == 0 ) {
+		if( throttle == 0 ) {
 			engine_RequestGear( 0 );
-			engine_RequestThrottle( event->data );
+			engine_RequestThrottle( throttle );
 		}
 
-		else if( event->data > 0 ) {
+		else if( throttle > 0 ) {
 			engine_RequestGear( 1 );
-			engine_RequestThrottle( event->data );
+			engine_RequestThrottle( throttle );
 		}
 
 		else {
 			engine_RequestGear( -1 );
-			engine_RequestThrottle( -event->data );
+			engine_RequestThrottle( -throttle );
 		}
 
 		break;

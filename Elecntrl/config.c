@@ -247,6 +247,8 @@ void config_Task() {
 
 			timer = schedule_time + schedule_SECOND/5;
 			while( schedule_time < timer );
+
+			asm volatile ("CLRWDT");
 		}
 	}
 

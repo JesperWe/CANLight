@@ -49,6 +49,9 @@ extern short			engine_Joystick_Level;
 extern short			engine_Gear;
 extern char			engine_Throttle;
 
+extern unsigned char 	engine_JoystickCalibrationMonitor;
+
+
 void engine_Initialize();
 void engine_ThrottleInitialize();
 unsigned char engine_ReadThrottleLevel();
