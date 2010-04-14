@@ -37,7 +37,7 @@ extern short	engine_CurGearPW;
 extern short			engine_LastJoystickLevel;
 extern unsigned char	engine_CurMasterDevice;
 extern short 			engine_CurrentRPM;
-extern short 			engine_TargetRPM;
+extern short 			engine_CurrentRPM;
 extern unsigned long	engine_GearSwitchTime;
 extern unsigned char	engine_TargetThrottle;
 extern short			engine_ThrottleTimeSteps;

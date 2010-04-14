@@ -25,8 +25,6 @@ short			engine_LastJoystickLevel;
 char			engine_Throttle; // Used by both Joystick, Actuators and I2C!
 short			engine_Gear;
 unsigned long	engine_GearSwitchTime;
-short 			engine_CurrentRPM;
-short 			engine_TargetRPM;
 short			engine_ThrottleTimeSteps;
 unsigned char engine_JoystickCalibrationMonitor;
 
@@ -78,7 +76,7 @@ void engine_ThrottleInitialize() {
 //---------------------------------------------------------------------------------------------
 // Read throttle settings and return True if there was any activity.
 
-#define engine_IDLE_DEADBAND 5
+#define engine_IDLE_DEADBAND 10
 
 unsigned char engine_ReadThrottleLevel() {
 	short diff;
@@ -145,37 +143,17 @@ void engine_RequestThrottle( unsigned char level ) {
 
 	engine_TargetThrottle = level;
 
-	// For 3000rpm = 3sek and 100ms task interval:
-	engine_ThrottleTimeSteps = (engine_TargetThrottle - engine_Throttle) / 3;
-
 	// We can execute the change immediately if no gear change is involved.
 
 	if( engine_CurrentGear == engine_TargetGear ) {
 		engine_SetThrottle( level );
 		engine_ThrottleTimeSteps = 0;
+		return;
 	}
-}
 
-
-//---------------------------------------------------------------------------------------------
-// Actually set throttle to a level from 0 to 100.
-
-void engine_SetThrottle( unsigned char level ) {
-	float fLevel;
-	float range;
-
-	// Maintain a simulated RPM counter.
-
-	engine_Throttle = level;
-	engine_TargetRPM = level * 30; // Level = 100 -> 3000 rpm
-
-	fLevel = ((float)level) / 100.0;
-
-	range = hw_Config->engine_Calibration[ p_ThrottleMax ] - hw_Config->engine_Calibration[ p_ThrottleMin ];
-	fLevel = fLevel * range;
-
-	engine_ThrottlePW = hw_Config->engine_Calibration[ p_ThrottleMin ] + (short)fLevel;
-	engine_UpdateActuators();
+	// For 3000rpm = 3sek and 100ms task interval use / 3:
+	engine_ThrottleTimeSteps = engine_Throttle / 3;
+	engine_SetThrottle( 0 );
 }
 
 
@@ -194,6 +172,27 @@ void engine_RequestGear( char direction ) {
 
 	engine_TargetGear = direction;
 	engine_SetThrottle( 0 );
+}
+
+
+//---------------------------------------------------------------------------------------------
+// Actually set throttle to a level from 0 to 100.
+
+void engine_SetThrottle( unsigned char level ) {
+	float fLevel;
+	float range;
+
+	// Maintain a simulated RPM counter.
+
+	engine_Throttle = level;
+
+	fLevel = ((float)level) / 100.0;
+
+	range = hw_Config->engine_Calibration[ p_ThrottleMax ] - hw_Config->engine_Calibration[ p_ThrottleMin ];
+	fLevel = fLevel * range;
+
+	engine_ThrottlePW = hw_Config->engine_Calibration[ p_ThrottleMin ] + (short)fLevel;
+	engine_UpdateActuators();
 }
 
 
@@ -226,7 +225,7 @@ void engine_ActuatorTask() {
 	// Let power to the Roboteq be controlled by ignition key.
 
 //	hw_WritePort( hw_SWITCH3, _RA3 );
-	hw_WritePort( hw_SWITCH3, 1 );
+	hw_WritePort( hw_SWITCH3, 1 ); // XXX Debug setting
 
 	if( engine_ThrottleTimeSteps > 0 ) {
 		engine_ThrottleTimeSteps--;
