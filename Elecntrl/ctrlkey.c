@@ -174,10 +174,10 @@ void ctrlkey_SendBackligtLevelTask() {
 // Input Change ISR
 
 void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
-	static unsigned short lastTimer;
+	static unsigned long lastTimer = 0;
 	static unsigned short lastState;
 
-	unsigned short elapsed;
+	unsigned long elapsed;
 	unsigned short currentState;
 	unsigned char diffKeys;
 	unsigned char keyNo;
@@ -185,19 +185,15 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 	_CNIE = 0;
 	_CNIF = 0;
 
-	hw_SleepTimer = schedule_SECOND/10; // Stay awake a few cycles to catch follow up action.
-
-	elapsed = (TMR1>=lastTimer) ?
-			TMR1 - lastTimer :
-			0xFFFF - (lastTimer - TMR1);
-
-	// Ignore Bounces.
-	if( elapsed < 1 ) goto done;
-
 	currentState = ctrlkey_ReadKeys();
 
+	elapsed = schedule_time - lastTimer;
+
+	// Ignore Bounces.
+	if( elapsed < 3 ) { _CNIE = 1; return; }
+
 	// Ignore events that don't change anything.
-	if( lastState == currentState ) goto done;
+	if( lastState == currentState ) { _CNIE = 1; return; }
 
 	diffKeys = lastState ^ currentState;
 	lastState = currentState;
@@ -249,8 +245,7 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 
 	schedule_ResetTaskTimer( ctrlkey_task );
 
-done:
-	lastTimer = TMR1;
+	lastTimer = schedule_time;
 	_CNIE = 1;
 	return;
 }

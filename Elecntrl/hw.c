@@ -246,10 +246,6 @@ void hw_Initialize( void ) {
 	// CAN Tx					Pin 10 RB12		Pin 10 RB12
 	// CAN Rx					Pin 11 RB13		Pin 21 RB0
 
-#ifdef DEBUG
-	TRISBbits.TRISB14 = 0;				// Debug output port.
-#endif
-
 	hw_OutputPort( hw_CAN_EN );
 	hw_OutputPort( hw_CAN_RATE );
 

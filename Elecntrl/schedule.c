@@ -27,7 +27,7 @@ short schedule_Parameter;
 void schedule_Initialize() {
 	schedule_NoTasks = 0;
 
-    // Timer 1 will be our main task timer. Interval is 1ms.
+    // Timer 1 will be our main task timer.
 
     T1CONbits.TSIDL = 1;
     T1CONbits.TCKPS = 3;				// Prescaler = 256

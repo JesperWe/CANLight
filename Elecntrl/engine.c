@@ -226,6 +226,7 @@ void engine_ActuatorTask() {
 
 //	hw_WritePort( hw_SWITCH3, _RA3 );
 	hw_WritePort( hw_SWITCH3, 1 ); // XXX Debug setting
+// XXX Communicate back to throttle master if ignition was turned off.
 
 	if( engine_ThrottleTimeSteps > 0 ) {
 		engine_ThrottleTimeSteps--;
