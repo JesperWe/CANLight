@@ -162,6 +162,8 @@ void ctrlkey_task() {
 }
 
 //---------------------------------------------------------------------------------------------
+// Special task if we have a key that controls becklight, and it is being held.
+// Dim light level up/down and tell the network to do the same.
 
 void ctrlkey_SendBackligtLevelTask() {
 	static float backlightStep;
@@ -171,7 +173,8 @@ void ctrlkey_SendBackligtLevelTask() {
 }
 
 //---------------------------------------------------------------------------------------------
-// Input Change ISR
+// Input Change Notification ISR. Takes care of debouncing key presses and keeping track
+// of key states.
 
 void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 	static unsigned long lastTimer = 0;
