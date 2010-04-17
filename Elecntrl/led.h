@@ -40,6 +40,8 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck );
 
 void led_FadeToLevel( unsigned char color, float level, float fadeSeconds );
 
+void led_SetBacklight( event_t *event );
+
 unsigned short led_Level( unsigned char color );
 
 void led_Toggle( unsigned char color, float fadeTime );

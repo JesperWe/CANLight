@@ -94,30 +94,7 @@ void event_Task() {
 
 			case e_NMEA_MESSAGE: {
 
-				if( (event.ctrlEvent == e_AMBIENT_LIGHT_LEVEL) && hw_AutoBacklightMode ) {
-					unsigned short blLevel;
-					blLevel = hw_Config->led_BacklightMultiplier * event.info;
-					blLevel += hw_Config->led_BacklightOffset;
-					if( blLevel > 0xFF ) blLevel = 0xFF;
-
-					if( hw_I2C_Installed ) {
-						display_SetBrightness( blLevel );
-					}
-
-					if( hw_Type == hw_SWITCH ) {
-
-						// Turn off back-light during daytime.
-
-						if( event.info > hw_Config->led_BacklightDaylightCutoff ) {
-							led_SetLevel( led_RED, 0.0, led_NO_ACK );
-							led_IndicatorPWM( FALSE );
-						}
-						else {
-							led_SetLevel( led_RED, (float)(blLevel)/256.0, led_NO_ACK );
-							led_IndicatorPWM( TRUE );
-						}
-					}
-				}
+				if( event.ctrlEvent == e_AMBIENT_LIGHT_LEVEL ) led_SetBacklight( &event );
 
 				// We intercept and store set level commands so we can show them in the
 				// calibration display, regardless of configuration.

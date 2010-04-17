@@ -385,8 +385,6 @@ int engine_ProcessEvent( event_t *event, unsigned char function ) {
 
 		if( engine_CurMasterDevice != event->ctrlDev ) {
 			engine_CurMasterDevice = event->ctrlDev;
-			masterEvent.ctrlEvent = e_THROTTLE_MASTER;
-			masterEvent.ctrlFunc = event->ctrlFunc;
 			masterEvent.info = engine_CurMasterDevice;
 			masterEvent.data = event->data; // Return info about what key was clicked to become master.
 
@@ -405,8 +403,6 @@ int engine_ProcessEvent( event_t *event, unsigned char function ) {
 			engine_RequestThrottle( 0 );
 			engine_RequestGear( 0 );
 
-			masterEvent.ctrlEvent = e_SWITCH_OFF;
-			masterEvent.ctrlFunc = hw_PWM1;
 			masterEvent.info = 0;
 			masterEvent.data = 0;
 
@@ -418,6 +414,8 @@ int engine_ProcessEvent( event_t *event, unsigned char function ) {
 
 		nmea_Wakeup();
 
+		masterEvent.ctrlEvent = e_THROTTLE_MASTER;
+		masterEvent.ctrlFunc = event->ctrlFunc;
 		masterEvent.ctrlDev = hw_DeviceID;
 		masterEvent.groupId = functionInGroup[ function ];
 

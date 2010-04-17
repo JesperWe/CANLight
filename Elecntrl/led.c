@@ -246,11 +246,54 @@ void led_FadeToLevel( unsigned char color, float level, float fadeSeconds ) {
 
 
 //---------------------------------------------------------------------------------------------
+
+void led_SetBacklight( event_t *event ) {
+	float value;
+	unsigned short ambientLevel;
+
+	if( hw_Type == hw_LEDLAMP ) return; // Doesn't have backlight.
+
+	if( event->ctrlEvent == e_SET_BACKLIGHT_LEVEL ) {
+		value = event->info / 1000.0;
+		ambientLevel = event->info / 4;
+	}
+
+	if( (event->ctrlEvent == e_AMBIENT_LIGHT_LEVEL) && hw_AutoBacklightMode ) {
+
+		if( event->info > hw_Config->led_BacklightDaylightCutoff ) {
+			value = 0.0;
+		}
+
+		else {
+			ambientLevel = hw_Config->led_BacklightMultiplier * event->info;
+			ambientLevel += hw_Config->led_BacklightOffset;
+			if( ambientLevel > 0xFF ) ambientLevel = 0xFF;
+			value = (float)(ambientLevel)/256.0;
+		}
+	}
+
+	if( hw_I2C_Installed ) {
+		display_SetBrightness( ambientLevel );
+	}
+
+	// Turn off back-light during daytime.
+
+	if( value == 0 ) {
+		led_SetLevel( led_RED, 0.0, led_NO_ACK );
+		led_IndicatorPWM( FALSE );
+	}
+	else {
+		led_SetLevel( led_RED, value, led_NO_ACK );
+		led_IndicatorPWM( TRUE );
+	}
+}
+
+
+//---------------------------------------------------------------------------------------------
 // Interrupt fade in progress.
 
 void led_ProcessEvent( event_t *event, unsigned char function ) {
 	event_t fadeEvent;
-	float value;
 
 
 	led_CurrentFunc = function;
@@ -269,12 +312,11 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_SET_BACKLIGHT_LEVEL: {
-			if( hw_Type == hw_LEDLAMP ) break; // Doesn't have backlight.
-			value = event->info / 1000.0;
-			led_SetLevel( led_RED, value, led_NO_ACK );
+			led_SetBacklight( event );
 			break;
 		}
 		case e_SET_LEVEL: {
+			float value;
 			led_DimmerTicks = 0;
 			value = event->info / 1000.0;
 			led_SetLevel( led_CurrentColor, value, led_NO_ACK );

@@ -394,7 +394,7 @@ void hw_AcknowledgeSwitch( unsigned char function, int setting ) {
 	}
 	case hw_KEY3: {
 		hw_WritePort( hw_LED3, setting );
-		hw_LEDStatus = hw_LEDStatus ^ 3;
+		hw_LEDStatus = hw_LEDStatus & 3;
 		hw_LEDStatus = hw_LEDStatus | setting<<2;
 		break;
 	}
