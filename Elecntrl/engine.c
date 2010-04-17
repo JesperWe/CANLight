@@ -152,7 +152,7 @@ void engine_RequestThrottle( unsigned char level ) {
 	}
 
 	// For 3000rpm = 3sek and 100ms task interval use / 3:
-	engine_ThrottleTimeSteps = engine_Throttle / 3;
+	engine_ThrottleTimeSteps += engine_Throttle / 3;
 	engine_SetThrottle( 0 );
 }
 
@@ -171,7 +171,6 @@ void engine_RequestGear( char direction ) {
 	// gear change was commanded.
 
 	engine_TargetGear = direction;
-	engine_SetThrottle( 0 );
 }
 
 
