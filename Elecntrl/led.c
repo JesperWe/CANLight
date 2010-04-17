@@ -447,40 +447,6 @@ void led_TaskComplete() {
 	schedule_Finished();
 }
 
-
-//-------------------------------------------------------------------------------
-// Do bit-banging PWM on keypad indicator LEDs, since they are not on PWM outputs.
-
-#define led_PWM_RESOLUTION	15
-
-void led_PWMTask() {
-	static unsigned char tickCounter;
-	unsigned short level;
-
-	if( ! hw_LEDStatus ) return;
-	if( led_CurrentLevel[ led_RED ] == 0.0 ) return;
-	if( led_CurrentLevel[ led_RED ] == 1.0 ) return;
-
-	tickCounter++;
-	tickCounter = tickCounter % led_PWM_RESOLUTION;
-
-	if( tickCounter == 0 ) {
-		if( hw_LEDStatus & 1 ) hw_WritePort( hw_LED1, 1 );
-		if( hw_LEDStatus & 2 ) hw_WritePort( hw_LED2, 1 );
-		if( hw_LEDStatus & 4 ) hw_WritePort( hw_LED3, 1 );
-		return;
-	}
-
-	// We know here that we are a hw_SWITCH, and led_RED is back-light!
-
-	level = 1 + (short)(led_CurrentLevel[ led_RED ] * (float)led_PWM_RESOLUTION);
-	if( level == tickCounter ) {
-		hw_WritePort( hw_LED1, 0 );
-		hw_WritePort( hw_LED2, 0 );
-		hw_WritePort( hw_LED3, 0 );
-	}
-}
-
 //---------------------------------------------------------------------------------------------
 // Do one dimmer step, change direction if 0% or 100% reached.
 // Update calling parameter with new direction in that case.
@@ -570,14 +536,18 @@ void led_IndicatorPWM( unsigned char run ) {
 void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
 
     _T2IF = 0;
+    _T2IE = 0;
 
-	if( ! hw_LEDStatus ) return;
-	if( led_CurrentLevel[ led_RED ] == 0.0 ) return;
-	if( led_CurrentLevel[ led_RED ] == 1.0 ) return;
+	if( ! hw_LEDStatus ) goto done;
+	if( led_CurrentLevel[ led_RED ] == 0.0 ) goto done;
+	if( led_CurrentLevel[ led_RED ] == 1.0 ) goto done;
 
 	if( hw_LEDStatus & 1 ) hw_WritePort( hw_LED1, 1 );
 	if( hw_LEDStatus & 2 ) hw_WritePort( hw_LED2, 1 );
 	if( hw_LEDStatus & 4 ) hw_WritePort( hw_LED3, 1 );
+
+done:
+	_T2IE= 1;
 }
 
 
@@ -603,7 +573,9 @@ void __attribute__((interrupt, no_auto_psv)) _OC2Interrupt(void) {
 
 	if( ! hw_LEDStatus ) return;
 
+    _OC2IE = 0;
 	hw_WritePort( hw_LED1, 0 );
 	hw_WritePort( hw_LED2, 0 );
 	hw_WritePort( hw_LED3, 0 );
+    _OC2IE = 1;
 }

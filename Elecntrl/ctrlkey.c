@@ -167,7 +167,7 @@ void ctrlkey_task() {
 
 void ctrlkey_SendBackligtLevelTask() {
 	static float backlightStep;
-	if( backlightStep == 0 ) backlightStep = 0.05;
+	if( backlightStep == 0 ) backlightStep = -0.05;
 	led_StepDimmer( &backlightStep, led_RED, hw_LED_RED, e_SET_BACKLIGHT_LEVEL );
 	if( ! ctrlkey_Holding[ ctrlkey_BacklightKey ] ) schedule_Finished();
 }

@@ -24,7 +24,7 @@ short			engine_Joystick_Level;
 short			engine_LastJoystickLevel;
 char			engine_Throttle; // Used by both Joystick, Actuators and I2C!
 short			engine_Gear;
-unsigned long	engine_GearSwitchTime;
+unsigned long	engine_LastTimer;
 short			engine_ThrottleTimeSteps;
 unsigned char engine_JoystickCalibrationMonitor;
 
@@ -77,6 +77,7 @@ void engine_ThrottleInitialize() {
 // Read throttle settings and return True if there was any activity.
 
 #define engine_IDLE_DEADBAND 10
+#define engine_THROTTLE_MIN_CHANGE 10
 
 unsigned char engine_ReadThrottleLevel() {
 	short diff;
@@ -94,7 +95,7 @@ unsigned char engine_ReadThrottleLevel() {
 	// Require a significant movement before taking action.
 
 	diff = engine_Joystick_Level - engine_LastJoystickLevel;
-	if( diff<3 && diff>-3 ) return 0;
+	if( diff<engine_THROTTLE_MIN_CHANGE && diff>-engine_THROTTLE_MIN_CHANGE ) return 0;
 	engine_LastJoystickLevel = engine_Joystick_Level;
 
 	// Scale A/D Converted level down to -100 --  +100 integer, calibrated.
@@ -210,7 +211,7 @@ void engine_SetGear( char direction ) {
 
 	engine_UpdateActuators();
 	engine_CurrentGear = direction;
-	engine_GearSwitchTime = schedule_time;
+	engine_LastTimer = schedule_time;
 }
 
 
@@ -233,7 +234,7 @@ void engine_ActuatorTask() {
 		// Require at least 1 seconds between gear changes.
 
 		long interval;
-		interval = schedule_time - engine_GearSwitchTime;
+		interval = schedule_time - engine_LastTimer;
 		if( interval > schedule_SECOND ) {
 
 			// Go to neutral between forward and reverse.
@@ -264,6 +265,13 @@ void engine_JoystickTask() {
 	if( functionInGroup[ hw_ANALOG ] == 0 ) return;
 
 	if( engine_ReadThrottleLevel() ) {
+
+		// Only send wakeup if there has been a significant pause since last event.
+
+		if( schedule_time - engine_LastTimer > schedule_SECOND/2 ) {
+			nmea_Wakeup();
+		}
+
 		event.PGN = 0;
 		event.groupId = functionInGroup[ hw_ANALOG ];
 		event.ctrlDev = hw_DeviceID;
@@ -272,6 +280,7 @@ void engine_JoystickTask() {
 		event.data = engine_Throttle;
 		event.info = engine_Joystick_Level;
 		nmea_SendEvent( &event );
+		engine_LastTimer = schedule_time;
 	}
 }
 
