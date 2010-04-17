@@ -222,12 +222,6 @@ void engine_SetGear( char direction ) {
 
 void engine_ActuatorTask() {
 
-	// Let power to the Roboteq be controlled by ignition key.
-
-//	hw_WritePort( hw_SWITCH3, _RA3 );
-	hw_WritePort( hw_SWITCH3, 1 ); // XXX Debug setting
-// XXX Communicate back to throttle master if ignition was turned off.
-
 	if( engine_ThrottleTimeSteps > 0 ) {
 		engine_ThrottleTimeSteps--;
 		return;
@@ -387,15 +381,47 @@ int engine_ProcessEvent( event_t *event, unsigned char function ) {
 	}
 
 	case e_KEY_CLICKED: {
-		engine_CurMasterDevice = event->ctrlDev;
-		masterEvent.ctrlDev = hw_DeviceID;
-		masterEvent.ctrlEvent = e_THROTTLE_MASTER;
-		masterEvent.groupId = functionInGroup[ function ];
-		masterEvent.ctrlFunc = event->ctrlFunc;
-		masterEvent.info = engine_CurMasterDevice;
-		masterEvent.data = event->data; // Return info about what key was clicked to become master.
+
+		// A device becomes the new master.
+
+		if( engine_CurMasterDevice != event->ctrlDev ) {
+			engine_CurMasterDevice = event->ctrlDev;
+			masterEvent.ctrlEvent = e_THROTTLE_MASTER;
+			masterEvent.ctrlFunc = event->ctrlFunc;
+			masterEvent.info = engine_CurMasterDevice;
+			masterEvent.data = event->data; // Return info about what key was clicked to become master.
+
+			// Turn on power to the Roboteq.
+
+			hw_WritePort( hw_SWITCH3, 1 );
+
+		}
+
+		// The current master want to shut down.
+
+		else {
+
+			engine_CurMasterDevice = 0;
+
+			engine_RequestThrottle( 0 );
+			engine_RequestGear( 0 );
+
+			masterEvent.ctrlEvent = e_SWITCH_OFF;
+			masterEvent.ctrlFunc = hw_PWM1;
+			masterEvent.info = 0;
+			masterEvent.data = 0;
+
+			// Wait a while for actuators to settle, then turn off power to the Roboteq.
+
+			schedule_Sleep( schedule_SECOND * 2 );
+			hw_WritePort( hw_SWITCH3, 0 );
+		}
 
 		nmea_Wakeup();
+
+		masterEvent.ctrlDev = hw_DeviceID;
+		masterEvent.groupId = functionInGroup[ function ];
+
 		nmea_SendEvent( &masterEvent );
 
 		break;
@@ -415,7 +441,7 @@ void engine_SetMaster( event_t *event ) {
 		hw_AcknowledgeSwitch( event->ctrlFunc, 1 );
 	}
 
-	// We lost master status. This device doesn't necessarily have the same key
+	// Our device lost master status. Our device doesn't necessarily use the same button
 	// to request master status as the new master, so we need to go through
 	// our config to find which indicator to turn off.
 
