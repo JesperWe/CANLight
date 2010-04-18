@@ -140,6 +140,7 @@ void event_Task() {
 								break;
 							}
 							case e_SET_BACKLIGHT_LEVEL: {
+								if( hw_Type != hw_SWITCH ) break;
 								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
 								break;
 							}

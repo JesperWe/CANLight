@@ -16,7 +16,7 @@
 #define DISABLE 		0
 #define CLEAR			0
 
-#define led_PWM_PERIOD	hw_FCY / 8 / 100 					// For 100Hz PWM with 1:8 prescaler.
+#define led_PWM_PERIOD	hw_FCY / 64 / 100 					// For 100Hz PWM with 1:64 prescaler.
 
 #define led_FADE_FREQ	25
 
@@ -36,7 +36,8 @@ float led_PresetLevel[led_MAX_NO_CHANNELS];
 float led_FadeTargetLevel[led_MAX_NO_CHANNELS];
 float led_FadeFromLevel[led_MAX_NO_CHANNELS];
 float led_CurrentLevel[led_MAX_NO_CHANNELS];
-float led_LastLevel, led_CurFadeStep;
+float led_LastLevel;
+float led_CurFadeStep;
 
 const char* led_ParamNames[] = {
 	"Light Calibration",
@@ -59,7 +60,7 @@ void led_Initialize( void ) {
 			OC1RS = led_PWM_PERIOD;
 			OC2CONbits.OCM = 6;
 			OC2RS = led_PWM_PERIOD;
-			led_PresetLevel[ led_RED ] = 1.0;
+			led_PresetLevel[ led_RED ] = 0.1;
 			led_PresetLevel[ led_WHITE ] = 0.5;
 			break;
 		}
@@ -81,7 +82,7 @@ void led_Initialize( void ) {
 	T2CONbits.T32 = 0;  		// 16 bits.
 	T2CONbits.TCS = 0;  		// Internal Clock.
 	T2CONbits.TSIDL = 0;  		// Don't stop in idle.
-	T2CONbits.TCKPS = 1;  		// Divide by 8 Prescaler.
+	T2CONbits.TCKPS = 2;  		// Divide by 64 Prescaler.
 	PR2 = led_PWM_PERIOD;
 	T2CONbits.TON = 1;  		// Start Timer.
 
@@ -251,32 +252,60 @@ void led_SetBacklight( event_t *event ) {
 	float value;
 	unsigned short ambientLevel;
 
-	if( hw_Type == hw_LEDLAMP ) return; // Doesn't have backlight.
+	if( hw_Type != hw_SWITCH ) return; // Doesn't have backlight.
 
-	if( event->ctrlEvent == e_SET_BACKLIGHT_LEVEL ) {
-		value = event->info / 1000.0;
-		ambientLevel = event->info / 4;
-	}
+	switch( event->ctrlEvent ) {
 
-	if( (event->ctrlEvent == e_AMBIENT_LIGHT_LEVEL) && hw_AutoBacklightMode ) {
-
-		if( event->info > hw_Config->led_BacklightDaylightCutoff ) {
-			value = 0.0;
+		case e_SET_BACKLIGHT_LEVEL: {
+			value = event->info / 1000.0;
+			ambientLevel = event->info / 4;
+			break;
 		}
 
-		else {
-			ambientLevel = hw_Config->led_BacklightMultiplier * event->info;
-			ambientLevel += hw_Config->led_BacklightOffset;
-			if( ambientLevel > 0xFF ) ambientLevel = 0xFF;
-			value = (float)(ambientLevel)/256.0;
+		case e_AMBIENT_LIGHT_LEVEL: {
+			if( hw_AutoBacklightMode ) {
+				if( event->info > hw_Config->led_BacklightDaylightCutoff ) {
+					value = 0.0;
+				}
+				else {
+					ambientLevel = hw_Config->led_BacklightMultiplier * event->info;
+					ambientLevel += hw_Config->led_BacklightOffset;
+					if( ambientLevel > 0xFF ) ambientLevel = 0xFF;
+					value = (float)(ambientLevel)/256.0;
+				}
+			}
+			break;
 		}
+
+		case e_KEY_CLICKED: {
+			hw_AutoBacklightMode = FALSE;
+			if( led_CurrentLevel[led_RED] == 0.0 ) {
+				value = led_LastLevel;
+			}
+			else {
+				led_LastLevel = led_CurrentLevel[led_RED];
+				value = 0;
+			}
+			break;
+		}
+
+		case e_KEY_DOUBLECLICKED: {
+			hw_AutoBacklightMode = TRUE;
+			break;
+		}
+
+		case e_KEY_TRIPLECLICKED: {
+			hw_AutoBacklightMode = FALSE;
+			value = (float)hw_Config->led_MinimumDimmedLevel / 100.0;
+			break;
+		}
+
+		default: return;
 	}
 
 	if( hw_I2C_Installed ) {
 		display_SetBrightness( ambientLevel );
 	}
-
-	// Turn off back-light during daytime.
 
 	if( value == 0 ) {
 		led_SetLevel( led_RED, 0.0, led_NO_ACK );
@@ -300,6 +329,13 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 
 	if( function != hw_LED_LIGHT ) led_CurrentColor = (function==hw_LED_RED) ? led_RED : led_WHITE;
 
+	// DEVICE_ANY events are backlight settings, handled separately.
+
+	if( event->groupId == hw_DEVICE_ANY ) {
+		led_SetBacklight( event );
+		return;
+	}
+
 	switch( event->ctrlEvent ) {
 		case e_FADE_MASTER: {
 
@@ -312,6 +348,7 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_SET_BACKLIGHT_LEVEL: {
+			hw_AutoBacklightMode = FALSE;
 			led_SetBacklight( event );
 			break;
 		}
@@ -342,8 +379,6 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_KEY_CLICKED: {
-			if( event->groupId == hw_DEVICE_ANY && hw_Type != hw_SWITCH ) break;
-			if( event->groupId == hw_DEVICE_ANY ) led_CurrentColor = led_RED;   // Backlight
 			led_LastLevel = led_CurrentLevel[led_CurrentColor];
 			led_Toggle( led_CurrentColor, 3.0 );
 			break;
@@ -355,12 +390,6 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_KEY_TRIPLECLICKED: {
-
-			if( event->groupId == hw_DEVICE_ANY && hw_Type == hw_SWITCH ) {
-				led_SetLevel( led_RED, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
-				break;
-			}
-
 			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) {
 				led_SetLevel( led_CurrentColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
 			}
@@ -527,6 +556,13 @@ void led_IndicatorPWM( unsigned char run ) {
 	else {
 		_OC2IE = 0;
 		_T2IE = 0;
+
+		// Now make sure current settings are reflected at outputs.
+		// (PWM stops at all indicators off most of the time).
+
+		if( hw_LEDStatus & 1 ) hw_WritePort( hw_LED1, 1 );
+		if( hw_LEDStatus & 2 ) hw_WritePort( hw_LED2, 1 );
+		if( hw_LEDStatus & 4 ) hw_WritePort( hw_LED3, 1 );
 	}
 }
 
