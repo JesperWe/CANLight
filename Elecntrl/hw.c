@@ -216,11 +216,11 @@ void hw_Initialize( void ) {
 
 		// Load some sensible values if we have lost calibrations.
 
-		hw_Config->engine_Calibration[ p_ThrottleMin ] = 1000;
-		hw_Config->engine_Calibration[ p_ThrottleMax ] = 1400;
-		hw_Config->engine_Calibration[ p_GearNeutral ] = 1200;
-		hw_Config->engine_Calibration[ p_GearReverse ] = 1000;
-		hw_Config->engine_Calibration[ p_GearForward ] = 1400;
+		hw_Config->engine_Calibration[ p_ThrottleMin ] = 130;
+		hw_Config->engine_Calibration[ p_ThrottleMax ] = 180;
+		hw_Config->engine_Calibration[ p_GearNeutral ] = 155;
+		hw_Config->engine_Calibration[ p_GearReverse ] = 130;
+		hw_Config->engine_Calibration[ p_GearForward ] = 180;
 
 		hw_Config->engine_Calibration[ p_JoystickMin ] = 100;
 		hw_Config->engine_Calibration[ p_JoystickMid ] = 390;
