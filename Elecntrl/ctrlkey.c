@@ -146,9 +146,9 @@ void ctrlkey_task() {
 						(short)(schedule_time - ctrlkey_Presstime[ keyNo ]) );
 				}
 				else {
-					// Everyone is listening to this key, send levels based on controllers level
-					// rather than any listeners. (Avoids bus overloads caused by a large number
-					// of listeners fighting to become fade masters.
+					// Everyone is listening to this key, send levels using current device as master,
+					// rather than making one listener master. (Avoids heavy bus traffic caused by a large number
+					// of listeners fighting to become fade masters).
 
 					ctrlkey_BacklightKey = keyNo;
 					schedule_AddTask( ctrlkey_SendBackligtLevelTask, schedule_SECOND/4 );

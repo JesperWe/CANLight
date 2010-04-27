@@ -259,20 +259,20 @@ void led_SetBacklight( event_t *event ) {
 		case e_SET_BACKLIGHT_LEVEL: {
 			value = event->info / 1000.0;
 			ambientLevel = event->info / 4;
+			hw_AutoBacklightMode = FALSE;
 			break;
 		}
 
 		case e_AMBIENT_LIGHT_LEVEL: {
-			if( hw_AutoBacklightMode ) {
-				if( event->info > hw_Config->led_BacklightDaylightCutoff ) {
-					value = 0.0;
-				}
-				else {
-					ambientLevel = hw_Config->led_BacklightMultiplier * event->info;
-					ambientLevel += hw_Config->led_BacklightOffset;
-					if( ambientLevel > 0xFF ) ambientLevel = 0xFF;
-					value = (float)(ambientLevel)/256.0;
-				}
+			if( ! hw_AutoBacklightMode ) return;
+			if( event->info > hw_Config->led_BacklightDaylightCutoff ) {
+				value = 0.0;
+			}
+			else {
+				ambientLevel = hw_Config->led_BacklightMultiplier * event->info;
+				ambientLevel += hw_Config->led_BacklightOffset;
+				if( ambientLevel > 0xFF ) ambientLevel = 0xFF;
+				value = (float)(ambientLevel)/256.0;
 			}
 			break;
 		}
@@ -296,7 +296,7 @@ void led_SetBacklight( event_t *event ) {
 
 		case e_KEY_TRIPLECLICKED: {
 			hw_AutoBacklightMode = FALSE;
-			value = (float)hw_Config->led_MinimumDimmedLevel / 100.0;
+			value = 0.01;
 			break;
 		}
 
@@ -348,7 +348,6 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			break;
 		}
 		case e_SET_BACKLIGHT_LEVEL: {
-			hw_AutoBacklightMode = FALSE;
 			led_SetBacklight( event );
 			break;
 		}
