@@ -8,13 +8,13 @@
 #include "ecsManagerApp.h"
 
 ecsManagerApp::ecsManagerApp() {
-	actionIcons[ ecsManager::SwitchON ] = QPixmap(":/graphics/bulb-lit.svg");
-	actionIcons[ ecsManager::SwitchOFF ] = QPixmap(":/graphics/bulb.svg");
-	actionIcons[ ecsManager::ToggleOnOff ] = QPixmap(":/graphics/onoff.svg");
-	actionIcons[ ecsManager::FadeStart ] = QPixmap(":/graphics/fade-start.svg");
-	actionIcons[ ecsManager::FadeStop ] = QPixmap(":/graphics/fade-stop.svg");
-	actionIcons[ ecsManager::ChangeColor ] = QPixmap(":/graphics/connections.svg");
-	actionIcons[ ecsManager::Actuator ] = QPixmap(":/graphics/actuator.svg");
+	actionIcons[ ecsManager::a_SWITCH_ON ] = QPixmap(":/graphics/bulb-lit.svg");
+	actionIcons[ ecsManager::a_SWITCH_OFF ] = QPixmap(":/graphics/bulb.svg");
+	actionIcons[ ecsManager::a_TOGGLE_STATE ] = QPixmap(":/graphics/onoff.svg");
+	actionIcons[ ecsManager::a_START_FADE ] = QPixmap(":/graphics/fade-start.svg");
+	actionIcons[ ecsManager::a_STOP_FADE ] = QPixmap(":/graphics/fade-stop.svg");
+	actionIcons[ ecsManager::a_CHANGE_COLOR ] = QPixmap(":/graphics/connections.svg");
+	actionIcons[ ecsManager::a_SET_LEVEL ] = QPixmap(":/graphics/actuator.svg");
 
 	eventSourceIcons[ ecsManager::hw_KEY1 ] = QImage(":/graphics/button.svg");
 	eventSourceIcons[ ecsManager::hw_KEY2 ] = QImage(":/graphics/button.svg");
@@ -26,11 +26,11 @@ ecsManagerApp::ecsManagerApp() {
 	eventSourceIcons[ ecsManager::hw_LED_LIGHT ] = QImage(":/graphics/light-both.svg");
 	eventSourceIcons[ ecsManager::hw_PWM1 ] = QImage(":/graphics/cogs.svg");
 
-	eventIcons[ ecsManager::SingleClick ] = QPixmap(":/graphics/click-single.svg");
-	eventIcons[ ecsManager::DoubleClick ] = QPixmap(":/graphics/click-double.svg");
-	eventIcons[ ecsManager::PressHold ] = QPixmap(":/graphics/click-hold.svg");
-	eventIcons[ ecsManager::Release ] = QPixmap(":/graphics/click-release.svg");
-	eventIcons[ ecsManager::SignalChange ] = QPixmap(":/graphics/signal.svg");
+	eventIcons[ ecsManager::e_KEY_CLICKED ] = QPixmap(":/graphics/click-single.svg");
+	eventIcons[ ecsManager::e_KEY_DOUBLECLICKED ] = QPixmap(":/graphics/click-double.svg");
+	eventIcons[ ecsManager::e_KEY_HOLDING ] = QPixmap(":/graphics/click-hold.svg");
+	eventIcons[ ecsManager::e_KEY_RELEASED ] = QPixmap(":/graphics/click-release.svg");
+	eventIcons[ ecsManager::e_LEVEL_CHANGED ] = QPixmap(":/graphics/signal.svg");
 
 	statusIcons[ ecsManager::StatusRed ] = QPixmap(":/graphics/icon-red.svg");
 	statusIcons[ ecsManager::StatusYellow ] = QPixmap(":/graphics/icon-yellow.svg");

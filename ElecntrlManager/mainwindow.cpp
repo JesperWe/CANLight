@@ -366,11 +366,11 @@ void MainWindow::_AddEvent( int eventType )
 	updateScene();
 }
 
-void MainWindow::on_actionSingle_Click_triggered() { _AddEvent( ecsManager::SingleClick ); }
-void MainWindow::on_actionDouble_Click_triggered() { _AddEvent( ecsManager::DoubleClick ); }
-void MainWindow::on_actionPress_Hold_triggered() { _AddEvent( ecsManager::PressHold ); }
-void MainWindow::on_actionRelease_triggered() { _AddEvent( ecsManager::Release ); }
-void MainWindow::on_actionSignal_Change_triggered() { _AddEvent( ecsManager::SignalChange ); }
+void MainWindow::on_actionSingle_Click_triggered() { _AddEvent( ecsManager::e_KEY_CLICKED ); }
+void MainWindow::on_actionDouble_Click_triggered() { _AddEvent( ecsManager::e_KEY_DOUBLECLICKED ); }
+void MainWindow::on_actionPress_Hold_triggered() { _AddEvent( ecsManager::e_KEY_HOLDING ); }
+void MainWindow::on_actionRelease_triggered() { _AddEvent( ecsManager::e_KEY_RELEASED ); }
+void MainWindow::on_actionSignal_Change_triggered() { _AddEvent( ecsManager::e_LEVEL_CHANGED ); }
 
 
 //-------------------------------------------------------------------------------------------------
@@ -388,24 +388,32 @@ void MainWindow::on_actionNew_triggered()
 void MainWindow::_AddAction( int actionType ) {
 	QList<QGraphicsItem*> selection = this->ui->graphicsView->scene()->selectedItems();
 	if( selection.count() != 1 ) return;
-	if( selection[0]->type() != ecsEvent::Type ) return;
 
-	ecsEvent* event = qgraphicsitem_cast<ecsEvent *>(selection[0]);
+	if( selection[0]->type() == ecsEvent::Type ) {
+		ecsEvent* event = qgraphicsitem_cast<ecsEvent *>(selection[0]);
+		event->eventAction = new ecsAction( actionType );
+		event->eventAction->setParentItem( event );
+		event->eventAction->setX( ecsManager::ActionOffset_X );
+		setWindowModified( true );
+		updateScene();
+	}
 
-	event->eventAction = new ecsAction( actionType );
-	event->eventAction->setParentItem( event );
-	event->eventAction->setX( ecsManager::ActionOffset_X );
-	setWindowModified( true );
-	updateScene();
+	if( selection[0]->type() == ecsAction::Type ) {
+		ecsAction* action = qgraphicsitem_cast<ecsAction *>(selection[0]);
+		action->actionType = actionType;
+		setWindowModified( true );
+		updateScene();
+	}
+
 }
 
-void MainWindow::on_actionToggle_On_Off_triggered() { _AddAction( ecsManager::ToggleOnOff ); }
-void MainWindow::on_actionSwitch_On_triggered() { _AddAction( ecsManager::SwitchON ); }
-void MainWindow::on_actionSwitch_Off_triggered() { _AddAction( ecsManager::SwitchOFF ); }
-void MainWindow::on_actionStart_Fade_triggered() { _AddAction( ecsManager::FadeStart ); }
-void MainWindow::on_actionStop_Fade_triggered() { _AddAction( ecsManager::FadeStop ); }
-void MainWindow::on_actionSwitch_Color_triggered() { _AddAction( ecsManager::ChangeColor ); }
-void MainWindow::on_actionRun_Actuator_triggered() { _AddAction( ecsManager::Actuator ); }
+void MainWindow::on_actionToggle_On_Off_triggered() { _AddAction( ecsManager::a_TOGGLE_STATE ); }
+void MainWindow::on_actionSwitch_On_triggered() { _AddAction( ecsManager::a_SWITCH_ON ); }
+void MainWindow::on_actionSwitch_Off_triggered() { _AddAction( ecsManager::a_SWITCH_OFF ); }
+void MainWindow::on_actionStart_Fade_triggered() { _AddAction( ecsManager::a_START_FADE ); }
+void MainWindow::on_actionStop_Fade_triggered() { _AddAction( ecsManager::a_STOP_FADE ); }
+void MainWindow::on_actionSwitch_Color_triggered() { _AddAction( ecsManager::a_CHANGE_COLOR ); }
+void MainWindow::on_actionRun_Actuator_triggered() { _AddAction( ecsManager::a_SET_LEVEL ); }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -469,7 +477,6 @@ void MainWindow::onKeypress( int key ) {
 	default:  { return; } // Ignore unknow keypress.
 	}
 
-	ecsControlGroup* linkedapp = (ecsControlGroup*)(link->data(0).value<void*>());
 	ecsControlGroupGraphic* groupGraphic = (ecsControlGroupGraphic*)(link->parentItem());
 
 	int linkNumber = groupGraphic->linkTexts.indexOf( link );

@@ -21,7 +21,7 @@ public:
 	ecsAction() : QGraphicsItem(0)  {
 		setAcceptDrops(true);
 		setFlag(QGraphicsItem::ItemIsSelectable, true);
-		actionType = ecsManager::NoAction;
+		actionType = ecsManager::a_NO_ACTION;
 		qDebug() << "Create Action (default)";
 	};
 	ecsAction( int t ) : QGraphicsItem(0) {

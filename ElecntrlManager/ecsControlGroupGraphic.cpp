@@ -179,7 +179,7 @@ void ecsControlGroupGraphic::dropEvent( QGraphicsSceneDragDropEvent *event ) {
 
 	prepareGeometryChange();
 	srcGroup->links.append( appliance );
-	srcGroup->functions.append( ecsManager::NoEventType );
+	srcGroup->functions.append( ecsManager::e_UNKNOWN );
 
 	qApp->activeWindow()->setWindowModified( true );
 }

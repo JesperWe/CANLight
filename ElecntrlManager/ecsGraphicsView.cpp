@@ -8,41 +8,41 @@ void ecsGraphicsView::setupUI() {
 	ecsGraphicsActionMenu = new QMenu( this );
 
 	QAction* makeSwitchON = new QAction(
-			ecsManagerApp::inst()->actionIcons[ecsManager::SwitchON],
+			ecsManagerApp::inst()->actionIcons[ecsManager::a_SWITCH_ON],
 			tr("Switch On"), this
 			);
 	QAction* makeSwitchOFF = new QAction(
-			ecsManagerApp::inst()->actionIcons[ecsManager::SwitchOFF],
+			ecsManagerApp::inst()->actionIcons[ecsManager::a_SWITCH_OFF],
 			tr("Switch Off"), this
 			);
 	QAction* makeToggleOnOff = new QAction(
-			ecsManagerApp::inst()->actionIcons[ecsManager::ToggleOnOff],
+			ecsManagerApp::inst()->actionIcons[ecsManager::a_TOGGLE_STATE],
 			tr("Toggle On/Off"), this
 			);
 	QAction* makeFadeStart = new QAction(
-			ecsManagerApp::inst()->actionIcons[ecsManager::FadeStart],
+			ecsManagerApp::inst()->actionIcons[ecsManager::a_START_FADE],
 			tr("Start Fade"), this
 			);
 	QAction* makeFadeStop = new QAction(
-			ecsManagerApp::inst()->actionIcons[ecsManager::FadeStop],
+			ecsManagerApp::inst()->actionIcons[ecsManager::a_STOP_FADE],
 			tr("Stop Fade"), this
 			);
 	QAction* makeChangeColor = new QAction(
-			ecsManagerApp::inst()->actionIcons[ecsManager::ChangeColor],
+			ecsManagerApp::inst()->actionIcons[ecsManager::a_CHANGE_COLOR],
 			tr("Change Color"), this
 			);
 	QAction* makeActuator = new QAction(
-			ecsManagerApp::inst()->actionIcons[ecsManager::Actuator],
+			ecsManagerApp::inst()->actionIcons[ecsManager::a_SET_LEVEL],
 			tr("Actuator Control"), this
 			);
 
-	makeSwitchON->setData( ecsManager::SwitchON );
-	makeSwitchOFF->setData( ecsManager::SwitchOFF );
-	makeToggleOnOff->setData( ecsManager::ToggleOnOff );
-	makeFadeStart->setData( ecsManager::FadeStart );
-	makeFadeStop->setData( ecsManager::FadeStop );
-	makeChangeColor->setData( ecsManager::ChangeColor );
-	makeActuator->setData( ecsManager::Actuator );
+	makeSwitchON->setData( ecsManager::a_SWITCH_ON );
+	makeSwitchOFF->setData( ecsManager::a_SWITCH_OFF );
+	makeToggleOnOff->setData( ecsManager::a_TOGGLE_STATE );
+	makeFadeStart->setData( ecsManager::a_START_FADE );
+	makeFadeStop->setData( ecsManager::a_STOP_FADE );
+	makeChangeColor->setData( ecsManager::a_CHANGE_COLOR );
+	makeActuator->setData( ecsManager::a_SET_LEVEL );
 
 	ecsGraphicsActionMenu->addAction( makeSwitchON );
 	ecsGraphicsActionMenu->addAction( makeSwitchOFF );
@@ -55,31 +55,31 @@ void ecsGraphicsView::setupUI() {
 	ecsGraphicsEventMenu = new QMenu( this );
 
 	QAction* makeSingleClick = new QAction(
-			ecsManagerApp::inst()->eventIcons[ecsManager::SingleClick],
+			ecsManagerApp::inst()->eventIcons[ecsManager::e_KEY_CLICKED],
 			tr("Single Click"), this
 			);
 	QAction* makeDoubleClick = new QAction(
-			ecsManagerApp::inst()->eventIcons[ecsManager::DoubleClick],
+			ecsManagerApp::inst()->eventIcons[ecsManager::e_KEY_DOUBLECLICKED],
 			tr("Double Click"), this
 			);
 	QAction* makePressHold = new QAction(
-			ecsManagerApp::inst()->eventIcons[ecsManager::PressHold],
+			ecsManagerApp::inst()->eventIcons[ecsManager::e_KEY_HOLDING],
 			tr("Press and Hold"), this
 			);
 	QAction* makeRelease = new QAction(
-			ecsManagerApp::inst()->eventIcons[ecsManager::Release],
+			ecsManagerApp::inst()->eventIcons[ecsManager::e_KEY_RELEASED],
 			tr("Release Key"), this
 			);
 	QAction* makeSignalChange = new QAction(
-			ecsManagerApp::inst()->eventIcons[ecsManager::SignalChange],
+			ecsManagerApp::inst()->eventIcons[ecsManager::e_LEVEL_CHANGED],
 			tr("Signal Change"), this
 			);
 
-	makeSingleClick->setData( ecsManager::SingleClick );
-	makeDoubleClick->setData( ecsManager::DoubleClick );
-	makePressHold->setData( ecsManager::PressHold );
-	makeRelease->setData( ecsManager::Release );
-	makeSignalChange->setData( ecsManager::SignalChange );
+	makeSingleClick->setData( ecsManager::e_KEY_CLICKED );
+	makeDoubleClick->setData( ecsManager::e_KEY_DOUBLECLICKED );
+	makePressHold->setData( ecsManager::e_KEY_HOLDING );
+	makeRelease->setData( ecsManager::e_KEY_RELEASED );
+	makeSignalChange->setData( ecsManager::e_LEVEL_CHANGED );
 
 	ecsGraphicsEventMenu->addAction( makeSingleClick );
 	ecsGraphicsEventMenu->addAction( makeDoubleClick );

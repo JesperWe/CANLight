@@ -24,23 +24,40 @@ public:
 	};
 
 	enum eventTypes_e {
-		NoEventType,
-		SingleClick,
-		DoubleClick,
-		PressHold,
-		Release,
-		SignalChange
+		/* 00 */ e_UNKNOWN,
+		/* 01 */ e_KEY_CLICKED,
+		/* 02 */ e_KEY_HOLDING,
+		/* 03 */ e_KEY_RELEASED,
+		/* 04 */ e_KEY_DOUBLECLICKED,
+		/* 05 */ e_KEY_TRIPLECLICKED,
+		/* 06 */ e_SWITCH_ON,
+		/* 07 */ e_SWITCH_OFF,
+		/* 08 */ e_SWITCH_FAIL,
+		/* 09 */ e_FADE_START,
+		/* 10 */ e_FADE_MASTER,
+		/* 11 */ e_FAST_HEARTBEAT,
+		/* 12 */ e_unused,
+		/* 13 */ e_NIGHTMODE,
+		/* 14 */ e_DAYLIGHTMODE,
+		/* 15 */ e_AMBIENT_LIGHT_LEVEL,
+		/* 16 */ e_BLACKOUT,
+		/* 17 */ e_SLOW_HEARTBEAT,
+		/* 18 */ e_THROTTLE_MASTER,
+		/* 19 */ e_LEVEL_CHANGED,
+		/* 20 */ e_CONFIG_FILE_UPDATE,
+		/* 21 */ e_SET_BACKLIGHT_LEVEL,
+		/* 22 */ e_NO_EVENTS
 	};
 
 	enum actionType_e {
-		NoAction,
-		SwitchON,
-		SwitchOFF,
-		ToggleOnOff,
-		FadeStart,
-		FadeStop,
-		ChangeColor,
-		Actuator
+		/* 00 */ a_SWITCH_ON,
+		/* 01 */ a_SWITCH_OFF,
+		/* 02 */ a_START_FADE,
+		/* 03 */ a_STOP_FADE,
+		/* 04 */ a_SET_LEVEL,
+		/* 05 */ a_TOGGLE_STATE,
+		/* 06 */ a_CHANGE_COLOR,
+		/* 07 */ a_NO_ACTION
 	};
 
 	enum eventSources_e {
