@@ -162,7 +162,7 @@ void ctrlkey_task() {
 }
 
 //---------------------------------------------------------------------------------------------
-// Special task if we have a key that controls becklight, and it is being held.
+// Special task if we have a key that controls backlight, and it is being held.
 // Dim light level up/down and tell the network to do the same.
 
 void ctrlkey_SendBackligtLevelTask() {

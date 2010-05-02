@@ -493,7 +493,7 @@ void led_StepDimmer( float *step, unsigned char color, unsigned char function, u
 
 	nmea_SendEvent( &levelEvent );
 
-	if( event == e_SET_BACKLIGHT_LEVEL ) led_SetLevel( color, value, led_NO_ACK );
+	if( event == e_LEVEL_CHANGED ) led_SetLevel( color, value, led_SEND_ACK );
 }
 
 //---------------------------------------------------------------------------------------------
@@ -531,7 +531,7 @@ void led_FadeTask() {
 		led_DimmerTicks++;
 		led_DimmerTicks = led_DimmerTicks % 5; // 5 steps/second if fade is 25 steps.
 
-		if( led_DimmerTicks == 0 ) led_StepDimmer( &led_CurFadeStep, led_CurrentColor, hw_LED_LIGHT, e_SET_LEVEL );
+		if( led_DimmerTicks == 0 ) led_StepDimmer( &led_CurFadeStep, led_CurrentColor, hw_LED_LIGHT, e_LEVEL_CHANGED );
 	}
 }
 

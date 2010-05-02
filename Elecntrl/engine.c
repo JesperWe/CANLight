@@ -276,7 +276,7 @@ void engine_JoystickTask() {
 		event.groupId = functionInGroup[ hw_ANALOG ];
 		event.ctrlDev = hw_DeviceID;
 		event.ctrlFunc = hw_ANALOG;
-		event.ctrlEvent = e_SET_LEVEL;
+		event.ctrlEvent = e_LEVEL_CHANGED;
 		event.data = engine_Throttle;
 		event.info = engine_Joystick_Level;
 		nmea_SendEvent( &event );
@@ -364,7 +364,7 @@ int engine_ProcessEvent( event_t *event, unsigned char function, unsigned char a
 
 	switch( event->ctrlEvent ) {
 
-		case e_SET_LEVEL: {
+		case e_LEVEL_CHANGED: {
 
 			throttle = event->data; // Make a signed value from event->data which is unsigned.
 

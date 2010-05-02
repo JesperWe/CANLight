@@ -101,7 +101,7 @@ void event_Task() {
 				// We intercept and store set level commands so we can show them in the
 				// calibration display, regardless of configuration.
 
-				if( event.ctrlEvent == e_SET_LEVEL ) {
+				if( event.ctrlEvent == e_LEVEL_CHANGED ) {
 					events_LastLevelSetInfo = event.info;
 					events_LastLevelSetData = event.data;
 				}
@@ -129,7 +129,7 @@ void event_Task() {
 							// If we have a display, capture engine events and save the values for monitoring.
 							// This special case is in ADDITION to the default processing below it!
 
-							case e_SET_LEVEL: {
+							case e_LEVEL_CHANGED: {
 								if( hw_I2C_Installed ) {
 									engine_Throttle = event.data;
 									engine_Gear = event.ctrlFunc;
