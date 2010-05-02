@@ -73,7 +73,7 @@ void engine_ThrottleMonitorUpdater();
 
 int engine_CalibrationParams();
 
-int engine_ProcessEvent( event_t *event, unsigned char function );
+int engine_ProcessEvent( event_t *event, unsigned char function, unsigned char action );
 
 void engine_SetMaster( event_t *event );
 

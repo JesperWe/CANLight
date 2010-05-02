@@ -50,7 +50,7 @@ void led_StopFade( unsigned char color );
 
 float led_GetPWMLevel( unsigned char color );
 
-void led_ProcessEvent( event_t *event, unsigned char function );
+void led_ProcessEvent( event_t *event, unsigned char function, unsigned char action );
 
 void led_PowerOnTest();
 

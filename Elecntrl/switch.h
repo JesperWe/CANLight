@@ -8,6 +8,6 @@
 #ifndef SWITCH_H_
 #define SWITCH_H_
 
-void switch_ProcessEvent( event_t *event, unsigned char function );
+void switch_ProcessEvent( event_t *event, unsigned char function, unsigned char action );
 
 #endif /* SWITCH_H_ */

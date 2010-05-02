@@ -356,7 +356,7 @@ int engine_CalibrationParams() {
 
 //--------------------------------------------------------------------------------------------
 
-int engine_ProcessEvent( event_t *event, unsigned char function ) {
+int engine_ProcessEvent( event_t *event, unsigned char function, unsigned char action ) {
 	event_t masterEvent;
 	char	throttle;
 
@@ -364,74 +364,74 @@ int engine_ProcessEvent( event_t *event, unsigned char function ) {
 
 	switch( event->ctrlEvent ) {
 
-	case e_SET_LEVEL: {
+		case e_SET_LEVEL: {
 
-		throttle = event->data; // Make a signed value from event->data which is unsigned.
+			throttle = event->data; // Make a signed value from event->data which is unsigned.
 
-		if( event->ctrlDev != engine_CurMasterDevice ) break;
+			if( event->ctrlDev != engine_CurMasterDevice ) break;
 
-		if( throttle == 0 ) {
-			engine_RequestGear( 0 );
-			engine_RequestThrottle( throttle );
+			if( throttle == 0 ) {
+				engine_RequestGear( 0 );
+				engine_RequestThrottle( throttle );
+			}
+
+			else if( throttle > 0 ) {
+				engine_RequestGear( 1 );
+				engine_RequestThrottle( throttle );
+			}
+
+			else {
+				engine_RequestGear( -1 );
+				engine_RequestThrottle( -throttle );
+			}
+
+			break;
 		}
 
-		else if( throttle > 0 ) {
-			engine_RequestGear( 1 );
-			engine_RequestThrottle( throttle );
+		case e_KEY_CLICKED: {
+
+			// Clicking on an actuator means a new device becomes the master.
+
+			if( engine_CurMasterDevice != event->ctrlDev ) {
+				engine_CurMasterDevice = event->ctrlDev;
+				masterEvent.info = engine_CurMasterDevice;
+				masterEvent.data = event->data; // Return info about what key was clicked to become master.
+
+				// Turn on power to the Roboteq.
+
+				hw_WritePort( hw_SWITCH3, 1 );
+
+			}
+
+			// The current master want to shut down.
+
+			else {
+
+				engine_CurMasterDevice = 0;
+
+				engine_RequestThrottle( 0 );
+				engine_RequestGear( 0 );
+
+				masterEvent.info = 0;
+				masterEvent.data = 0;
+
+				// Wait a while for actuators to settle, then turn off power to the Roboteq.
+
+				schedule_Sleep( schedule_SECOND * 2 );
+				hw_WritePort( hw_SWITCH3, 0 );
+			}
+
+			nmea_Wakeup();
+
+			masterEvent.ctrlEvent = e_THROTTLE_MASTER;
+			masterEvent.ctrlFunc = event->ctrlFunc;
+			masterEvent.ctrlDev = hw_DeviceID;
+			masterEvent.groupId = functionInGroup[ function ];
+
+			nmea_SendEvent( &masterEvent );
+
+			break;
 		}
-
-		else {
-			engine_RequestGear( -1 );
-			engine_RequestThrottle( -throttle );
-		}
-
-		break;
-	}
-
-	case e_KEY_CLICKED: {
-
-		// A device becomes the new master.
-
-		if( engine_CurMasterDevice != event->ctrlDev ) {
-			engine_CurMasterDevice = event->ctrlDev;
-			masterEvent.info = engine_CurMasterDevice;
-			masterEvent.data = event->data; // Return info about what key was clicked to become master.
-
-			// Turn on power to the Roboteq.
-
-			hw_WritePort( hw_SWITCH3, 1 );
-
-		}
-
-		// The current master want to shut down.
-
-		else {
-
-			engine_CurMasterDevice = 0;
-
-			engine_RequestThrottle( 0 );
-			engine_RequestGear( 0 );
-
-			masterEvent.info = 0;
-			masterEvent.data = 0;
-
-			// Wait a while for actuators to settle, then turn off power to the Roboteq.
-
-			schedule_Sleep( schedule_SECOND * 2 );
-			hw_WritePort( hw_SWITCH3, 0 );
-		}
-
-		nmea_Wakeup();
-
-		masterEvent.ctrlEvent = e_THROTTLE_MASTER;
-		masterEvent.ctrlFunc = event->ctrlFunc;
-		masterEvent.ctrlDev = hw_DeviceID;
-		masterEvent.groupId = functionInGroup[ function ];
-
-		nmea_SendEvent( &masterEvent );
-
-		break;
-	}
 	}
 	return 0;
 }

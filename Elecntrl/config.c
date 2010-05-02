@@ -80,13 +80,13 @@ const unsigned char __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2))) conf
 void config_Initialize() {
 	const unsigned char* configPtr;
 	unsigned short configSequenceNumber;
-	unsigned char inGroupID;
+	unsigned char controllerGroupID;
 	unsigned char listenToGroupID;
 	unsigned char applianceID;
 	unsigned char functionID;
 	unsigned char event;
 	unsigned char action;
-	unsigned char lastUsedFunction;
+	unsigned char lastAssignedFunction;
 
 	// First check if we don't we have a valid device Id.
 	// Device ID = 0xFF is not allowed. It indicates that the device was programmed
@@ -125,20 +125,20 @@ void config_Initialize() {
 
 		// Controller Group Appliances
 
-		inGroupID = *configPtr++;
+		controllerGroupID = *configPtr++;
 		do {
 			applianceID = *configPtr++;
 			functionID = *configPtr++;
 
 			if( applianceID == hw_DeviceID ) {
-				functionInGroup[ functionID ] = inGroupID;
-				lastUsedFunction = functionID;
+				functionInGroup[ functionID ] = controllerGroupID;
+				lastAssignedFunction = functionID;
 			}
 		}
 		while( *configPtr != DELIMITER );
 
-		// Listener Group Appliances. These functions are "in" the listenToGroupID,
-		// but "listen" to the inGroupID.
+		// Listener Group Appliances. For the purpose of acknowledge events, these functions
+		// are "in" the listenToGroupID, but "listen" to the inGroupID.
 
 		configPtr++;
 		listenToGroupID = *configPtr++;
@@ -148,14 +148,14 @@ void config_Initialize() {
 
 			if( applianceID == hw_DeviceID ) {
 				functionInGroup[ functionID ] = listenToGroupID;
-				functionListenGroup[ functionID ] = inGroupID;
+				functionListenGroup[ functionID ] = controllerGroupID;
 			}
 
-			// Special case: If we are processing a group where the listeners
-			//listen to any controller, mark this for the controlling function too.
+			// Special case: If we are processing a group where the listening function
+			// belongs to any appliance, mark this for the controlling function too.
 
 			if( applianceID == hw_DEVICE_ANY ) {
-				functionInGroup[lastUsedFunction] = hw_DEVICE_ANY;
+				functionInGroup[lastAssignedFunction] = hw_DEVICE_ANY;
 				functionListenGroup[ functionID ] = hw_DEVICE_ANY;
 			}
 
@@ -166,7 +166,7 @@ void config_Initialize() {
 		// in it and set their listening group for acknowledge events.
 
 		for( functionID=0; functionID<hw_NoFunctions; functionID++ ) {
-			if( functionInGroup[ functionID ] == inGroupID ) {
+			if( functionInGroup[ functionID ] == controllerGroupID ) {
 				functionListenGroup[ functionID ] = listenToGroupID;
 			}
 		}
@@ -177,7 +177,7 @@ void config_Initialize() {
 		do {
 			event = *configPtr++;
 			action = *configPtr++;
-			config_AddControlEvent( inGroupID, event, action );
+			config_AddControlEvent( controllerGroupID, event, action );
 		}
 		while( *configPtr != DELIMITER );
 

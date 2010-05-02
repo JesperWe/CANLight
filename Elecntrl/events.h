@@ -41,6 +41,19 @@ enum event_Events_e {
 	/* 22 */ e_NO_EVENTS
 };
 
+enum event_Actions_e {
+	/* 00 */ a_SWITCH_ON,
+	/* 01 */ a_SWITCH_OFF,
+	/* 02 */ a_START_FADE,
+	/* 03 */ a_STOP_FADE,
+	/* 04 */ a_SET_LEVEL,
+	/* 05 */ a_TOGGLE_STATE,
+	/* 06 */ a_CHANGE_COLOR,
+	/* 07 */ a_SET_FADE_MASTER,
+	/* 08 */ a_GOTO_MINIMUM,
+	/* 09 */ a_NO_ACTION
+};
+
 typedef struct {
 	unsigned char type;
 	unsigned short PGN;

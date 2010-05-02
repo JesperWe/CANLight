@@ -321,7 +321,7 @@ void led_SetBacklight( event_t *event ) {
 //---------------------------------------------------------------------------------------------
 // Interrupt fade in progress.
 
-void led_ProcessEvent( event_t *event, unsigned char function ) {
+void led_ProcessEvent( event_t *event, unsigned char function, unsigned char action ) {
 	event_t fadeEvent;
 
 
@@ -336,8 +336,8 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 		return;
 	}
 
-	switch( event->ctrlEvent ) {
-		case e_FADE_MASTER: {
+	switch( action ) {
+		case a_SET_FADE_MASTER: {
 
 			// We are not the master. Stop fade.
 			if( event->data != hw_DeviceID ) led_CurFadeStep = 0;
@@ -347,18 +347,14 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 
 			break;
 		}
-		case e_SET_BACKLIGHT_LEVEL: {
-			led_SetBacklight( event );
-			break;
-		}
-		case e_SET_LEVEL: {
+		case a_SET_LEVEL: {
 			float value;
 			led_DimmerTicks = 0;
 			value = event->info / 1000.0;
 			led_SetLevel( led_CurrentColor, value, led_NO_ACK );
 			break;
 		}
-		case e_KEY_HOLDING: {
+		case a_START_FADE: {
 
 			fadeEvent.groupId = functionInGroup[ function ];
 			fadeEvent.ctrlDev = hw_DeviceID;
@@ -373,22 +369,22 @@ void led_ProcessEvent( event_t *event, unsigned char function ) {
 			else led_CurFadeStep = 0.05;
 			break;
 		}
-		case e_KEY_RELEASED: {
+		case a_STOP_FADE: {
 			led_CurFadeStep = 0.0;
 			break;
 		}
-		case e_KEY_CLICKED: {
+		case a_TOGGLE_STATE: {
 			led_LastLevel = led_CurrentLevel[led_CurrentColor];
 			led_Toggle( led_CurrentColor, 3.0 );
 			break;
 		}
-		case e_KEY_DOUBLECLICKED: {
+		case a_CHANGE_COLOR: {
 			if( hw_Type == hw_LEDLAMP && function == hw_LED_LIGHT ) {
 				led_CurrentColor = (led_CurrentColor==led_RED) ? led_WHITE : led_RED;
 			}
 			break;
 		}
-		case e_KEY_TRIPLECLICKED: {
+		case a_GOTO_MINIMUM: {
 			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) {
 				led_SetLevel( led_CurrentColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
 			}

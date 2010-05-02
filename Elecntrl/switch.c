@@ -11,7 +11,7 @@
 #include "switch.h"
 #include "led.h"
 
-void switch_ProcessEvent( event_t *event, unsigned char function ) {
+void switch_ProcessEvent( event_t *event, unsigned char function, unsigned char action ) {
 	unsigned char setting;
 
 	// Do nothing if called on something that isn't a digital output.
@@ -21,13 +21,13 @@ void switch_ProcessEvent( event_t *event, unsigned char function ) {
 
 	setting = hw_ReadPort( function );
 
-	if( event->ctrlEvent == e_KEY_CLICKED ) setting = (setting == 0);
-	if( event->ctrlEvent == e_SWITCH_ON ) setting = 1;
-	if( event->ctrlEvent == e_SWITCH_OFF ) setting = 0;
+	switch( action ) {
+		case a_SWITCH_ON: { setting = 1; break; }
+		case a_SWITCH_OFF: { setting = 0; break; }
+		case a_TOGGLE_STATE: { setting = (setting == 0); break; }
+	}
 
 	hw_WritePort( function, setting );
-
-	//event_Acknowledge(  );
 
 	return;
 }

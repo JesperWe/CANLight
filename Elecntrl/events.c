@@ -79,7 +79,10 @@ void events_Push(
 
 void event_Task() {
 	unsigned char function;
+	unsigned char takeAction;
 	static event_t event;
+	config_Event_t* actionPtr;
+
 
 	//if( led_SleepTimer > 250 ) hw_Sleep();
 
@@ -87,10 +90,9 @@ void event_Task() {
 
 		switch( event.type ) {
 
-			case e_IO_EVENT: 	{ nmea_SendKeyEvent( &event ); break; }
-
-			// When we get a NMEA message (that we are listening to!) we find
-			// out what function it controls, and take the appropriate action.
+			case e_IO_EVENT: {
+				nmea_SendKeyEvent( &event ); break;
+			}
 
 			case e_NMEA_MESSAGE: {
 
@@ -104,64 +106,56 @@ void event_Task() {
 					events_LastLevelSetData = event.data;
 				}
 
-
 				// Do I have a function listening to events from the controller group?
-				// XXX Also apply event filter here, it is unused at the moment!
 
 				for( function=0; function<hw_NoFunctions; function++ ) {
 
 					if( functionListenGroup[function] == event.groupId ) {
 
+						// Now find out what action we should take. Some events are not
+						// part of the configuration but have system defined actions, so we first check for these.
+
 						switch( event.ctrlEvent ) {
-							case e_KEY_CLICKED: {
-								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
-								if( hw_IsActuator(function) ) engine_ProcessEvent( &event, function );
-								else switch_ProcessEvent( &event, function );
-								break;
-							}
-							case e_KEY_DOUBLECLICKED: {
-								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
-								break;
-							}
-							case e_KEY_TRIPLECLICKED: {
-								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
-								break;
-							}
-							case e_KEY_HOLDING: {
-								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
-								break;
-							}
 							case e_FADE_MASTER: {
-								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
-								break;
-							}
-							case e_KEY_RELEASED: {
-								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
+								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function, a_SET_FADE_MASTER );
 								break;
 							}
 							case e_SET_BACKLIGHT_LEVEL: {
 								if( hw_Type != hw_SWITCH ) break;
-								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function );
+								if( hw_IsPWM(function) ) led_SetBacklight( &event );
 								break;
 							}
-							case e_SET_LEVEL: {
-								if( hw_IsActuator(function) ) {
-									engine_ProcessEvent( &event, function );
-									break;
-								}
-								if( hw_IsPWM(function) ) {
-									led_ProcessEvent( &event, function );
-									break;
-								}
 
-								// Capture engine events, save transmitted values for monitoring.
-			
+							// If we have a display, capture engine events and save the values for monitoring.
+							// This special case is in ADDITION to the default processing below it!
+
+							case e_SET_LEVEL: {
 								if( hw_I2C_Installed ) {
 									engine_Throttle = event.data;
 									engine_Gear = event.ctrlFunc;
 									engine_LastJoystickLevel = event.info;
 								}
-								break;
+								// Continue running into the default clause here.
+							}
+
+							default: {
+								actionPtr = config_MyEvents;
+								takeAction = a_NO_ACTION;
+
+								while( actionPtr != 0 ) {
+									if( (( actionPtr->ctrlGroup == event.groupId ) || (event.groupId == hw_DEVICE_ANY)) &&
+									    ( actionPtr->ctrlEvent == event.ctrlEvent ) ) {
+										takeAction = actionPtr->ctrlAction;
+										break;
+									}
+									actionPtr = actionPtr->next;
+								}
+
+								if( takeAction == a_NO_ACTION ) break;;
+
+								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function, takeAction );
+								if( hw_IsActuator(function) ) engine_ProcessEvent( &event, function, takeAction );
+								else switch_ProcessEvent( &event, function, takeAction );
 							}
 						}
 					}
