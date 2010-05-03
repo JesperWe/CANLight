@@ -34,6 +34,6 @@ protected:
 
 
 signals:
-	void keypress( int key );
+	void keypress( QKeyEvent *event );
 };
 #endif // ECSGRAPHICSVIEW_H

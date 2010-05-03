@@ -118,19 +118,23 @@ void SystemDescription::saveFile( QString toFile )
 
 		foreach( ecsEvent* e, group->events ) {
 			out.writeStartElement( "controlevent" );
-			out.writeAttribute( "type", QString::number(e->eventType) );
-			out.writeAttribute( "action", QString::number(e->eventAction->actionType) );
+			if( e->eventType ) {
+				out.writeAttribute( "type", QString::number(e->eventType) );
+				if( e->eventAction ) {
 
-			foreach( ecsControlGroupGraphic* target, e->eventAction->targetGroups ) {
-				out.writeStartElement( "targetgroup");
-				out.writeAttribute( "id", QString::number(target->srcGroup->id) );
+					out.writeAttribute( "action", QString::number(e->eventAction->actionType) );
 
-				if( target->parentItem() == e->eventAction )
-					out.writeAttribute( "parented", "1" );
+					foreach( ecsControlGroupGraphic* target, e->eventAction->targetGroups ) {
+						out.writeStartElement( "targetgroup");
+						out.writeAttribute( "id", QString::number(target->srcGroup->id) );
 
-				out.writeEndElement();
+						if( target->parentItem() == e->eventAction )
+							out.writeAttribute( "parented", "1" );
+
+						out.writeEndElement();
+					}
+				}
 			}
-
 			out.writeEndElement();
 		}
 		out.writeEndElement();

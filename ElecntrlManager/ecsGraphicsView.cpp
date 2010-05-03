@@ -36,6 +36,11 @@ void ecsGraphicsView::setupUI() {
 			tr("Actuator Control"), this
 			);
 
+	QAction* makeOnTimer = new QAction(
+			ecsManagerApp::inst()->actionIcons[ecsManager::a_ON_TIMER],
+			tr("On with Timer"), this
+			);
+
 	makeSwitchON->setData( ecsManager::a_SWITCH_ON );
 	makeSwitchOFF->setData( ecsManager::a_SWITCH_OFF );
 	makeToggleOnOff->setData( ecsManager::a_TOGGLE_STATE );
@@ -43,12 +48,14 @@ void ecsGraphicsView::setupUI() {
 	makeFadeStop->setData( ecsManager::a_STOP_FADE );
 	makeChangeColor->setData( ecsManager::a_CHANGE_COLOR );
 	makeActuator->setData( ecsManager::a_SET_LEVEL );
+	makeOnTimer->setData( ecsManager::a_ON_TIMER );
 
 	ecsGraphicsActionMenu->addAction( makeSwitchON );
 	ecsGraphicsActionMenu->addAction( makeSwitchOFF );
 	ecsGraphicsActionMenu->addAction( makeToggleOnOff );
 	ecsGraphicsActionMenu->addAction( makeFadeStart );
 	ecsGraphicsActionMenu->addAction( makeFadeStop );
+	ecsGraphicsActionMenu->addAction( makeOnTimer );
 	ecsGraphicsActionMenu->addAction( makeChangeColor );
 	ecsGraphicsActionMenu->addAction( makeActuator );
 
@@ -114,7 +121,7 @@ void ecsGraphicsView::keyPressEvent( QKeyEvent *event ) {
 	else if( event->text() == "f" ) this->resetTransform();
 
 	else  {
-		emit keypress( event->key() );
+		emit keypress( event );
 	}
 }
 

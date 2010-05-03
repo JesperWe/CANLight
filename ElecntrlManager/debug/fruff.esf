@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<systemdescription version="34">
+<systemdescription version="45">
     <appliance id="7" description="Aft Cabin Port Switch"/>
     <appliance id="2" description="Aft Cabin Stbd Switch"/>
     <appliance id="3" description="Steering Port Switch 1"/>
@@ -25,6 +25,9 @@
     </controlgroup>
     <controlgroup id="8" description="System Backlight" type="2">
         <appliance-function id="-1" function="3"/>
+    </controlgroup>
+    <controlgroup id="11" description="Bilge Pump" type="2">
+        <appliance-function id="2" function="10"/>
     </controlgroup>
     <controlgroup id="3" description="Aft Cabin Port Light" type="1">
         <appliance-function id="7" function="12"/>
@@ -87,6 +90,18 @@
         </controlevent>
         <controlevent type="1" action="5">
             <targetgroup id="8" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="10" description="Bilge Pump Ctrl" type="1">
+        <appliance-function id="8" function="13"/>
+        <controlevent type="2" action="0">
+            <targetgroup id="11" parented="1"/>
+        </controlevent>
+        <controlevent type="3" action="1">
+            <targetgroup id="11"/>
+        </controlevent>
+        <controlevent type="1" action="7">
+            <targetgroup id="11"/>
         </controlevent>
     </controlgroup>
 </systemdescription>

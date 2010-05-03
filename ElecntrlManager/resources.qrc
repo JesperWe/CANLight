@@ -48,5 +48,6 @@
         <file>graphics/eye.svg</file>
         <file>graphics/connect.svg</file>
         <file>graphics/disconnect.svg</file>
+        <file>graphics/timer.svg</file>
     </qresource>
 </RCC>

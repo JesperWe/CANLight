@@ -75,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ecsManagerApp::inst()->cGroups = cGroupModel;
 
 	connect( ui->cGroupView->model(), SIGNAL( modified() ), this, SLOT(onModifiedData()) );
-	connect( ui->graphicsView, SIGNAL(keypress(int)), this, SLOT(onKeypress(int)) );
+	connect( ui->graphicsView, SIGNAL(keypress(QKeyEvent*)), this, SLOT(onKeypress(QKeyEvent*)) );
 
 	monitorDialog = new QDialog;
 	Ui::NMEA2000Monitor monitorUi;
@@ -414,17 +414,24 @@ void MainWindow::on_actionStart_Fade_triggered() { _AddAction( ecsManager::a_STA
 void MainWindow::on_actionStop_Fade_triggered() { _AddAction( ecsManager::a_STOP_FADE ); }
 void MainWindow::on_actionSwitch_Color_triggered() { _AddAction( ecsManager::a_CHANGE_COLOR ); }
 void MainWindow::on_actionRun_Actuator_triggered() { _AddAction( ecsManager::a_SET_LEVEL ); }
+void MainWindow::on_actionOn_with_Timer_triggered() { _AddAction( ecsManager::a_ON_TIMER ); }
 
 //-------------------------------------------------------------------------------------------------
 
-void MainWindow::onKeypress( int key ) {
+void MainWindow::onKeypress( QKeyEvent *event ) {
 	QList<QGraphicsItem*> selection;
 	QGraphicsSimpleTextItem* link;
 
+	if( event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_S ) {
+		on_actionSave_triggered();
+		return;
+	}
+
 	selection = this->ui->graphicsView->scene()->selectedItems();
+
 	if( selection.count() != 1 ) return;
 
-	switch( key ) {
+	switch( event->key() ) {
 
 	case Qt::Key_Delete: {
 		switch( selection[0]->type() ) {
@@ -452,10 +459,6 @@ void MainWindow::onKeypress( int key ) {
 		}
 		break;
 	}
-
-	case Qt::Key_Control | Qt::Key_S: {
-		on_actionSave_triggered();
-	}
 	}
 
 	QGraphicsItem* selectedItem = selection[0];
@@ -464,10 +467,33 @@ void MainWindow::onKeypress( int key ) {
 	 link = qgraphicsitem_cast<QGraphicsSimpleTextItem *>(selection[0]);
 
 	int func = 0;
-	switch( key ) {
-	case Qt::Key_1: { func = ecsManager::hw_KEY1; break; }
-	case Qt::Key_2: { func = ecsManager::hw_KEY2; break; }
-	case Qt::Key_3: { func = ecsManager::hw_KEY3; break; }
+	switch( event->key() ) {
+	case Qt::Key_1: {
+			if( event->modifiers() == Qt::ControlModifier )
+				func = ecsManager::hw_SWITCH1;
+			else
+				func = ecsManager::hw_KEY1;
+			break;
+		}
+	case Qt::Key_2: {
+			if( event->modifiers() == Qt::ControlModifier )
+				func = ecsManager::hw_SWITCH2;
+			else
+				func = ecsManager::hw_KEY2;
+			break;
+		}
+	case Qt::Key_3: {
+			if( event->modifiers() == Qt::ControlModifier )
+				func = ecsManager::hw_SWITCH3;
+			else
+				func = ecsManager::hw_KEY3;
+			break;
+		}
+	case Qt::Key_4: {
+			if( event->modifiers() == Qt::ControlModifier )
+				func = ecsManager::hw_SWITCH4;
+			break;
+		}
 	case Qt::Key_A: { func = ecsManager::hw_ANALOG; break; }
 	case Qt::Key_I: { func = ecsManager::hw_DIGITAL_IN; break; }
 	case Qt::Key_R: { func = ecsManager::hw_LED_RED; break; }

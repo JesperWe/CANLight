@@ -15,6 +15,7 @@ ecsManagerApp::ecsManagerApp() {
 	actionIcons[ ecsManager::a_STOP_FADE ] = QPixmap(":/graphics/fade-stop.svg");
 	actionIcons[ ecsManager::a_CHANGE_COLOR ] = QPixmap(":/graphics/connections.svg");
 	actionIcons[ ecsManager::a_SET_LEVEL ] = QPixmap(":/graphics/actuator.svg");
+	actionIcons[ ecsManager::a_ON_TIMER ] = QPixmap(":/graphics/timer.svg");
 
 	eventSourceIcons[ ecsManager::hw_KEY1 ] = QImage(":/graphics/button.svg");
 	eventSourceIcons[ ecsManager::hw_KEY2 ] = QImage(":/graphics/button.svg");
@@ -25,6 +26,10 @@ ecsManagerApp::ecsManagerApp() {
 	eventSourceIcons[ ecsManager::hw_LED_WHITE ] = QImage(":/graphics/light-white.svg");
 	eventSourceIcons[ ecsManager::hw_LED_LIGHT ] = QImage(":/graphics/light-both.svg");
 	eventSourceIcons[ ecsManager::hw_PWM1 ] = QImage(":/graphics/cogs.svg");
+	eventSourceIcons[ ecsManager::hw_SWITCH1 ] = QImage(":/graphics/outlet.svg");
+	eventSourceIcons[ ecsManager::hw_SWITCH2 ] = QImage(":/graphics/outlet.svg");
+	eventSourceIcons[ ecsManager::hw_SWITCH3 ] = QImage(":/graphics/outlet.svg");
+	eventSourceIcons[ ecsManager::hw_SWITCH4 ] = QImage(":/graphics/outlet.svg");
 
 	eventIcons[ ecsManager::e_KEY_CLICKED ] = QPixmap(":/graphics/click-single.svg");
 	eventIcons[ ecsManager::e_KEY_DOUBLECLICKED ] = QPixmap(":/graphics/click-double.svg");

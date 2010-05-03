@@ -57,7 +57,8 @@ public:
 		/* 04 */ a_SET_LEVEL,
 		/* 05 */ a_TOGGLE_STATE,
 		/* 06 */ a_CHANGE_COLOR,
-		/* 07 */ a_NO_ACTION
+		/* 07 */ a_ON_TIMER,
+		/* 08 */ a_NO_ACTION
 	};
 
 	enum eventSources_e {

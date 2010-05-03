@@ -223,6 +223,7 @@
     <addaction name="actionSwitch_On"/>
     <addaction name="actionSwitch_Off"/>
     <addaction name="actionRun_Actuator"/>
+    <addaction name="actionOn_with_Timer"/>
    </widget>
    <widget class="QMenu" name="menuNetwork">
     <property name="title">
@@ -303,6 +304,7 @@
    <addaction name="actionSwitch_Color"/>
    <addaction name="actionStart_Fade"/>
    <addaction name="actionStop_Fade"/>
+   <addaction name="actionOn_with_Timer"/>
    <addaction name="actionSwitch_On"/>
    <addaction name="actionSwitch_Off"/>
    <addaction name="actionRun_Actuator"/>
@@ -535,6 +537,16 @@
   <action name="actionSend_NMEA_Test_Sequence_A">
    <property name="text">
     <string>Send NMEA Test Sequence A</string>
+   </property>
+  </action>
+  <action name="actionOn_with_Timer">
+   <property name="icon">
+    <iconset>
+     <normalon>:/graphics/timer.svg</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>On with Timer</string>
    </property>
   </action>
  </widget>

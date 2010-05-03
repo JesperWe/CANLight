@@ -117,6 +117,22 @@ void ecsControlGroupGraphic::paint(QPainter *painter, const QStyleOptionGraphics
 			case ecsManager::hw_KEY3: {
 					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
 					break; }
+			case ecsManager::hw_SWITCH1: {
+					painter->setPen( Qt::yellow );	 painter->setFont( qApp->property( "headerFont" ).value<QFont>() );
+					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "1", 0 );
+					break; }
+			case ecsManager::hw_SWITCH2: {
+					painter->setPen( Qt::yellow ); painter->setFont( qApp->property( "headerFont" ).value<QFont>() );
+					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "2", 0 );
+					break; }
+			case ecsManager::hw_SWITCH3: {
+					painter->setPen( Qt::yellow ); painter->setFont( qApp->property( "headerFont" ).value<QFont>() );
+					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "3", 0 );
+					break; }
+			case ecsManager::hw_SWITCH4: {
+					painter->setPen( Qt::yellow ); painter->setFont( qApp->property( "headerFont" ).value<QFont>() );
+					painter->drawText( textPos.x(), textPos.y(), buttonSize, buttonSize, Qt::AlignHCenter|Qt::AlignVCenter, "4", 0 );
+					break; }
 			}
 		}
 		linkNumber++;

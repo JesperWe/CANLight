@@ -49,7 +49,8 @@ private:
 	ecsCANUSB* canusb;
 
 private slots:
-	void on_actionSend_NMEA_Test_Sequence_A_triggered();
+	void on_actionOn_with_Timer_triggered();
+ void on_actionSend_NMEA_Test_Sequence_A_triggered();
  void on_actionShow_Monitor_triggered();
 	void on_actionClose_Connection_triggered();
 	void on_actionOpen_Connection_triggered();
@@ -78,7 +79,7 @@ private slots:
 
 public slots:
 	void onModifiedData();
-	void onKeypress( int key );
+	void onKeypress( QKeyEvent *event );
 };
 
 #endif // MAINWINDOW_H
