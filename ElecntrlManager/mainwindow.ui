@@ -20,7 +20,7 @@
    <string>JM60 Electric Control System [*]</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="resources.qrc">
     <normaloff>:/graphics/connection.svg</normaloff>:/graphics/connection.svg</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
@@ -95,9 +95,6 @@
            <attribute name="horizontalHeaderStretchLastSection">
             <bool>true</bool>
            </attribute>
-           <attribute name="horizontalHeaderStretchLastSection">
-            <bool>true</bool>
-           </attribute>
           </widget>
          </item>
         </layout>
@@ -133,9 +130,6 @@
            <property name="changeAffectsGraphics" stdset="0">
             <bool>true</bool>
            </property>
-           <attribute name="horizontalHeaderStretchLastSection">
-            <bool>true</bool>
-           </attribute>
            <attribute name="horizontalHeaderStretchLastSection">
             <bool>true</bool>
            </attribute>
@@ -208,6 +202,7 @@
     </property>
     <addaction name="actionSingle_Click"/>
     <addaction name="actionDouble_Click"/>
+    <addaction name="actionTriple_Click"/>
     <addaction name="actionPress_Hold"/>
     <addaction name="actionRelease"/>
     <addaction name="actionSignal_Change"/>
@@ -224,6 +219,7 @@
     <addaction name="actionSwitch_Off"/>
     <addaction name="actionRun_Actuator"/>
     <addaction name="actionOn_with_Timer"/>
+    <addaction name="actionGo_To_Minimum"/>
    </widget>
    <widget class="QMenu" name="menuNetwork">
     <property name="title">
@@ -286,6 +282,7 @@
    </attribute>
    <addaction name="actionSingle_Click"/>
    <addaction name="actionDouble_Click"/>
+   <addaction name="actionTriple_Click"/>
    <addaction name="actionPress_Hold"/>
    <addaction name="actionRelease"/>
    <addaction name="actionSignal_Change"/>
@@ -305,6 +302,7 @@
    <addaction name="actionStart_Fade"/>
    <addaction name="actionStop_Fade"/>
    <addaction name="actionOn_with_Timer"/>
+   <addaction name="actionGo_To_Minimum"/>
    <addaction name="actionSwitch_On"/>
    <addaction name="actionSwitch_Off"/>
    <addaction name="actionRun_Actuator"/>
@@ -369,7 +367,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/click-single.svg</normaloff>:/graphics/click-single.svg</iconset>
    </property>
    <property name="text">
@@ -378,7 +376,7 @@
   </action>
   <action name="actionDouble_Click">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/click-double.svg</normaloff>:/graphics/click-double.svg</iconset>
    </property>
    <property name="text">
@@ -387,7 +385,7 @@
   </action>
   <action name="actionPress_Hold">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/click-hold.svg</normaloff>:/graphics/click-hold.svg</iconset>
    </property>
    <property name="text">
@@ -396,7 +394,7 @@
   </action>
   <action name="actionRelease">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/click-release.svg</normaloff>:/graphics/click-release.svg</iconset>
    </property>
    <property name="text">
@@ -405,7 +403,7 @@
   </action>
   <action name="actionToggle_On_Off">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/onoff.svg</normaloff>:/graphics/onoff.svg</iconset>
    </property>
    <property name="text">
@@ -414,7 +412,7 @@
   </action>
   <action name="actionSwitch_On">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/bulb-lit.svg</normaloff>:/graphics/bulb-lit.svg</iconset>
    </property>
    <property name="text">
@@ -423,7 +421,7 @@
   </action>
   <action name="actionSwitch_Off">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/bulb.svg</normaloff>:/graphics/bulb.svg</iconset>
    </property>
    <property name="text">
@@ -432,7 +430,7 @@
   </action>
   <action name="actionStart_Fade">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/fade-start.svg</normaloff>:/graphics/fade-start.svg</iconset>
    </property>
    <property name="text">
@@ -441,7 +439,7 @@
   </action>
   <action name="actionStop_Fade">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/fade-stop.svg</normaloff>:/graphics/fade-stop.svg</iconset>
    </property>
    <property name="text">
@@ -450,7 +448,7 @@
   </action>
   <action name="actionSwitch_Color">
    <property name="icon">
-    <iconset>
+    <iconset resource="resources.qrc">
      <normaloff>:/graphics/connections.svg</normaloff>:/graphics/connections.svg</iconset>
    </property>
    <property name="text">
@@ -549,6 +547,26 @@
     <string>On with Timer</string>
    </property>
   </action>
+  <action name="actionGo_To_Minimum">
+   <property name="icon">
+    <iconset>
+     <normalon>:/graphics/minimum.svg</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Go To Minimum</string>
+   </property>
+  </action>
+  <action name="actionTriple_Click">
+   <property name="icon">
+    <iconset>
+     <normalon>:/graphics/click-triple.svg</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Triple Click</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -563,6 +581,8 @@
    <header>ecsTableView.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

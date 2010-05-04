@@ -49,5 +49,7 @@
         <file>graphics/connect.svg</file>
         <file>graphics/disconnect.svg</file>
         <file>graphics/timer.svg</file>
+        <file>graphics/minimum.svg</file>
+        <file>graphics/click-triple.svg</file>
     </qresource>
 </RCC>

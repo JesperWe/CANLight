@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<systemdescription version="45">
+<systemdescription version="46">
     <appliance id="7" description="Aft Cabin Port Switch"/>
     <appliance id="2" description="Aft Cabin Stbd Switch"/>
     <appliance id="3" description="Steering Port Switch 1"/>
@@ -90,6 +90,9 @@
         </controlevent>
         <controlevent type="1" action="5">
             <targetgroup id="8" parented="1"/>
+        </controlevent>
+        <controlevent type="4" action="8">
+            <targetgroup id="8"/>
         </controlevent>
     </controlgroup>
     <controlgroup id="10" description="Bilge Pump Ctrl" type="1">

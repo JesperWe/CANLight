@@ -44,7 +44,7 @@
    showgrid="false"
    inkscape:showpageshadow="true"
    inkscape:zoom="3.447852"
-   inkscape:cx="49.712862"
+   inkscape:cx="7.0776213"
    inkscape:cy="35.775054"
    inkscape:window-x="388"
    inkscape:window-y="309"
@@ -66,20 +66,21 @@
 
 <g
    id="g9554"
-   transform="matrix(0.58506399,0,0,0.58506399,19.554986,-93.98177)"><line
-     style="fill:none;stroke:#000000;stroke-width:15;stroke-linecap:round"
+   transform="matrix(0.58506399,0,0,0.58506399,19.554986,-93.98177)"
+   style="stroke-width:18.80136185;stroke-miterlimit:4;stroke-dasharray:none"><line
+     style="fill:none;stroke:#000000;stroke-width:18.80136185;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
      id="line9396"
      y2="267.42993"
      x2="124.45705"
      y1="267.42993"
      x1="-22.355944" /><line
-     style="fill:none;stroke:#000000;stroke-width:15;stroke-linecap:round"
+     style="fill:none;stroke:#000000;stroke-width:18.80136185;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
      id="line9398"
      y2="257.02393"
      x2="51.084061"
      y1="219.52094"
      x1="13.584059" /><line
-     style="fill:none;stroke:#000000;stroke-width:15;stroke-linecap:round"
+     style="fill:none;stroke:#000000;stroke-width:18.80136185;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
      id="line9400"
      y2="252.76794"
      x2="112.29305"
