@@ -83,10 +83,6 @@ int main (void)
 
 	schedule_AddTask( led_FadeTask, schedule_SECOND/25 );
 
-	if( hw_Type == hw_SWITCH ) {
-		//schedule_AddTask( led_PWMTask, 1 );
-	}
-
 	if( hw_I2C_Installed ) {
 		schedule_AddTask( display_Task, schedule_SECOND/3 );
 		schedule_AddTask( menu_Task, schedule_SECOND/100 );

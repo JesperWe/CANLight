@@ -51,7 +51,8 @@ enum event_Actions_e {
 	/* 06 */ a_CHANGE_COLOR,
 	/* 07 */ a_SET_FADE_MASTER,
 	/* 08 */ a_GOTO_MINIMUM,
-	/* 09 */ a_NO_ACTION
+	/* 09 */ a_ON_TIMER,
+	/* 10 */ a_NO_ACTION
 };
 
 typedef struct {

@@ -288,6 +288,10 @@ void hw_Initialize( void ) {
 			hw_WritePort( hw_LED2, 0 );
 			hw_WritePort( hw_LED3, 0 );
 
+			// We don't configure the General Purpose Outputs here, since they
+			// are seldom used and we want to minimize current draw.
+			// They get configured on first use instead.
+
 			PPSUnLock;
 			PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to pin 41.
 			hw_PWMInverted = 1;

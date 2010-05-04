@@ -62,7 +62,7 @@ unsigned char cfg_MyDeviceId = 0;
 unsigned char config_Invalid = 0;
 unsigned char functionInGroup[ hw_NoFunctions ];
 unsigned char functionListenGroup[ hw_NoFunctions ];
-config_Event_t *config_MyEvents;
+config_Event_t *config_MyEvents = 0;
 
 
 //-------------------------------------------------------------------------------
