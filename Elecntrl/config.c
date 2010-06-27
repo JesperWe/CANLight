@@ -12,28 +12,15 @@
 
 /*------------------------------------------------------------------------------------
 
-The system config represents the entire system, and is stored in each appliance.
-The config "file" is actually a byte sequence sent from some master controller
-to all appliances on update. This "file" is stored in User Flash memory and parsed at runtime.
+The system config represents the entire yacht network, and is stored in each appliance.
+The config "file" is actually a byte sequence sent on update from some master controller
+to all appliances. This "file" is stored in User Flash memory and parsed at runtime.
 
 A "appliance" in the system is a single piece of hardware with its own CPU.
 It has an address (Appliance ID) in the range 0-253.
 
 A "function" is one individually controllable I/O channel on this appliance. A function can also
 bundle several channels, like the "Lamp" function is a bundle of all colors of a lamp appliance.
-
-Controller Group (GID)
-        Appliance (AID)/Function
-
->>> Sends: Controller Group ID + Event
-
-Bindings: [Event/Action], ...
-
-<<< Sends: Listener Group ID + Event
-
-Listener Group (GID)
-        Appliance (AID)/Function
-
 
 A "group" is a collection of functions on one or many appliances that listen to the same events.
 Group ID is also in the 0-253 range.
@@ -52,6 +39,21 @@ The config "file" byte sequence follows this pattern:
 
 The events sent between the controllers and the listeners are always send as broadcast messages,
 but each message uses the group IDs to mark which groups are communicating.
+
+Communication flow:
+
+Controller Group (GID)
+        Appliance (AID)/Function
+
+>>> Sends: Controller Group ID + Event
+
+Bindings: [Event/Action], ...
+
+<<< Sends: Listener Group ID + Event
+
+Listener Group (GID)
+        Appliance (AID)/Function
+
 */
 
 
@@ -291,7 +293,7 @@ void config_Update( unsigned short configBytes ) {
 	for( i = 0; i < (_FLASH_PAGE / _FLASH_ROW); i++ ) {
 		_write_flash16( config_FlashPage, newConfigData );
 		config_FlashPage += _FLASH_ROW * 2;
-		newConfigData += _FLASH_ROW * 2;
+		newConfigData += _FLASH_ROW;
 	}
 
 	config_Invalid = FALSE;
