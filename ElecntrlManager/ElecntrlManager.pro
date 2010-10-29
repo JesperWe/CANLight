@@ -35,4 +35,7 @@ FORMS += mainwindow.ui \
     NMEAMonitor.ui
 RESOURCES += resources.qrc
 INCLUDEPATH += CANUSB/include
-win32:LIBS += CANUSB/libs/canusbdrv.lib
+win32:LIBS += ./CANUSB/libs/canusbdrv.lib
+
+OTHER_FILES += \
+    CANUSB/libs/canusbdrv.lib

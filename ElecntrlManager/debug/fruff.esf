@@ -1,25 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<systemdescription version="50">
-    <appliance id="7" description="Aft Cabin Port Switch"/>
-    <appliance id="2" description="Aft Cabin Stbd Switch"/>
-    <appliance id="3" description="Steering Port Switch 1"/>
-    <appliance id="4" description="Steering Port Switch 2"/>
-    <appliance id="5" description="Aft Cabin Port Ceiling Light 1"/>
-    <appliance id="6" description="Aft Cabin Port Ceiling Light 2"/>
-    <appliance id="1" description="Steering Stbd Switch 1"/>
-    <appliance id="8" description="Navtable Switch 1"/>
-    <appliance id="40" description="Aft Cabin Stbd Ceiling Light 1"/>
-    <appliance id="41" description="Aft Cabin Stbd Ceiling Light 2"/>
+<systemdescription version="58">
     <appliance id="-1" description="*"/>
-    <appliance id="9" description="Galley 1"/>
-    <controlgroup id="2" description="Aft Cabin Port Light" type="2">
-        <appliance-function id="6" function="15"/>
-        <appliance-function id="5" function="15"/>
-    </controlgroup>
-    <controlgroup id="7" description="Aft Cabin Stbd Light" type="2">
-        <appliance-function id="40" function="15"/>
-        <appliance-function id="41" function="15"/>
-    </controlgroup>
+    <appliance id="1" description="Steering Stbd Switch 1"/>
+    <appliance id="2" description="Engine Control Box"/>
+    <appliance id="4" description="Deckhouse Door Sw"/>
+    <appliance id="15" description="Sail Locker Switch"/>
+    <appliance id="64" description="Lamp Deckhouse Fwd"/>
+    <appliance id="65" description="Lamp Deckhouse Aft"/>
     <controlgroup id="5" description="Engine Actuators" type="2">
         <appliance-function id="2" function="19"/>
     </controlgroup>
@@ -28,50 +15,14 @@
     </controlgroup>
     <controlgroup id="11" description="Bilge Pump" type="2">
         <appliance-function id="2" function="10"/>
-        <appliance-function id="9" function="8"/>
     </controlgroup>
-    <controlgroup id="3" description="Aft Cabin Port Light" type="1">
-        <appliance-function id="7" function="12"/>
-        <appliance-function id="4" function="12"/>
-        <controlevent type="4" action="6">
-            <targetgroup id="2" parented="1"/>
-        </controlevent>
-        <controlevent type="1" action="5">
-            <targetgroup id="2"/>
-        </controlevent>
-        <controlevent type="2" action="2">
-            <targetgroup id="2"/>
-        </controlevent>
-        <controlevent type="3" action="3">
-            <targetgroup id="2"/>
-        </controlevent>
-    </controlgroup>
-    <controlgroup id="4" description="Aft Cabin Stbd Light" type="1">
-        <appliance-function id="2" function="13"/>
-        <appliance-function id="3" function="13"/>
-        <appliance-function id="1" function="13"/>
-        <appliance-function id="9" function="13"/>
-        <controlevent type="1" action="5">
-            <targetgroup id="7"/>
-        </controlevent>
-        <controlevent type="4" action="6">
-            <targetgroup id="7"/>
-        </controlevent>
-        <controlevent type="2" action="2">
-            <targetgroup id="7" parented="1"/>
-        </controlevent>
-        <controlevent type="3" action="3">
-            <targetgroup id="7"/>
-        </controlevent>
-        <controlevent type="5" action="8">
-            <targetgroup id="7"/>
-        </controlevent>
+    <controlgroup id="12" description="Running Lights" type="2"/>
+    <controlgroup id="13" description="Deckhouse Lights" type="2">
+        <appliance-function id="64" function="15"/>
+        <appliance-function id="65" function="15"/>
     </controlgroup>
     <controlgroup id="6" description="Throttle" type="1">
-        <appliance-function id="3" function="17"/>
         <appliance-function id="1" function="17"/>
-        <appliance-function id="8" function="17"/>
-        <appliance-function id="1" function="14"/>
         <controlevent type="19" action="4">
             <targetgroup id="5" parented="1"/>
         </controlevent>
@@ -80,12 +31,8 @@
         </controlevent>
     </controlgroup>
     <controlgroup id="9" description="Backlight Controllers" type="1">
-        <appliance-function id="8" function="14"/>
-        <appliance-function id="3" function="14"/>
         <appliance-function id="1" function="12"/>
         <appliance-function id="2" function="14"/>
-        <appliance-function id="6" function="14"/>
-        <appliance-function id="9" function="12"/>
         <controlevent type="2" action="2">
             <targetgroup id="8"/>
         </controlevent>
@@ -100,8 +47,6 @@
         </controlevent>
     </controlgroup>
     <controlgroup id="10" description="Bilge Pump Ctrl" type="1">
-        <appliance-function id="8" function="13"/>
-        <appliance-function id="9" function="14"/>
         <controlevent type="2" action="0">
             <targetgroup id="11" parented="1"/>
         </controlevent>
@@ -110,6 +55,21 @@
         </controlevent>
         <controlevent type="1" action="9">
             <targetgroup id="11"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="14" description="Deckhouse Light Ctrl" type="1">
+        <appliance-function id="4" function="12"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="13"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="13"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="13" parented="1"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="13"/>
         </controlevent>
     </controlgroup>
 </systemdescription>

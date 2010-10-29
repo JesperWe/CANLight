@@ -206,7 +206,7 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 			case 16: eventName = "e_BLACKOUT"; break;
 			case 17: eventName = "e_SLOW_HEARTBEAT"; break;
 			case 18: eventName = "e_THROTTLE_MASTER"; break;
-			case 19: eventName = "e_SET_LEVEL"; break;
+                        case 19: eventName = "e_LEVEL_CHANGED"; break;
 			case 20: eventName = "e_CONFIG_FILE_UPDATE"; break;
 			case 21: eventName = "e_SET_BACKLIGHT_LEVEL"; break;
 			default: eventName = "<unknown>";

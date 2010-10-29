@@ -171,8 +171,9 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 
 		// Check that this group is fully configured before adding it.
 
-		if( cGroup->events.count() == 0 ) continue;
-		if( cGroup->events[0]->eventAction == 0 ) continue;
+                if( cGroup->links.count() == 0 ) continue;
+                if( cGroup->events.count() == 0 ) continue;
+                if( cGroup->events[0]->eventAction == 0 ) continue;
 		if( cGroup->events[0]->eventAction->targetGroups.count() == 0 ) continue;
 
 		configFile.append( (uint8_t)( cGroup->id )); // Start new group.
