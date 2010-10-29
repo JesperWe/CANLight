@@ -16,6 +16,7 @@
 #include "led.h"
 #include "switch.h"
 #include "engine.h"
+#include "schedule.h"
 
 //---------------------------------------------------------------------------------------------
 // Globals.
@@ -120,16 +121,29 @@ void event_Task() {
 								if( hw_IsPWM(function) ) led_ProcessEvent( &event, function, a_SET_FADE_MASTER );
 								break;
 							}
+
 							case e_SET_BACKLIGHT_LEVEL: {
 								if( hw_Type != hw_SWITCH ) break;
 								if( hw_IsPWM(function) ) led_SetBacklight( &event );
 								break;
 							}
 
-							// If we have a display, capture engine events and save the values for monitoring.
-							// This special case is in ADDITION to the default processing below it!
-
 							case e_LEVEL_CHANGED: {
+
+								if( hw_IsPWM(function) ) {
+									led_ProcessEvent( &event, function, a_SET_LEVEL );
+
+									// Stay awake long enough to catch the next level change if we are
+									// a slave in a dimming operation.
+
+									hw_SleepTimer = schedule_SECOND;
+									break;
+								}
+
+								// If not a PWM LED we must be an actuator.
+								// In case we have a display, capture engine events and save the values for monitoring.
+								// This special case is in ADDITION to the default processing below it!
+
 								if( hw_I2C_Installed ) {
 									engine_Throttle = event.data;
 									engine_Gear = event.ctrlFunc;

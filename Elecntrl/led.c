@@ -340,10 +340,14 @@ void led_ProcessEvent( event_t *event, unsigned char function, unsigned char act
 		case a_SET_FADE_MASTER: {
 
 			// We are not the master. Stop fade.
-			if( event->data != hw_DeviceID ) led_CurFadeStep = 0;
+			if( event->data != hw_DeviceID ) {
+				led_CurFadeStep = 0;
+			}
 
 			// We are master. Save controller group ID for set_level events.
-			else led_LevelControlGroup = event->groupId;
+			else {
+				led_LevelControlGroup = event->groupId;
+			}
 
 			break;
 		}
@@ -492,8 +496,6 @@ void led_StepDimmer( float *step, unsigned char color, unsigned char function, u
 	levelEvent.info = (short) (value * 1000);
 
 	nmea_SendEvent( &levelEvent );
-
-	if( event == e_LEVEL_CHANGED ) led_SetLevel( color, value, led_SEND_ACK );
 }
 
 //---------------------------------------------------------------------------------------------

@@ -77,7 +77,7 @@ void engine_ThrottleInitialize() {
 // Read throttle settings and return True if there was any activity.
 
 #define engine_IDLE_DEADBAND 10
-#define engine_THROTTLE_MIN_CHANGE 10
+#define engine_THROTTLE_MIN_CHANGE 5
 
 unsigned char engine_ReadThrottleLevel() {
 	short diff;
