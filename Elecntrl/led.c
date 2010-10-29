@@ -355,6 +355,7 @@ void led_ProcessEvent( event_t *event, unsigned char function, unsigned char act
 			float value;
 			led_DimmerTicks = 0;
 			value = event->info / 1000.0;
+			led_CurrentColor = event->data;
 			led_SetLevel( led_CurrentColor, value, led_NO_ACK );
 			break;
 		}
@@ -379,7 +380,7 @@ void led_ProcessEvent( event_t *event, unsigned char function, unsigned char act
 		}
 		case a_TOGGLE_STATE: {
 			led_LastLevel = led_CurrentLevel[led_CurrentColor];
-			led_Toggle( led_CurrentColor, 3.0 );
+			led_Toggle( led_CurrentColor, 1.5 );
 			break;
 		}
 		case a_CHANGE_COLOR: {
