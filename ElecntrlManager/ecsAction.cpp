@@ -153,7 +153,22 @@ QPointF ecsAction::anchorOut() {
 
 void ecsAction::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 {
-	event->setAccepted(event->mimeData()->hasFormat("x-application/ecs-controlgroup-id"));
+    if(event->mimeData()->hasFormat("x-application/ecs-controlgroup-id")) {
+
+        const QMimeData* data = event->mimeData();
+        QString idString(data->data("x-application/ecs-controlgroup-id"));
+        int cGroupId = idString.toInt();
+
+        ecsControlGroupGraphic* targetGroup =
+                new ecsControlGroupGraphic( ((MainWindow*)qApp->activeWindow())->cGroupModel->findItem( cGroupId ) );
+
+        if( targetGroup->srcGroup->itemType == ecsControlGroup::Activity ) {
+            event->setAccepted( true );
+            return;
+        }
+    }
+
+    event->setAccepted( false );
 }
 
 //------------------------------------------------------------------------------------
