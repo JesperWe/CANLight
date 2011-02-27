@@ -407,7 +407,7 @@ void nmea_SendMultipacket( unsigned char *msgBuffer, unsigned short msgLength, l
 
 int nmea_DistributeSettings() {
 	hw_ReadConfigFlash();
-	nmea_SendMultipacket( hw_1kBuffer, hw_CONFIG_SIZE, nmea_CONFIGURATION );
+	nmea_SendMultipacket( hw_1kBuffer, hw_CONFIG_SIZE, nmea_SETTINGS );
 	return 0;
 }
 
@@ -523,7 +523,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 							config_Update( nmea_TPMessage_Size );
 							break;
 						}
-						case nmea_CONFIGURATION: {
+						case nmea_SETTINGS: {
 
 							// Validation
 
@@ -532,7 +532,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 							if( hw_1kBuffer[0] != hw_CONFIG_MAGIC_WORD_1 // NB Little Endian
 									|| hw_1kBuffer[1] != hw_CONFIG_MAGIC_WORD_0 ) break;
 
-							hw_WriteConfigFlash();
+							hw_WriteSettingsFlash();
 
 							schedule_Parameter = 2;
 							schedule_AddTask( led_TaskComplete, 10 );

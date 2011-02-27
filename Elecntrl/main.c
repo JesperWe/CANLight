@@ -77,7 +77,7 @@ int main (void)
 
 	schedule_Initialize();
 
-	schedule_AddTask( config_Task, schedule_SECOND/100 );
+	schedule_AddTask( config_UninitializedTask, schedule_SECOND/100 );
 
 	schedule_AddTask( event_Task, schedule_SECOND/100 );
 

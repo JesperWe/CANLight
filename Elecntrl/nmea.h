@@ -33,7 +33,7 @@
 #define nmea_LIGHTING_COMMAND		65089
 #define nmea_MAINTAIN_POWER		65095
 
-#define nmea_CONFIGURATION			126998
+#define nmea_SETTINGS			126998
 
 // NMEA2000 CA NAME basics for a marine electrical lighting appliance.
 

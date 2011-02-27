@@ -231,7 +231,7 @@ void hw_Initialize( void ) {
 		hw_Config->led_BacklightDaylightCutoff = 220;
 		hw_Config->led_MinimumDimmedLevel = 5;
 
-		hw_WriteConfigFlash();
+		hw_WriteSettingsFlash();
 
 		hw_Config = (hw_Config_t*) &hw_ConfigData; // Set pointer back to Flash data.
 	}
@@ -346,7 +346,7 @@ void hw_ReadConfigFlash() {
 // Copy parameters from RAM to Flash.
 // Note that only one row is written although the whole page is erased.
 
-void hw_WriteConfigFlash() {
+void hw_WriteSettingsFlash() {
     _init_prog_address( hw_ConfigPtr, hw_ConfigData);
 	_erase_flash( hw_ConfigPtr );
 	_write_flash16( hw_ConfigPtr, (int*)hw_1kBuffer );

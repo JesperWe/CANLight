@@ -28,14 +28,7 @@ A group can consist of only a single function of a single appliance.
 A function must be part of a group to be able to listen for events.
 
 The config "file" byte sequence follows this pattern:
-	<2 bytes magic number>
-	<2 bytes sequence number>
-	ControllerGroupID ApplianceID func [ ApplianceID func ] FE
-	ListenerGroupID ApplianceID func [ ApplianceID func ] FE
-	event action [event action] FE
-	FE
-	...
-	FF
+
 
 The events sent between the controllers and the listeners are always send as broadcast messages,
 but each message uses the group IDs to mark which groups are communicating.
@@ -75,6 +68,120 @@ config_Event_t *config_MyEvents = 0;
 
 const unsigned char __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2))) config_Data[_FLASH_PAGE*2];
 
+
+//-------------------------------------------------------------------------------
+// Return the action to take if we are listening to this event, or NO_ACTION if we are not.
+
+unsigned char config_GetFunctionActionFromEvent( unsigned char function, Event_t* event ) {
+	unsigned char controllerGroupID;
+	unsigned char deviceID;
+	unsigned char functionID;
+	unsigned char listenerGroupID;
+	unsigned char thisFunctionTargeted;
+	unsigned char eventType;
+	unsigned char foundOriginGroup;
+	unsigned char foundAckGroup;
+	unsigned char functionIsInThisCntrlGroup;
+
+	config_Event_t* actionPtr = config_MyEvents;
+
+	takeAction = a_NO_ACTION;
+
+	while( actionPtr != 0 ) {
+		if( (( actionPtr->ctrlGroup == event.groupId ) || (event.groupId == hw_DEVICE_ANY)) &&
+			( actionPtr->ctrlEvent == event.ctrlEvent ) ) {
+			takeAction = actionPtr->ctrlAction;
+			break;
+		}
+		actionPtr = actionPtr->next;
+	}
+
+	configPtr = config_Data;
+	configPtr += 4;	// Skip magic and sequence numbers.
+
+	foundOriginGroup = FALSE;
+
+	do {
+
+		thisFunctionTargeted = FALSE;
+		functionIsInThisCntrlGroup = FALSE;
+
+		// Controller Group. Is this the group that generated the event?
+
+		controllerGroupID = *configPtr++;
+
+		foundOriginGroup = ( controllerGroupID == event->groupId );
+
+		do {
+			deviceID = *configPtr++;
+			functionID = *configPtr++;
+
+			// For acknowledge events, we need to remember if this control group
+			// contains the current device and function.
+
+			if( deviceID == hw_DeviceID && functionID == function )
+				functionIsInThisCntrlGroup = TRUE;
+
+		}
+		while( *configPtr != DELIMITER );
+
+		// Listener Group Devices. See if we are a listener?
+
+		configPtr++;
+		listenerGroupID = *configPtr++;
+
+		foundAckGroup = ( listenerGroupID == event->groupId );
+
+		do {
+			deviceID = *configPtr++;
+			functionID = *configPtr++;
+
+			if( foundOriginGroup ) {
+				if( deviceID == hw_DeviceID || deviceID == hw_DEVICE_ANY ) {
+					thisFunctionTargeted = ( function == functionID );
+				}
+				continue;
+			}
+
+
+		}
+		while( *configPtr != DELIMITER );
+
+		// Check if this is an Ack event.
+
+		if( foundAckGroup && functionIsInThisCntrlGroup ) {
+
+		}
+
+		// OK, so what action does this event generate for this function?
+
+		configPtr++;
+		do {
+			eventType = *configPtr++;
+			action = *configPtr++;
+
+			if( ! foundOriginGroup ) continue;
+			if( ! thisFunctionTargeted ) continue;
+
+			if( eventType = event->ctrlEvent ) {
+
+				// OK we found the action to perform for this event. Since multiple actions
+				// for the same event/function combination are not supported we can stop searching
+				// and return immediately.
+
+				return action;
+			}
+		}
+		while( *configPtr != DELIMITER );
+
+		while( *configPtr == DELIMITER ) { configPtr++; }
+	}
+	while( *configPtr != END_OF_FILE );
+
+	return a_NO_ACTION;
+}
+
+
 //-------------------------------------------------------------------------------
 // Initialize System Configuration.
 // The config_MyEvents dynamic list should contain all events that affect this device.
@@ -84,7 +191,7 @@ void config_Initialize() {
 	unsigned short configSequenceNumber;
 	unsigned char controllerGroupID;
 	unsigned char listenToGroupID;
-	unsigned char applianceID;
+	unsigned char deviceID;
 	unsigned char functionID;
 	unsigned char event;
 	unsigned char action;
@@ -107,110 +214,14 @@ void config_Initialize() {
 	}
 
 	config_Invalid = FALSE;
-
-	config_MyEvents = 0; // XXX Memory leak if config initialized more than once after reset!
-
-	for( functionID=0; functionID<hw_NoFunctions; functionID++ ) {
-		functionListenGroup[ functionID ] = 0;
-		functionInGroup[ functionID ] = 0;
-	}
-
 	configSequenceNumber = ((short)config_Data[2])<<8 | config_Data[3];
-
-	// Now filter system config to find out what groups we belong to, and
-	// which devices messages we should listen to.
-	
-	configPtr = config_Data;
-	configPtr += 4;	// Skip magic and sequence numbers.
-
-	do {
-
-		// Controller Group Appliances
-
-		controllerGroupID = *configPtr++;
-		do {
-			applianceID = *configPtr++;
-			functionID = *configPtr++;
-
-			if( applianceID == hw_DeviceID ) {
-				functionInGroup[ functionID ] = controllerGroupID;
-				lastAssignedFunction = functionID;
-			}
-		}
-		while( *configPtr != DELIMITER );
-
-		// Listener Group Appliances. For the purpose of acknowledge events, these functions
-		// are "in" the listenToGroupID, but "listen" to the inGroupID.
-
-		configPtr++;
-		listenToGroupID = *configPtr++;
-		do {
-			applianceID = *configPtr++;
-			functionID = *configPtr++;
-
-			if( applianceID == hw_DeviceID ) {
-				functionInGroup[ functionID ] = listenToGroupID;
-				functionListenGroup[ functionID ] = controllerGroupID;
-			}
-
-			// Special case: If we are processing a group where the listening function
-			// belongs to any appliance, mark this for the controlling function too.
-
-			if( applianceID == hw_DEVICE_ANY ) {
-				functionInGroup[lastAssignedFunction] = hw_DEVICE_ANY;
-				functionListenGroup[ functionID ] = hw_DEVICE_ANY;
-			}
-
-		} 
-		while( *configPtr != DELIMITER );
-
-		// Since the controlling group came first, we need to go through the functions
-		// in it and set their listening group for acknowledge events.
-
-		for( functionID=0; functionID<hw_NoFunctions; functionID++ ) {
-			if( functionInGroup[ functionID ] == controllerGroupID ) {
-				functionListenGroup[ functionID ] = listenToGroupID;
-			}
-		}
-
-		// Event / Action bindings
-
-		configPtr++;
-		do {
-			event = *configPtr++;
-			action = *configPtr++;
-			config_AddControlEvent( controllerGroupID, event, action );
-		}
-		while( *configPtr != DELIMITER );
-
-		while( *configPtr == DELIMITER ) { configPtr++; }
-	}
-	while( *configPtr != END_OF_FILE );
 }
 
-void config_AddControlEvent( 
-		const unsigned char ctrlGroup,
-		const unsigned char ctrlEvent,
-		const unsigned char ctrlAction )
-{
-
-	config_Event_t *newEvent;
-
-	newEvent = malloc( sizeof( config_Event_t ) );
-	newEvent->ctrlGroup = ctrlGroup;
-	newEvent->ctrlEvent = ctrlEvent;
-	newEvent->ctrlAction = ctrlAction;
-
-	// Insert new event at start of event list.
-
-	newEvent->next = config_MyEvents;
-	config_MyEvents = newEvent;
-}
 
 
 //-------------------------------------------------------------------------------
 
-void config_Task() {
+void config_UninitializedTask() {
 	// No point in running if we have no valid system configuration,
 	// so stay here waiting for one to arrive and flash something to show
 	// we are waiting.

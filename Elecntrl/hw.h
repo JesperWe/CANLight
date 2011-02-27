@@ -147,7 +147,7 @@ void hw_Initialize( void );
 
 void hw_ReadConfigFlash( void );
 
-void hw_WriteConfigFlash( void );
+void hw_WriteSettingsFlash( void );
 
 unsigned char hw_IsPWM( unsigned short hw_Port );
 

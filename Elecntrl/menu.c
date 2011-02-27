@@ -210,7 +210,7 @@ int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, 
 //---------------------------------------------------------------------------------------------
 
 int menu_SaveCalibration() {
-	hw_WriteConfigFlash();
+	hw_WriteSettingsFlash();
 	menu_ActiveHandler = 0;
 	return 0;
 }

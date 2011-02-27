@@ -24,7 +24,7 @@ void config_AddControlEvent(
 );
 
 void config_Initialize();
-void config_Task();
+void config_UninitializedTask();
 void config_Update( unsigned short configBytes );
 
 #endif /* CONFIG_H_ */
