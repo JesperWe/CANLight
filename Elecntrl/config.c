@@ -118,7 +118,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 	unsigned char confDevice;
 	unsigned char confPort;
 	unsigned char listenerGroupID;
-	unsigned char functionIsInCurrentTask;
+	unsigned char portIsInCurrentTask;
 	unsigned char eventType;
 	unsigned char action;
 	unsigned char defaultAction;
@@ -130,13 +130,13 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 	const unsigned char* configPtr = config_Data;
 	configPtr += 4;	// Skip magic and sequence numbers.
 
-	eventIsInCurrentGroup = FALSE;
 	config_CurrentGroup = 0;
 
 	do {
 		defaultAction = a_NO_ACTION;
-		functionIsInCurrentTask = FALSE;
+		portIsInCurrentTask = FALSE;
 		portIsInCurrentCntrlGroup = FALSE;
+		eventIsInCurrentGroup = FALSE;
 
 		// Controller Group. Is this the group that generated the event?
 
@@ -166,6 +166,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 		listenerGroupID = *configPtr++;
 
 		sendingGroupIsTask = ( listenerGroupID == event->groupId );
+		portIsInCurrentTask = FALSE;
 
 		do {
 			confDevice = *configPtr++;
@@ -176,7 +177,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 				if(	( confDevice == hw_DeviceID || confDevice == hw_DEVICE_ANY ) &&
 					( port == confPort ) )
 				{
-					functionIsInCurrentTask = TRUE;
+					portIsInCurrentTask = TRUE;
 					continue;
 				}
 			}
@@ -201,7 +202,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 			action = *configPtr++;
 
 			if( ! eventIsInCurrentGroup ) continue;
-			if( ! functionIsInCurrentTask ) continue;
+			if( ! portIsInCurrentTask ) continue;
 
 			if( eventType == event->ctrlEvent ) {
 

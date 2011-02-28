@@ -9,6 +9,7 @@
 #include "events.h"
 #include "nmea.h"
 #include "led.h"
+#include "menu.h"
 
 unsigned char display_IsOn = 1;
 unsigned char display_CurrentAdjust = 0;
@@ -192,6 +193,7 @@ void display_NumberFormat( char outString[], short digits, short number ) {
 
 void display_Task() {
 	char key;
+	static unsigned char failCount = 0;
 
 	key = display_ReadKeypad();
 
@@ -201,7 +203,13 @@ void display_Task() {
 		// did not ACK. It is probably busy. So we try again next time slot.
 
 		if( (key & 0x80) != 0 ) {
+			failCount++;
 			key = 0;
+			if( failCount > 10 ) {
+				failCount = 0;
+				display_Initialize();
+				menu_Initialize();
+			}
 		}
 		else {
 			queue_Send( display_Queue, &key );

@@ -91,13 +91,14 @@ void ctrlkey_task() {
 	for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 
 		port = ctrlkey_Key2Port[ keyNo ];
-		groupId = config_GetGroupIdForPort( port );
 
 		// If holding, check that we still are. This event is somehow missed sometimes?
 
 		if( ctrlkey_Holding[ keyNo ] ) {
 
 			if( hw_ReadPort( port ) == 0 ) continue;
+	
+			groupId = config_GetGroupIdForPort( port );
 
 			events_Push( e_IO_EVENT, 0,
 					groupId, hw_DeviceID,
@@ -119,6 +120,8 @@ void ctrlkey_task() {
 				case 3: { event = e_KEY_TRIPLECLICKED; break; }
 				default: { event = e_KEY_CLICKED; break; }
 				}
+
+				groupId = config_GetGroupIdForPort( port );
 
 				events_Push( e_IO_EVENT, 0,
 						groupId, hw_DeviceID,

@@ -141,6 +141,7 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 	}
 
 	if( ! sendAck ) return;
+	if( hw_Type == hw_SWITCH && color == led_RED ) return; // Don't Ack for backlight!
 
 	// Response message back to controller.
 	// Going to or from level=0 (off) from/to any other level triggers a response.
