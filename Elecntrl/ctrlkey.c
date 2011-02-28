@@ -23,7 +23,7 @@ unsigned long ctrlkey_Releasetime[ ctrlkey_MAX_NO_KEYS ];
 unsigned char ctrlkey_ClickCount[ ctrlkey_MAX_NO_KEYS ];
 unsigned char ctrlkey_BacklightKey;
 
-static const unsigned char ctrlkey_Key2Function[] = { hw_KEY1, hw_KEY2, hw_KEY3 };
+static const unsigned char ctrlkey_Key2Port[] = { hw_KEY1, hw_KEY2, hw_KEY3 };
 
 
 //---------------------------------------------------------------------------------------------
@@ -83,23 +83,25 @@ unsigned short ctrlkey_ReadKeys( void ) {
 void ctrlkey_task() {
 	unsigned char keyNo;
 	unsigned char event;
-	unsigned char function;
+	unsigned char port;
+	unsigned char groupId;
 
 	_CNIE = 0; // Disable interrupts while we process, otherwise confusion might ensue...
 
 	for( keyNo=0; keyNo<ctrlkey_NoKeys; keyNo++ ) {
 
-		function = ctrlkey_Key2Function[ keyNo ];
+		port = ctrlkey_Key2Port[ keyNo ];
+		groupId = config_GetGroupIdForPort( port );
 
 		// If holding, check that we still are. This event is somehow missed sometimes?
 
 		if( ctrlkey_Holding[ keyNo ] ) {
 
-			if( hw_ReadPort( function ) == 0 ) continue;
+			if( hw_ReadPort( port ) == 0 ) continue;
 
 			events_Push( e_IO_EVENT, 0,
-					functionInGroup[function], hw_DeviceID,
-					function, e_KEY_RELEASED, keyNo,
+					groupId, hw_DeviceID,
+					port, e_KEY_RELEASED, keyNo,
 					(short)schedule_time );
 
 			ctrlkey_Presstime[ keyNo ] = 0;
@@ -119,8 +121,8 @@ void ctrlkey_task() {
 				}
 
 				events_Push( e_IO_EVENT, 0,
-						functionInGroup[function], hw_DeviceID,
-						function, event, keyNo,
+						groupId, hw_DeviceID,
+						port, event, keyNo,
 						(short)ctrlkey_Presstime[ keyNo ] );
 
 				ctrlkey_ClickCount[ keyNo ] = 0;
@@ -139,10 +141,10 @@ void ctrlkey_task() {
 
 				led_FadeMaster = 0xFF;
 
-				if( functionInGroup[function] != hw_DEVICE_ANY ) {
+				if( groupId != hw_DEVICE_ANY ) {
 					events_Push( e_IO_EVENT, 0,
-						functionInGroup[function], hw_DeviceID,
-						function, e_KEY_HOLDING, keyNo,
+						groupId, hw_DeviceID,
+						port, e_KEY_HOLDING, keyNo,
 						(short)(schedule_time - ctrlkey_Presstime[ keyNo ]) );
 				}
 				else {
@@ -216,11 +218,11 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 			else {
 				if( ctrlkey_Holding[ keyNo ] ) {
 
-					unsigned char function = ctrlkey_Key2Function[ keyNo ];
+					unsigned char port = ctrlkey_Key2Port[ keyNo ];
 
 					events_Push( e_IO_EVENT, 0,
-							functionInGroup[function], hw_DeviceID,
-							function, e_KEY_RELEASED, keyNo,
+							config_GetGroupIdForPort( port ), hw_DeviceID,
+							port, e_KEY_RELEASED, keyNo,
 							(short)schedule_time );
 
 					ctrlkey_Presstime[ keyNo ] = 0;

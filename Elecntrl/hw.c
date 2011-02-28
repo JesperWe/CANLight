@@ -47,7 +47,7 @@ unsigned short		hw_SleepTimer;	// Count ticks before we can go to sleep.
 //-------------------------------------------------------------------------------
 // Structures for hardware dependent I/O pin manipulation
 
-static const hw_Port_t hw_Port[hw_NoVariants][hw_NoFunctions] =
+static const hw_Port_t hw_Port[hw_NoVariants][hw_PortCount] =
 {{
 	{ &PORTA, &TRISA, 0 },  // Unused
 	{ &PORTB, &TRISB, 10 }, // CAN_RATE
@@ -87,19 +87,19 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_NoFunctions] =
 const unsigned short hw_NoKeys[hw_NoVariants] = { 0, 3 };
 
 
-unsigned int hw_ReadPort(enum hw_Functions_e port) {
+unsigned int hw_ReadPort(enum hw_Ports_e port) {
     return (*(hw_Port[hw_Type][port].port) >> hw_Port[hw_Type][port].bit) & 1;
 }
 
-void hw_OutputPort(enum hw_Functions_e port) {
+void hw_OutputPort(enum hw_Ports_e port) {
 	*(hw_Port[hw_Type][port].tris) &= ~(1 << hw_Port[hw_Type][port].bit);
 }
 
-void hw_InputPort(enum hw_Functions_e port) {
+void hw_InputPort(enum hw_Ports_e port) {
 	*(hw_Port[hw_Type][port].port) |= (1 << hw_Port[hw_Type][port].bit);
 }
 
-void hw_WritePort(enum hw_Functions_e port, int value) {
+void hw_WritePort(enum hw_Ports_e port, int value) {
 	NOP;
 	if (value) *(hw_Port[hw_Type][port].port) |= (1 << hw_Port[hw_Type][port].bit);
 	else *(hw_Port[hw_Type][port].port) &= ~(1 << hw_Port[hw_Type][port].bit);

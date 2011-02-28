@@ -35,10 +35,11 @@ enum event_Events_e {
 	/* 16 */ e_BLACKOUT,
 	/* 17 */ e_SLOW_HEARTBEAT,
 	/* 18 */ e_THROTTLE_MASTER,
-	/* 19 */ e_LEVEL_CHANGED,
+	/* 19 */ e_LED_LEVEL_CHANGED,
 	/* 20 */ e_CONFIG_FILE_UPDATE,
 	/* 21 */ e_SET_BACKLIGHT_LEVEL,
-	/* 22 */ e_NO_EVENTS
+	/* 22 */ e_THROTTLE_CHANGE,
+	/* 23 */ e_NO_EVENTS
 };
 
 enum event_Actions_e {
@@ -52,7 +53,8 @@ enum event_Actions_e {
 	/* 07 */ a_SET_FADE_MASTER,
 	/* 08 */ a_GOTO_MINIMUM,
 	/* 09 */ a_ON_TIMER,
-	/* 10 */ a_NO_ACTION
+	/* 10 */ a_FADE_MASTER_ARBITRATION,
+	/* 11 */ a_NO_ACTION
 };
 
 typedef struct {
@@ -60,7 +62,7 @@ typedef struct {
 	unsigned short PGN;
 	unsigned char groupId;
 	unsigned char ctrlDev;
-	unsigned char ctrlFunc;
+	unsigned char ctrlPort;
 	unsigned char ctrlEvent;
 	unsigned char data;
 	unsigned short info;
@@ -80,7 +82,7 @@ void events_Push(
 		unsigned short nmeaPGN, 
 		unsigned char groupId,
 		unsigned char ctrlDev, 
-		unsigned char ctrlFunc,
+		unsigned char ctrlPort,
 		unsigned char ctrlEvent,
 		unsigned char eventData, 
 		unsigned short atTimer );
@@ -92,11 +94,8 @@ event_t* events_Pop( void );
 // our own event queue. This feature can be enabled or disabled.
 
 extern unsigned char loopbackEnabled;
-extern short events_LastLevelSetInfo;
-extern unsigned char events_LastLevelSetData;
 
 unsigned char event_Discard( event_t* event );
-config_Event_t* event_FindNextListener( config_Event_t *fromAccept, event_t* event );
 void event_Task();
 
 #endif /* EVENTS_H_ */

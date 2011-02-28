@@ -3,12 +3,12 @@
 
 #include "hw.h"
 #include "schedule.h"
-#include "config.h"
 #include "events.h"
 #include "led.h"
 #include "display.h"
 #include "menu.h"
 #include "nmea.h"
+#include "config.h"
 
 /*------------------------------------------------------------------------------------
 
@@ -55,10 +55,7 @@ Listener Group (GID)
 
 unsigned char cfg_MyDeviceId = 0;
 unsigned char config_Invalid = 0;
-unsigned char functionInGroup[ hw_NoFunctions ];
-unsigned char functionListenGroup[ hw_NoFunctions ];
-config_Event_t *config_MyEvents = 0;
-
+unsigned char config_CurrentGroup;
 
 //-------------------------------------------------------------------------------
 
@@ -70,57 +67,95 @@ const unsigned char __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2))) conf
 
 
 //-------------------------------------------------------------------------------
-// Return the action to take if we are listening to this event, or NO_ACTION if we are not.
+// Find the first group that a port on this device is a member of.
 
-unsigned char config_GetFunctionActionFromEvent( unsigned char function, Event_t* event ) {
+unsigned char config_GetGroupIdForPort( unsigned char port ) {
 	unsigned char controllerGroupID;
-	unsigned char deviceID;
-	unsigned char functionID;
-	unsigned char listenerGroupID;
-	unsigned char thisFunctionTargeted;
-	unsigned char eventType;
-	unsigned char foundOriginGroup;
-	unsigned char foundAckGroup;
-	unsigned char functionIsInThisCntrlGroup;
+	unsigned char confDevice;
+	unsigned char confPort;
 
-	config_Event_t* actionPtr = config_MyEvents;
-
-	takeAction = a_NO_ACTION;
-
-	while( actionPtr != 0 ) {
-		if( (( actionPtr->ctrlGroup == event.groupId ) || (event.groupId == hw_DEVICE_ANY)) &&
-			( actionPtr->ctrlEvent == event.ctrlEvent ) ) {
-			takeAction = actionPtr->ctrlAction;
-			break;
-		}
-		actionPtr = actionPtr->next;
-	}
-
-	configPtr = config_Data;
+	const unsigned char* configPtr = config_Data;
 	configPtr += 4;	// Skip magic and sequence numbers.
 
-	foundOriginGroup = FALSE;
+	do {
+		controllerGroupID = *configPtr++;
+
+		do {
+			confDevice = *configPtr++;
+			confPort = *configPtr++;
+
+			if( confDevice == hw_DeviceID && confPort == port ) {
+				return controllerGroupID;
+			}
+		}
+		while( *configPtr != DELIMITER );
+
+		// Roll passed listener groups.
+
+		configPtr++;
+		do { configPtr++; }
+		while( *configPtr != DELIMITER );
+
+		// Roll passed event/actions.
+
+		configPtr++;
+		do { configPtr++; }
+		while( *configPtr != DELIMITER );
+
+		while( *configPtr == DELIMITER ) { configPtr++; }
+	}
+	while( *configPtr != END_OF_FILE );
+
+	return config_GROUP_UNDEFINED;
+}
+
+
+//-------------------------------------------------------------------------------
+// Return the action to take if we are listening to this event, or NO_ACTION if we are not.
+
+unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event ) {
+	unsigned char controllerGroupID;
+	unsigned char confDevice;
+	unsigned char confPort;
+	unsigned char listenerGroupID;
+	unsigned char functionIsInCurrentTask;
+	unsigned char eventType;
+	unsigned char action;
+	unsigned char defaultAction;
+	unsigned char eventIsInCurrentGroup;
+	unsigned char sendingGroupIsTask;
+	unsigned char portIsInCurrentCntrlGroup;
+
+
+	const unsigned char* configPtr = config_Data;
+	configPtr += 4;	// Skip magic and sequence numbers.
+
+	eventIsInCurrentGroup = FALSE;
+	config_CurrentGroup = 0;
 
 	do {
-
-		thisFunctionTargeted = FALSE;
-		functionIsInThisCntrlGroup = FALSE;
+		defaultAction = a_NO_ACTION;
+		functionIsInCurrentTask = FALSE;
+		portIsInCurrentCntrlGroup = FALSE;
 
 		// Controller Group. Is this the group that generated the event?
 
 		controllerGroupID = *configPtr++;
 
-		foundOriginGroup = ( controllerGroupID == event->groupId );
+		if ( controllerGroupID == event->groupId ) {
+			eventIsInCurrentGroup = TRUE;
+			config_CurrentGroup = controllerGroupID;
+		}
 
 		do {
-			deviceID = *configPtr++;
-			functionID = *configPtr++;
+			confDevice = *configPtr++;
+			confPort = *configPtr++;
 
 			// For acknowledge events, we need to remember if this control group
-			// contains the current device and function.
+			// contains the current device and port.
 
-			if( deviceID == hw_DeviceID && functionID == function )
-				functionIsInThisCntrlGroup = TRUE;
+			if( confDevice == hw_DeviceID && confPort == port )
+				portIsInCurrentCntrlGroup = TRUE;
 
 		}
 		while( *configPtr != DELIMITER );
@@ -130,43 +165,48 @@ unsigned char config_GetFunctionActionFromEvent( unsigned char function, Event_t
 		configPtr++;
 		listenerGroupID = *configPtr++;
 
-		foundAckGroup = ( listenerGroupID == event->groupId );
+		sendingGroupIsTask = ( listenerGroupID == event->groupId );
 
 		do {
-			deviceID = *configPtr++;
-			functionID = *configPtr++;
+			confDevice = *configPtr++;
+			confPort = *configPtr++;
 
-			if( foundOriginGroup ) {
-				if( deviceID == hw_DeviceID || deviceID == hw_DEVICE_ANY ) {
-					thisFunctionTargeted = ( function == functionID );
+			if( eventIsInCurrentGroup ) {
+
+				if(	( confDevice == hw_DeviceID || confDevice == hw_DEVICE_ANY ) &&
+					( port == confPort ) )
+				{
+					functionIsInCurrentTask = TRUE;
+					continue;
 				}
-				continue;
 			}
 
+			// Fading events: If the current port is in the same task group as the
+			// Fade Master (but not the fade master itself!) then we map some events
+			// to the corresponding actions.
 
+			if(	sendingGroupIsTask && portIsInCurrentCntrlGroup )
+			{
+				if(	event->ctrlEvent == e_LED_LEVEL_CHANGED ) { defaultAction = a_SET_LEVEL; }
+				if(	event->ctrlEvent == e_FADE_START ) { defaultAction = a_FADE_MASTER_ARBITRATION; }
+			}
 		}
 		while( *configPtr != DELIMITER );
 
-		// Check if this is an Ack event.
-
-		if( foundAckGroup && functionIsInThisCntrlGroup ) {
-
-		}
-
-		// OK, so what action does this event generate for this function?
+		// OK, so what action does this event generate for this port?
 
 		configPtr++;
 		do {
 			eventType = *configPtr++;
 			action = *configPtr++;
 
-			if( ! foundOriginGroup ) continue;
-			if( ! thisFunctionTargeted ) continue;
+			if( ! eventIsInCurrentGroup ) continue;
+			if( ! functionIsInCurrentTask ) continue;
 
-			if( eventType = event->ctrlEvent ) {
+			if( eventType == event->ctrlEvent ) {
 
-				// OK we found the action to perform for this event. Since multiple actions
-				// for the same event/function combination are not supported we can stop searching
+				// OK we have found the action to perform for this event. Since multiple actions
+				// for the same event/port combination are not supported we can stop searching
 				// and return immediately.
 
 				return action;
@@ -178,7 +218,7 @@ unsigned char config_GetFunctionActionFromEvent( unsigned char function, Event_t
 	}
 	while( *configPtr != END_OF_FILE );
 
-	return a_NO_ACTION;
+	return defaultAction;
 }
 
 
@@ -187,15 +227,7 @@ unsigned char config_GetFunctionActionFromEvent( unsigned char function, Event_t
 // The config_MyEvents dynamic list should contain all events that affect this device.
 
 void config_Initialize() {
-	const unsigned char* configPtr;
 	unsigned short configSequenceNumber;
-	unsigned char controllerGroupID;
-	unsigned char listenToGroupID;
-	unsigned char deviceID;
-	unsigned char functionID;
-	unsigned char event;
-	unsigned char action;
-	unsigned char lastAssignedFunction;
 
 	// First check if we don't we have a valid device Id.
 	// Device ID = 0xFF is not allowed. It indicates that the device was programmed

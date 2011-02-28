@@ -1,10 +1,10 @@
 #include <stdio.h>
 
 #include "hw.h"
+#include "events.h"
 #include "config.h"
 #include "schedule.h"
 #include "queue.h"
-#include "events.h"
 #include "led.h"
 #include "nmea.h"
 #include "switch.h"

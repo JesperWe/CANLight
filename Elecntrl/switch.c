@@ -20,18 +20,20 @@ unsigned char switch_timedFunction;
 
 //---------------------------------------------------------------------------
 
-void switch_Acknowledge( unsigned char function, unsigned char setting ) {
+void switch_Acknowledge( unsigned char port, unsigned char setting ) {
 	event_t response;
+	unsigned char groupId = config_GetGroupIdForPort( port );
 
 	// If we can't find what group we are in the event was a hw_DEVICE_ANY event.
 	// Don't acknowledge in this case.
-	if( functionInGroup[ function ] == 0) return;
+
+	if( groupId == config_GROUP_UNDEFINED ) return;
 
 	response.PGN = 0;
 	response.info = 0;
-	response.groupId = functionInGroup[ function ];
+	response.groupId = groupId;
 	response.ctrlDev = hw_DeviceID;
-	response.ctrlFunc = function;
+	response.ctrlPort = port;
 	response.ctrlEvent = (setting) ? e_SWITCH_ON : e_SWITCH_OFF;
 
 	nmea_Wakeup();
@@ -53,15 +55,15 @@ void switch_TimerTask() {
 
 //---------------------------------------------------------------------------
 
-void switch_ProcessEvent( event_t *event, unsigned char function, unsigned char action ) {
+void switch_ProcessEvent( event_t *event, unsigned char port, unsigned char action ) {
 	unsigned char setting;
 
 	// Do nothing if called on something that isn't a digital output.
 
-	if( function < hw_LED1 ) return;
-	if( function > hw_SWITCH4 ) return;
+	if( port < hw_LED1 ) return;
+	if( port > hw_SWITCH4 ) return;
 
-	setting = hw_ReadPort( function );
+	setting = hw_ReadPort( port );
 
 	switch( action ) {
 
@@ -71,7 +73,7 @@ void switch_ProcessEvent( event_t *event, unsigned char function, unsigned char 
 
 		case a_SWITCH_OFF: {
 			setting = 0;
-			if( function == switch_timedFunction ) {
+			if( port == switch_timedFunction ) {
 				switch_timer = 0;
 				switch_timedFunction = 0;
 			}
@@ -82,12 +84,12 @@ void switch_ProcessEvent( event_t *event, unsigned char function, unsigned char 
 			break; }
 
 		case a_ON_TIMER: {
-			hw_OutputPort( function );
+			hw_OutputPort( port );
 			setting = 1;
 
 			if( switch_timer == 0 ) {
 				schedule_AddTask( switch_TimerTask, schedule_SECOND );
-				switch_timedFunction = function;
+				switch_timedFunction = port;
 			}
 
 			if( switch_timer < 40 ) switch_timer += 10;
@@ -97,11 +99,11 @@ void switch_ProcessEvent( event_t *event, unsigned char function, unsigned char 
 		}
 	}
 
-	if( setting ) hw_OutputPort( function );
+	if( setting ) hw_OutputPort( port );
 
-	hw_WritePort( function, setting );
+	hw_WritePort( port, setting );
 
-	switch_Acknowledge( function, setting );
+	switch_Acknowledge( port, setting );
 
 	return;
 }

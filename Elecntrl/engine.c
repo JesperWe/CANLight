@@ -262,7 +262,7 @@ void engine_JoystickTask() {
 
 	// Check that this appliance is configured as a throttle sender.
 
-	if( functionInGroup[ hw_ANALOG ] == 0 ) return;
+	if( config_GetGroupIdForPort( hw_ANALOG ) == config_GROUP_UNDEFINED ) return;
 
 	if( engine_ReadThrottleLevel() ) {
 
@@ -273,10 +273,10 @@ void engine_JoystickTask() {
 		}
 
 		event.PGN = 0;
-		event.groupId = functionInGroup[ hw_ANALOG ];
+		event.groupId = config_GetGroupIdForPort( hw_ANALOG );
 		event.ctrlDev = hw_DeviceID;
-		event.ctrlFunc = hw_ANALOG;
-		event.ctrlEvent = e_LEVEL_CHANGED;
+		event.ctrlPort = hw_ANALOG;
+		event.ctrlEvent = e_LED_LEVEL_CHANGED;
 		event.data = engine_Throttle;
 		event.info = engine_Joystick_Level;
 		nmea_SendEvent( &event );
@@ -312,14 +312,14 @@ void engine_ThrottleMonitorUpdater() {
 
 	// First show exact joystick levels read.
 
-	display_NumberFormat( numberString, 4, events_LastLevelSetInfo );
+	display_NumberFormat( numberString, 4, engine_LastJoystickLevel );
 	display_SetPosition( 17,1 );
 	display_Write( numberString );
 
 	// Now show a graphical representation of the resulting actuator positions.
 
 	gear = 0;
-	throttle = events_LastLevelSetData;
+	throttle = engine_Throttle;
 	if( throttle > 0 ) gear = 1;
 	if( throttle < 0 ) {
 		gear = -1;
@@ -356,7 +356,7 @@ int engine_CalibrationParams() {
 
 //--------------------------------------------------------------------------------------------
 
-int engine_ProcessEvent( event_t *event, unsigned char function, unsigned char action ) {
+int engine_ProcessEvent( event_t *event, unsigned char port, unsigned char action ) {
 	event_t masterEvent;
 	char	throttle;
 
@@ -364,7 +364,7 @@ int engine_ProcessEvent( event_t *event, unsigned char function, unsigned char a
 
 	switch( event->ctrlEvent ) {
 
-		case e_LEVEL_CHANGED: {
+		case e_LED_LEVEL_CHANGED: {
 
 			throttle = event->data; // Make a signed value from event->data which is unsigned.
 
@@ -424,9 +424,9 @@ int engine_ProcessEvent( event_t *event, unsigned char function, unsigned char a
 			nmea_Wakeup();
 
 			masterEvent.ctrlEvent = e_THROTTLE_MASTER;
-			masterEvent.ctrlFunc = event->ctrlFunc;
+			masterEvent.ctrlPort = event->ctrlPort;
 			masterEvent.ctrlDev = hw_DeviceID;
-			masterEvent.groupId = functionInGroup[ function ];
+			masterEvent.groupId = config_GetGroupIdForPort( port );
 
 			nmea_SendEvent( &masterEvent );
 
@@ -439,12 +439,12 @@ int engine_ProcessEvent( event_t *event, unsigned char function, unsigned char a
 //--------------------------------------------------------------------------------------------
 
 void engine_SetMaster( event_t *event ) {
-	short function;
+	short port;
 
 	engine_CurMasterDevice = event->info;
 
 	if( engine_CurMasterDevice == hw_DeviceID ) {
-		hw_AcknowledgeSwitch( event->ctrlFunc, 1 );
+		hw_AcknowledgeSwitch( event->ctrlPort, 1 );
 	}
 
 	// Our device lost master status. Our device doesn't necessarily use the same button
@@ -452,9 +452,9 @@ void engine_SetMaster( event_t *event ) {
 	// our config to find which indicator to turn off.
 
 	else {
-		for( function=0; function<hw_NoFunctions; function++ ) {
-			if( functionListenGroup[ function ] == event->groupId ) {
-				hw_AcknowledgeSwitch( function, 0 );
+		for( port=0; port<hw_PortCount; port++ ) {
+			if( config_GetGroupIdForPort( port ) == event->groupId ) {
+				hw_AcknowledgeSwitch( port, 0 );
 			}
 		}
 	}

@@ -242,7 +242,7 @@ void display_BacklightTask() {
 		ambientEvent.data = 0;
 		ambientEvent.groupId = 0;
 		ambientEvent.ctrlDev = hw_DeviceID;
-		ambientEvent.ctrlFunc = hw_BACKLIGHT;
+		ambientEvent.ctrlPort = hw_BACKLIGHT;
 		ambientEvent.ctrlEvent = e_AMBIENT_LIGHT_LEVEL;
 		ambientEvent.info = hw_AmbientLevel;
 

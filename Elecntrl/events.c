@@ -25,8 +25,6 @@ queue_t* events_Queue;
 event_t *eventPtr;
 
 unsigned char loopbackEnabled = 1;
-short events_LastLevelSetInfo;
-unsigned char events_LastLevelSetData;
 
 //---------------------------------------------------------------------------------------------
 
@@ -52,7 +50,7 @@ void events_Push(
 	// Debug Dump...
 	//if( type != e_SLOW_HEARTBEAT ){
 	//	char line[30];
-	//	sprintf( line, "%04d:%02d(%01d) %02x %02d %03d", info, type, events_QueueFull, ctrlFunc, ctrlEvent, data );
+	//	sprintf( line, "%04d:%02d(%01d) %02x %02d %03d", info, type, events_QueueFull, ctrlPort, ctrlEvent, data );
 	//	display_Write( line );
 	//}
 
@@ -63,7 +61,7 @@ void events_Push(
 	newEvent.type = type;
 	newEvent.groupId = groupId;
 	newEvent.ctrlDev = ctrlDev;
-	newEvent.ctrlFunc = ctrlFunc;
+	newEvent.ctrlPort = ctrlFunc;
 	newEvent.ctrlEvent = ctrlEvent;
 	newEvent.PGN = nmeaPGN;
 	newEvent.data = data;
@@ -79,7 +77,7 @@ void events_Push(
 // and respond to incoming commands.
 
 void event_Task() {
-	unsigned char function;
+	unsigned char port;
 	unsigned char takeAction;
 	static event_t event;
 
@@ -97,125 +95,105 @@ void event_Task() {
 			// Some events are not part of the configuration but have system defined actions,
 			// so we first check for these.
 
+			takeAction = TRUE;
 			switch( event.ctrlEvent ) {
 
 				case e_AMBIENT_LIGHT_LEVEL: {
 					led_SetBacklight( &event );
-					break;
+					return;
 				}
 
-				// Intercept and store set level commands so we can show them in the
-				// calibration display, regardless of configuration.
+				// Capture e_THROTTLE_CHANGE events if we have I2C installed.
+				// This allows monitoring of system levels even if our current device
+				// is not involved in the event.
 
-				case e_LEVEL_CHANGED: {
-					events_LastLevelSetInfo = event.info;
-					events_LastLevelSetData = event.data;
-					break;
-				}
-
-				case e_FADE_MASTER: {
-					if( hw_IsPWM(function) ) led_ProcessEvent( &event, function, a_SET_FADE_MASTER );
-					break;
+				case e_THROTTLE_CHANGE: {
+					if( hw_I2C_Installed ) {
+						engine_Throttle = event.data;
+						engine_Gear = event.ctrlPort;
+						engine_LastJoystickLevel = event.info;
+					}
+					return;
 				}
 
 				case e_SET_BACKLIGHT_LEVEL: {
 					if( hw_Type != hw_SWITCH ) break;
-					if( hw_IsPWM(function) ) led_SetBacklight( &event );
-					break;
+					if( hw_IsPWM(port) ) led_SetBacklight( &event );
+					return;
+				}
+
+				case e_FADE_MASTER: {
+					led_FadeMaster = event.data;
+
+					if( led_FadeMaster != hw_DeviceID ) {
+
+						// We are not the master. Stop fade.
+						led_CurFadeStep = 0;
+					} else {
+
+						// We are master. Save controller group ID for set_level events.
+						led_LevelControlGroup = event.groupId;
+					}
+					return;
 				}
 			}
 
-			// Do I have a function listening to events from the controller group?
+			// For all our ports we now go through the config file to see if this event should
+			// cause some action to be taken.
 
-			for( function=0; function<hw_NoFunctions; function++ ) {
+			for( port=0; port<hw_PortCount; port++ ) {
 
-				takeAction = config_GetFunctionActionFromEvent( function, event );
+				takeAction = config_GetPortActionFromEvent( port, &event );
+				if( takeAction == a_NO_ACTION ) continue;
 
-				if( takeAction != a_NO_ACTION ) {
+				if( hw_IsPWM(port) ) led_ProcessEvent( &event, port, takeAction );
 
-					if( event.ctrlEvent == e_LEVEL_CHANGED ) {
+				if( hw_IsActuator(port) )
+					engine_ProcessEvent( &event, port, takeAction );
+				else
+					switch_ProcessEvent( &event, port, takeAction );
 
-						if( hw_IsPWM(function) ) {
-							led_ProcessEvent( &event, function, a_SET_LEVEL );
+				switch( takeAction ) {
 
-							// Stay awake long enough to catch the next level change if we are
-							// a slave in a dimming operation.
+					// Fade Starts: If we are originating the fade, led_FadeMaster is undefined until
+					// the first response from a listener is received. This first responder becomes
+					// the master for the rest of the fade.
 
-							hw_SleepTimer = schedule_SECOND;
-							break;
-						}
+					case a_FADE_MASTER_ARBITRATION: {
+						if( led_FadeMaster != led_FADE_MASTER_UNDEFINED ) break;
+						led_FadeMaster = event.ctrlDev;
 
-						// If not a PWM LED we must be an actuator.
-						// In case we have a display, capture engine events and save the values for monitoring.
+						event.groupId = config_CurrentGroup;
+						event.ctrlDev = hw_DeviceID;
+						event.ctrlEvent = e_FADE_MASTER;
+						event.ctrlPort = port;
+						event.data = led_FadeMaster;
+						event.info = 0;
 
-						if( hw_I2C_Installed ) {
-							engine_Throttle = event.data;
-							engine_Gear = event.ctrlFunc;
-							engine_LastJoystickLevel = event.info;
-						}
+						nmea_SendEvent( &event );
+						break;
 					}
 
-					if( hw_IsPWM(function) ) led_ProcessEvent( &event, function, takeAction );
-					if( hw_IsActuator(function) ) engine_ProcessEvent( &event, function, takeAction );
-					else switch_ProcessEvent( &event, function, takeAction );
-				}
-			}
+					case e_SWITCH_ON: {
+						hw_AcknowledgeSwitch( port, 1 );
+						break;
+					}
 
-			// hw_SleepTimer = 0;
+					case e_SWITCH_OFF: {
+						hw_AcknowledgeSwitch( port, 0 );
+						break;
+					}
 
-			// Now check for acknowledge events. Do I have a function that controls
-			// this listener group?
+					case e_SWITCH_FAIL: { // XXX !
+						break;
+					}
 
-			for( function=0; function<hw_NoFunctions; function++ ) {
-
-				if( functionListenGroup[function] == event.groupId ) {
-
-					switch( event.ctrlEvent ) {
-
-						// Fade Starts: If we are originating the fade, led_FadeMaster is 0xFF until
-						// the first response from a listener is received. This first responder becomes
-						// the master for the rest of the fade.
-
-						case e_FADE_START: {
-
-							if( led_FadeMaster != 0xFF ) break;
-
-							led_FadeMaster = event.ctrlDev;
-
-							event.groupId = functionInGroup[function];
-							event.ctrlDev = hw_DeviceID;
-							event.ctrlEvent = e_FADE_MASTER;
-							event.ctrlFunc = function;
-							event.data = led_FadeMaster;
-							event.info = 0;
-
-							nmea_SendEvent( &event );
-
-							break;
-						}
-
-						case e_SWITCH_ON: {
-							hw_AcknowledgeSwitch( function, 1 );
-							break;
-						}
-
-						case e_SWITCH_OFF: {
-							hw_AcknowledgeSwitch( function, 0 );
-							break;
-						}
-
-						case e_SWITCH_FAIL: { // XXX !
-							break;
-						}
-
-						case e_THROTTLE_MASTER: {
-							if( hw_Throttle_Installed ) engine_SetMaster( &event );
-							break;
-						}
+					case e_THROTTLE_MASTER: {
+						if( hw_Throttle_Installed ) engine_SetMaster( &event );
+						break;
 					}
 				}
 			}
-			break;
 		}
 	}
 }

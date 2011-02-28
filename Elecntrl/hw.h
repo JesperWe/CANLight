@@ -1,7 +1,7 @@
 /*
  * hw.h
  *
- *  Created on: 2009-jun-07
+ *  Created on: 2009-06-07
  *      Author: Jesper W
  */
 
@@ -13,8 +13,8 @@
 #include <string.h>
 
 #include "queue.h"
-#include "config.h"
 #include "events.h"
+#include "config.h"
 #include "engine.h"
 
 #ifndef HW_H_
@@ -42,7 +42,7 @@
 
 #define hw_FCY					7024531
 
-enum hw_Functions_e {
+enum hw_Ports_e {
 	/* 00 */ hw_UNKNOWN,
 	/* 01 */ hw_CAN_RATE,
 	/* 02 */ hw_CAN_EN,
@@ -64,7 +64,7 @@ enum hw_Functions_e {
 	/* 18 */ hw_DIGITAL_IN,
 	/* 19 */ hw_PWM1,
 	/* 20 */ hw_PWM2,
-	/* 21 */ hw_NoFunctions
+	/* 21 */ hw_PortCount
 };
 
 
@@ -135,13 +135,13 @@ extern unsigned char 		hw_LEDStatus;
 extern unsigned char 		hw_CanSleep;
 extern unsigned short		hw_SleepTimer;
 
-unsigned int hw_ReadPort(enum hw_Functions_e port);
+unsigned int hw_ReadPort(enum hw_Ports_e port);
 
-void hw_InputPort(enum hw_Functions_e port);
+void hw_InputPort(enum hw_Ports_e port);
 
-void hw_OutputPort(enum hw_Functions_e port);
+void hw_OutputPort(enum hw_Ports_e port);
 
-void hw_WritePort(enum hw_Functions_e, int value);
+void hw_WritePort(enum hw_Ports_e, int value);
 
 void hw_Initialize( void );
 

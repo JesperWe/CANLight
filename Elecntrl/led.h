@@ -6,6 +6,7 @@
 #define led_WHITE				1
 #define led_NO_ACK				0
 #define led_SEND_ACK			1
+#define led_FADE_MASTER_UNDEFINED 0xFF
 
 extern float led_PresetLevel[];
 extern float led_FadeTargetLevel[];
@@ -13,7 +14,7 @@ extern float led_FadeFromLevel[];
 extern float led_CurrentLevel[];
 extern float led_LastLevel, led_CurFadeStep;
 
-extern unsigned char led_CurrentFunc;
+extern unsigned char led_CurrentPort;
 extern unsigned short led_NoChannels;
 extern unsigned short led_CurrentColor;
 extern unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];

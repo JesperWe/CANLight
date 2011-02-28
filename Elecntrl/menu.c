@@ -371,11 +371,11 @@ void menu_Task() {
 		char line1[5];
 		static short lastLevel;
 
-		if( lastLevel != events_LastLevelSetInfo ) {
+		if( lastLevel != engine_LastJoystickLevel ) {
 			display_SetPosition(10,4);
-			display_NumberFormat( line1, 4, events_LastLevelSetInfo );
+			display_NumberFormat( line1, 4, engine_LastJoystickLevel );
 			display_Write( line1 );
-			lastLevel = events_LastLevelSetInfo;
+			lastLevel = engine_LastJoystickLevel;
 		}
 	}
 

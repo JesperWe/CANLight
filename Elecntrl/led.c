@@ -28,7 +28,7 @@ unsigned short led_FadeSteps[led_MAX_NO_CHANNELS];			// Total steps in the fade.
 unsigned short led_NoChannels;
 unsigned short led_CurrentColor;
 unsigned char led_DimmerTicks;
-unsigned char led_CurrentFunc;
+unsigned char led_CurrentPort;
 unsigned char led_FadeMaster;
 unsigned char led_LevelControlGroup;
 
@@ -120,7 +120,7 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 
 	modLevel = modLevel * led_PWM_PERIOD;
 
-	if( !hw_PWMInverted ) {
+	if( ! hw_PWMInverted ) {
 		dutycycle = led_PWM_PERIOD - (short)modLevel;
 		if( dutycycle == led_PWM_PERIOD ) dutycycle++; // Remove last clock cycle for fully off.
 	}
@@ -150,19 +150,19 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 
 		// If we can't find what group we are in the event was a hw_DEVICE_ANY event.
 		// Don't acknowledge in this case.
-		if( functionInGroup[ led_CurrentFunc ] == 0) return;
+		if( config_CurrentGroup == 0) return;
 
 		response.PGN = 0;
 		response.info = 0;
-		response.groupId = functionInGroup[ led_CurrentFunc ];
+		response.groupId = config_CurrentGroup;
 		response.ctrlDev = hw_DeviceID;
-		response.ctrlFunc = led_CurrentFunc;
+		response.ctrlPort = led_CurrentPort;
 		response.ctrlEvent = (level == 0.0) ? e_SWITCH_OFF : e_SWITCH_ON;
 
 		// No "off" response if other channel is still on.
 		if( response.ctrlEvent == e_SWITCH_OFF
 			&& led_CurrentLevel[1-color] > 0.0
-			&& led_CurrentFunc == hw_LED_LIGHT
+			&& led_CurrentPort == hw_LED_LIGHT
 		) return;
 
 		nmea_Wakeup();
@@ -319,38 +319,16 @@ void led_SetBacklight( event_t *event ) {
 
 
 //---------------------------------------------------------------------------------------------
-// Interrupt fade in progress.
 
-void led_ProcessEvent( event_t *event, unsigned char function, unsigned char action ) {
+
+void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action ) {
 	event_t fadeEvent;
 
+	led_CurrentPort = port;
 
-	led_CurrentFunc = function;
-
-	if( function != hw_LED_LIGHT ) led_CurrentColor = (function==hw_LED_RED) ? led_RED : led_WHITE;
-
-	// DEVICE_ANY events are backlight settings, handled separately.
-
-	if( event->groupId == hw_DEVICE_ANY ) {
-		led_SetBacklight( event );
-		return;
-	}
+	if( port != hw_LED_LIGHT ) led_CurrentColor = (port==hw_LED_RED) ? led_RED : led_WHITE;
 
 	switch( action ) {
-		case a_SET_FADE_MASTER: {
-
-			// We are not the master. Stop fade.
-			if( event->data != hw_DeviceID ) {
-				led_CurFadeStep = 0;
-			}
-
-			// We are master. Save controller group ID for set_level events.
-			else {
-				led_LevelControlGroup = event->groupId;
-			}
-
-			break;
-		}
 		case a_SET_LEVEL: {
 			float value;
 			led_DimmerTicks = 0;
@@ -361,9 +339,9 @@ void led_ProcessEvent( event_t *event, unsigned char function, unsigned char act
 		}
 		case a_START_FADE: {
 
-			fadeEvent.groupId = functionInGroup[ function ];
+			fadeEvent.groupId = config_CurrentGroup;
 			fadeEvent.ctrlDev = hw_DeviceID;
-			fadeEvent.ctrlFunc = led_CurrentFunc;
+			fadeEvent.ctrlPort = led_CurrentPort;
 			fadeEvent.ctrlEvent = e_FADE_START;
 			fadeEvent.info = (unsigned short)(led_CurrentLevel[led_CurrentColor] * 1000);
 			fadeEvent.data = led_CurrentColor;
@@ -384,7 +362,7 @@ void led_ProcessEvent( event_t *event, unsigned char function, unsigned char act
 			break;
 		}
 		case a_CHANGE_COLOR: {
-			if( hw_Type == hw_LEDLAMP && function == hw_LED_LIGHT ) {
+			if( hw_Type == hw_LEDLAMP && port == hw_LED_LIGHT ) {
 				led_CurrentColor = (led_CurrentColor==led_RED) ? led_WHITE : led_RED;
 			}
 			break;
@@ -492,7 +470,7 @@ void led_StepDimmer( float *step, unsigned char color, unsigned char function, u
 	levelEvent.groupId = led_LevelControlGroup;
 	levelEvent.ctrlDev = hw_DeviceID;
 	levelEvent.ctrlEvent = event;
-	levelEvent.ctrlFunc = function;
+	levelEvent.ctrlPort = function;
 	levelEvent.data = color;
 	levelEvent.info = (short) (value * 1000);
 
@@ -534,7 +512,7 @@ void led_FadeTask() {
 		led_DimmerTicks++;
 		led_DimmerTicks = led_DimmerTicks % 5; // 5 steps/second if fade is 25 steps.
 
-		if( led_DimmerTicks == 0 ) led_StepDimmer( &led_CurFadeStep, led_CurrentColor, hw_LED_LIGHT, e_LEVEL_CHANGED );
+		if( led_DimmerTicks == 0 ) led_StepDimmer( &led_CurFadeStep, led_CurrentColor, hw_LED_LIGHT, e_LED_LEVEL_CHANGED );
 	}
 }
 

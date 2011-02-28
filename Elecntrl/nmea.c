@@ -225,7 +225,7 @@ unsigned char nmea_SendEvent( event_t *event )
 	nmea_OutgoingPDU.data[2] = (event->info&0xFF00) >> 8;
 	nmea_OutgoingPDU.data[3] = event->info&0x00FF;
 	nmea_OutgoingPDU.data[4] = event->ctrlDev;
-	nmea_OutgoingPDU.data[5] = event->ctrlFunc;
+	nmea_OutgoingPDU.data[5] = event->ctrlPort;
 	nmea_OutgoingPDU.data[6] = event->ctrlEvent;
 	status = nmea_SendMessage();
 
@@ -233,7 +233,7 @@ unsigned char nmea_SendEvent( event_t *event )
 		events_Push(
 			e_NMEA_MESSAGE, nmea_LIGHTING_COMMAND,
 			event->groupId, hw_DeviceID,
-			event->ctrlFunc,
+			event->ctrlPort,
 			event->ctrlEvent,
 			event->data,
 			event->info

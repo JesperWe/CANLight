@@ -4,18 +4,10 @@
 #define 	END_OF_FILE		0xFF
 #define 	DELIMITER		0xFE	// End of Group Entry
 #define 	hw_DEVICE_ANY	0xFF
-typedef struct cfg_Event_s {
-	unsigned char ctrlGroup;
-	unsigned char ctrlEvent;
-	unsigned char ctrlAction;
-	struct cfg_Event_s *next;
-} config_Event_t;
+#define 	config_GROUP_UNDEFINED	0xFF
 
-
-extern config_Event_t *config_MyEvents;
 extern unsigned char config_Invalid;
-extern unsigned char functionInGroup[];
-extern unsigned char functionListenGroup[];
+extern unsigned char config_CurrentGroup;
 
 void config_AddControlEvent( 
 	const unsigned char ctrlGroup,
@@ -26,5 +18,7 @@ void config_AddControlEvent(
 void config_Initialize();
 void config_UninitializedTask();
 void config_Update( unsigned short configBytes );
+unsigned char config_GetGroupIdForPort( unsigned char port );
+unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event );
 
 #endif /* CONFIG_H_ */
