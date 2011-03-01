@@ -336,19 +336,6 @@ char menu_ProcessKey( unsigned char keypress ) {
 				break;
 			}
 
-		// Not part of the State Machine, just switch backlight on or off.
-		case DISPLAY_KEY_ONOFF: {
-				if( display_IsOn ) {
-					display_Off();
-					display_IsOn = 0;
-				}
-				else {
-					display_On();
-					display_IsOn = 1;
-				}
-				return 1;
-			}
-
 		default: return 0; // Means we don't know what to do with this key.
 	}
 
@@ -364,6 +351,8 @@ char menu_ProcessKey( unsigned char keypress ) {
 
 void menu_Task() {
 	char key;
+
+	if( ! display_IsOn ) return;
 
 	// First see if there are any special display tricks to be done.
 

@@ -11,14 +11,16 @@
 #include "led.h"
 #include "menu.h"
 
-unsigned char display_IsOn = 1;
+unsigned char display_IsOn;
 unsigned char display_CurrentAdjust = 0;
 short display_Brightness = 0xFF;
 short display_Contrast = 0x80;
-queue_t* display_Queue;
+queue_t* display_Queue = 0;
 
 void display_Initialize() {
 	unsigned int config2, config1;
+	unsigned char status;
+
 	config2 = 0x50;
 
 	config1 = (I2C1_ON & I2C1_IDLE_CON & I2C1_CLK_HLD &
@@ -30,7 +32,17 @@ void display_Initialize() {
 	           I2C1_START_DIS);
 	OpenI2C1(config1,config2);
 
-	display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_RS232_AUTOXMIT, 0 );
+	status = display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_RS232_AUTOXMIT, 0 );
+
+	if( status & 0x80 ) {
+		// Addressing failed. Display is not connected or maybe powered off.
+		CloseI2C1();
+		display_IsOn = FALSE;
+		return;
+	}
+
+	display_IsOn = TRUE;
+
 	display_Sendbytes( 3, DISPLAY_CMD, DISPLAY_DEBOUNCE, 12 );
 	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_WRAP_ON );
 	display_Sendbytes( 2, DISPLAY_CMD, DISPLAY_AUTOSCROLL_ON );
@@ -42,7 +54,7 @@ void display_Initialize() {
 
 	display_SetContrast( display_Contrast );
 
-	display_Queue = queue_Create( 5, 1 );
+	if( display_Queue == 0 ) display_Queue = queue_Create( 5, 1 );
 
 /* Code below only needed when initializing a factory reset display.
    Maybe we should set up a RS232 connection to do this is the future?
@@ -61,6 +73,8 @@ void display_Initialize() {
 	IdleI2C1();
 	StopI2C1();
 	IdleI2C1(); */
+	
+	return;
 }
 
 
@@ -195,25 +209,33 @@ void display_Task() {
 	char key;
 	static unsigned char failCount = 0;
 
-	key = display_ReadKeypad();
+	if( display_IsOn ) {
+		key = display_ReadKeypad();
 
-	if( key != 0x00 ) {
+		if( key != 0x00 ) {
 
-		// If MSB is set there was a negative status which means the display
-		// did not ACK. It is probably busy. So we try again next time slot.
+			// If MSB is set there was a negative status which means the display
+			// did not ACK. It is probably busy. So we try again next time slot.
 
-		if( (key & 0x80) != 0 ) {
-			failCount++;
-			key = 0;
-			if( failCount > 10 ) {
-				failCount = 0;
-				display_Initialize();
-				menu_Initialize();
+			if( (key & 0x80) != 0 ) {
+				failCount++;
+				key = 0;
+				if( failCount > 10 ) {
+					display_IsOn = FALSE;
+				}
+			}
+			else {
+				queue_Send( display_Queue, &key );
 			}
 		}
-		else {
-			queue_Send( display_Queue, &key );
-		}
+		return;
+	}
+
+	failCount++;
+	if( failCount > 10 ) {
+		failCount = 0;
+		display_Initialize();
+		if( display_IsOn ) menu_Initialize();
 	}
 }
 

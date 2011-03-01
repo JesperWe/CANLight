@@ -85,7 +85,7 @@ int main (void)
 
 	if( hw_I2C_Installed ) {
 		schedule_AddTask( display_Task, schedule_SECOND/3 );
-		schedule_AddTask( menu_Task, schedule_SECOND/100 );
+		schedule_AddTask( menu_Task, schedule_SECOND/30 );
 	}
 
 	if( hw_Photodetector_Installed ) {
