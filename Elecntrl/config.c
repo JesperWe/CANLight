@@ -73,9 +73,12 @@ unsigned char config_GetGroupIdForPort( unsigned char port ) {
 	unsigned char controllerGroupID;
 	unsigned char confDevice;
 	unsigned char confPort;
+	unsigned char groupId;
+
 
 	const unsigned char* configPtr = config_Data;
 	configPtr += 4;	// Skip magic and sequence numbers.
+	groupId = 0;
 
 	do {
 		controllerGroupID = *configPtr++;
@@ -85,28 +88,37 @@ unsigned char config_GetGroupIdForPort( unsigned char port ) {
 			confPort = *configPtr++;
 
 			if( confDevice == hw_DeviceID && confPort == port ) {
-				return controllerGroupID;
+				groupId = controllerGroupID;
 			}
 		}
 		while( *configPtr != DELIMITER );
 
-		// Roll passed listener groups.
+		// Listener groups.
 
-		configPtr++;
-		do { configPtr++; }
+		configPtr++; // Delimiter
+		configPtr++; // Listener Group Id
+		do {
+			confDevice = *configPtr++;
+			confPort = *configPtr++;
+
+			// Special flagging of events broadcast to all devices.
+
+			if( ( confDevice == hw_DEVICE_ANY ) &&
+				( groupId != 0 ) ) groupId = config_GROUP_UNDEFINED;
+		}
 		while( *configPtr != DELIMITER );
 
 		// Roll passed event/actions.
 
 		configPtr++;
-		do { configPtr++; }
-		while( *configPtr != DELIMITER );
-
+		while( *configPtr != DELIMITER ) { configPtr++; }
 		while( *configPtr == DELIMITER ) { configPtr++; }
+
+		if( groupId != 0 ) break;
 	}
 	while( *configPtr != END_OF_FILE );
 
-	return config_GROUP_UNDEFINED;
+	return groupId;
 }
 
 

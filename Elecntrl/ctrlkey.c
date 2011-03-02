@@ -140,11 +140,13 @@ void ctrlkey_task() {
 
 		if( ctrlkey_Presstime[ keyNo ] ) {
 			if( (schedule_time - ctrlkey_Presstime[ keyNo ]) > ctrlkey_HOLDING_THRESHOLD ) {
+
 				ctrlkey_Holding[ keyNo ] = TRUE;
+				groupId = config_GetGroupIdForPort( port );
 
 				led_FadeMaster = 0xFF;
 
-				if( groupId != hw_DEVICE_ANY ) {
+				if( groupId != config_GROUP_UNDEFINED ) {
 					events_Push( e_IO_EVENT, 0,
 						groupId, hw_DeviceID,
 						port, e_KEY_HOLDING, keyNo,
