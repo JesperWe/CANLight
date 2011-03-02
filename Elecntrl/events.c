@@ -95,7 +95,6 @@ void event_Task() {
 			// Some events are not part of the configuration but have system defined actions,
 			// so we first check for these.
 
-			takeAction = TRUE;
 			switch( event.ctrlEvent ) {
 
 				case e_AMBIENT_LIGHT_LEVEL: {
@@ -116,6 +115,12 @@ void event_Task() {
 					return;
 				}
 
+				case e_LED_LEVEL_CHANGED: {
+					if( led_FadeMaster != 0 ) led_ProcessEvent( &event, 0, a_SET_LEVEL );
+					hw_SleepTimer = schedule_SECOND;  // Wait for next level event in the fade.
+					return;
+				}
+
 				case e_SET_BACKLIGHT_LEVEL: {
 					if( hw_Type != hw_SWITCH ) break;
 					if( hw_IsPWM(port) ) led_SetBacklight( &event );
@@ -123,12 +128,16 @@ void event_Task() {
 				}
 
 				case e_FADE_MASTER: {
+
+					if( led_FadeMaster != led_FADE_MASTER_EXPECTED ) return;
+
 					led_FadeMaster = event.data;
 
 					if( led_FadeMaster != hw_DeviceID ) {
 
-						// We are not the master. Stop fade.
+						// We are not the master. Stop fade. Also make sure we stay awake!
 						led_CurFadeStep = 0;
+						hw_SleepTimer = schedule_SECOND;
 					} else {
 
 						// We are master. Save controller group ID for set_level events.
@@ -160,7 +169,12 @@ void event_Task() {
 					// the master for the rest of the fade.
 
 					case a_FADE_MASTER_ARBITRATION: {
-						if( led_FadeMaster != led_FADE_MASTER_UNDEFINED ) break;
+
+						// led_FADE_MASTER_UNDEFINED means this arbiration was initiated by this device,
+						// so we are the ones to decide. led_FadeMaster == 0 means we are another controller
+						// in this group and should shut up.
+
+						if( led_FadeMaster != led_FADE_MASTER_EXPECTED ) break;
 						led_FadeMaster = event.ctrlDev;
 
 						event.groupId = config_CurrentGroup;

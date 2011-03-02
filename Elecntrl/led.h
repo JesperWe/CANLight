@@ -6,7 +6,7 @@
 #define led_WHITE				1
 #define led_NO_ACK				0
 #define led_SEND_ACK			1
-#define led_FADE_MASTER_UNDEFINED 0xFF
+#define led_FADE_MASTER_EXPECTED 0xFF
 
 extern float led_PresetLevel[];
 extern float led_FadeTargetLevel[];

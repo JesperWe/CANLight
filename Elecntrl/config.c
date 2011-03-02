@@ -56,6 +56,7 @@ Listener Group (GID)
 unsigned char cfg_MyDeviceId = 0;
 unsigned char config_Invalid = 0;
 unsigned char config_CurrentGroup;
+unsigned char config_CurrentTaskGroup;
 
 //-------------------------------------------------------------------------------
 
@@ -129,7 +130,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 	unsigned char controllerGroupID;
 	unsigned char confDevice;
 	unsigned char confPort;
-	unsigned char listenerGroupID;
+	unsigned char taskGroupID;
 	unsigned char portIsInCurrentTask;
 	unsigned char eventType;
 	unsigned char action;
@@ -172,12 +173,12 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 		}
 		while( *configPtr != DELIMITER );
 
-		// Listener Group Devices. See if we are a listener?
+		// Task Group Devices. See if we are a listener?
 
 		configPtr++;
-		listenerGroupID = *configPtr++;
+		taskGroupID = *configPtr++;
 
-		sendingGroupIsTask = ( listenerGroupID == event->groupId );
+		sendingGroupIsTask = ( taskGroupID == event->groupId );
 		portIsInCurrentTask = FALSE;
 
 		do {
@@ -190,6 +191,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 					( port == confPort ) )
 				{
 					portIsInCurrentTask = TRUE;
+					config_CurrentTaskGroup = taskGroupID;
 					continue;
 				}
 			}
@@ -200,7 +202,6 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 
 			if(	sendingGroupIsTask && portIsInCurrentCntrlGroup )
 			{
-				if(	event->ctrlEvent == e_LED_LEVEL_CHANGED ) { defaultAction = a_SET_LEVEL; }
 				if(	event->ctrlEvent == e_FADE_START ) { defaultAction = a_FADE_MASTER_ARBITRATION; }
 			}
 		}

@@ -16,7 +16,7 @@
 #define DISABLE 		0
 #define CLEAR			0
 
-#define led_PWM_PERIOD	hw_FCY / 64 / 100 					// For 100Hz PWM with 1:64 prescaler.
+#define led_PWM_PERIOD	hw_FCY / 64 / 200 					// For 200Hz PWM with 1:64 prescaler.
 
 #define led_FADE_FREQ	25
 
@@ -96,6 +96,7 @@ void led_Initialize( void ) {
 	}
 
 	led_CurrentColor = led_RED;
+	led_FadeMaster = 0;
 }
 
 
@@ -340,7 +341,7 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 		}
 		case a_START_FADE: {
 
-			fadeEvent.groupId = config_CurrentGroup;
+			fadeEvent.groupId = config_CurrentTaskGroup;
 			fadeEvent.ctrlDev = hw_DeviceID;
 			fadeEvent.ctrlPort = led_CurrentPort;
 			fadeEvent.ctrlEvent = e_FADE_START;
@@ -351,6 +352,9 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 
 			if( led_CurrentLevel[led_CurrentColor] > 0.5 ) led_CurFadeStep = -0.05;
 			else led_CurFadeStep = 0.05;
+
+			led_FadeMaster = led_FADE_MASTER_EXPECTED;
+
 			break;
 		}
 		case a_STOP_FADE: {

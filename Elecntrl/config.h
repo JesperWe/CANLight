@@ -8,6 +8,7 @@
 
 extern unsigned char config_Invalid;
 extern unsigned char config_CurrentGroup;
+extern unsigned char config_CurrentTaskGroup;
 
 void config_AddControlEvent( 
 	const unsigned char ctrlGroup,
