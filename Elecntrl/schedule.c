@@ -97,7 +97,7 @@ void schedule_Run() {
 		}
 
 		if( idle ) {
-			_TRISB15 = 0;
+			_TRISB15 = 0;  // Set CAN Bus transceiver to standby listener.
 			hw_Sleep();
 		}
 	}

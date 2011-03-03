@@ -211,9 +211,20 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 
 			if(	sendingGroupIsTask && portIsInCurrentCntrlGroup )
 			{
-				if(	event->ctrlEvent == e_FADE_START ) { defaultAction = a_FADE_MASTER_ARBITRATION; }
-				if(	event->ctrlEvent == e_SWITCH_ON )  { defaultAction = a_SWITCH_ON; }
-				if(	event->ctrlEvent == e_SWITCH_OFF ) { defaultAction = a_SWITCH_OFF; }
+				if(	event->ctrlEvent == e_FADE_START ) {
+					defaultAction = a_FADE_MASTER_ARBITRATION;
+					config_CurrentGroup = controllerGroupID;
+				}
+
+				if(	event->ctrlEvent == e_SWITCH_ON ) {
+					defaultAction = a_SWITCH_ON;
+					config_CurrentGroup = controllerGroupID;
+				}
+
+				if(	event->ctrlEvent == e_SWITCH_OFF ) {
+					defaultAction = a_SWITCH_OFF;
+					config_CurrentGroup = controllerGroupID;
+				}
 			}
 		}
 		while( *configPtr != DELIMITER );

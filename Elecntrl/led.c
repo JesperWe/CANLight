@@ -152,7 +152,7 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 
 		// If we can't find what group we are in the event was a hw_DEVICE_ANY event.
 		// Don't acknowledge in this case.
-		if( config_CurrentGroup == 0) return;
+		if( config_CurrentTaskGroup == 0) return;
 
 		response.PGN = 0;
 		response.info = 0;
@@ -359,6 +359,7 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 		}
 		case a_STOP_FADE: {
 			led_CurFadeStep = 0.0;
+			led_FadeMaster = 0;
 			break;
 		}
 		case a_TOGGLE_STATE: {
@@ -466,6 +467,8 @@ void led_TaskComplete() {
 void led_StepDimmer( float *step, unsigned char color, unsigned char function, unsigned char event ) {
 	float value;
 	event_t	levelEvent;
+
+	if( led_FadeMaster != hw_DeviceID ) return;
 
 	value = led_CurrentLevel[color];
 	value += *step;

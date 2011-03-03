@@ -116,8 +116,10 @@ void event_Task() {
 				}
 
 				case e_LED_LEVEL_CHANGED: {
-					if( led_FadeMaster != 0 ) led_ProcessEvent( &event, 0, a_SET_LEVEL );
-					hw_SleepTimer = schedule_SECOND;  // Wait for next level event in the fade.
+					if( led_FadeMaster != 0 ) {
+						led_ProcessEvent( &event, 0, a_SET_LEVEL );
+						hw_SleepTimer += schedule_SECOND;  // Wait for next level event in the fade.
+					}
 					return;
 				}
 
@@ -137,7 +139,7 @@ void event_Task() {
 
 						// We are not the master. Stop fade. Also make sure we stay awake!
 						led_CurFadeStep = 0;
-						hw_SleepTimer = schedule_SECOND;
+						hw_SleepTimer += schedule_SECOND;
 					} else {
 
 						// We are master. Save controller group ID for set_level events.
@@ -172,7 +174,7 @@ void event_Task() {
 
 					case a_FADE_MASTER_ARBITRATION: {
 
-						// led_FADE_MASTER_UNDEFINED means this arbiration was initiated by this device,
+						// led_FADE_MASTER_EXPECTED means this arbitration was initiated by this device,
 						// so we are the ones to decide. led_FadeMaster == 0 means we are another controller
 						// in this group and should shut up.
 
