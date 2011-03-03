@@ -207,6 +207,17 @@ float led_GetPWMLevel( unsigned char color ) {
 
 void led_Toggle( unsigned char color, float fadeTime ) {
 
+	// Reverse fade direction if we haven't finished the last fade yet.
+
+	if( led_FadeInProgress[color] ) {
+		if( led_FadeTargetLevel[color] == 0.0 )
+			led_FadeToLevel( color, led_PresetLevel[color], fadeTime );
+		else
+			led_FadeToLevel( color, 0.0, fadeTime );
+
+		return;
+	}
+
 	if( led_CurrentLevel[color] == 0.0 ) {
 		led_FadeToLevel( color, led_PresetLevel[color], fadeTime );
 	}

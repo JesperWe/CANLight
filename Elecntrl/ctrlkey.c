@@ -77,8 +77,8 @@ unsigned short ctrlkey_ReadKeys( void ) {
 // The Control Key Task monitors time elapsed between key clicks and determines
 // if the click is a single/double/tripple click, and sends bus events accordingly.
 
-#define ctrlkey_DOUBLECLICK_THRESHOLD schedule_SECOND * 0.4
-#define ctrlkey_HOLDING_THRESHOLD schedule_SECOND * 0.5
+#define ctrlkey_DOUBLECLICK_THRESHOLD schedule_SECOND/4
+#define ctrlkey_HOLDING_THRESHOLD schedule_SECOND/2
 
 void ctrlkey_task() {
 	unsigned char keyNo;
