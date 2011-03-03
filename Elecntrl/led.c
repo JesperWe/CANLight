@@ -156,7 +156,7 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 
 		response.PGN = 0;
 		response.info = 0;
-		response.groupId = config_CurrentGroup;
+		response.groupId = config_CurrentTaskGroup;
 		response.ctrlDev = hw_DeviceID;
 		response.ctrlPort = led_CurrentPort;
 		response.ctrlEvent = (level == 0.0) ? e_SWITCH_OFF : e_SWITCH_ON;

@@ -378,6 +378,18 @@ unsigned char hw_IsActuator( unsigned short hw_Port ) {
 }
 
 
+//-------------------------------------------------------------------------------
+
+unsigned char hw_IsSwitch( unsigned short hw_Port ) {
+
+	if( hw_Port >= hw_SWITCH1 &&
+		hw_Port <= hw_SWITCH4
+		) return 1;
+
+	return 0;
+}
+
+
 //---------------------------------------------------------------------------------------------
 
 void hw_AcknowledgeSwitch( unsigned char function, int setting ) {

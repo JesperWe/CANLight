@@ -139,6 +139,11 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 	unsigned char sendingGroupIsTask;
 	unsigned char portIsInCurrentCntrlGroup;
 
+	unsigned char egid = event->groupId;
+	unsigned char edata = event->data;
+	unsigned char edev = event->ctrlDev;
+	unsigned char eev = event->ctrlEvent;
+	unsigned char eport = event->ctrlPort;
 
 	const unsigned char* configPtr = config_Data;
 	configPtr += 4;	// Skip magic and sequence numbers.
@@ -178,7 +183,11 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 		configPtr++;
 		taskGroupID = *configPtr++;
 
-		sendingGroupIsTask = ( taskGroupID == event->groupId );
+		if ( taskGroupID == event->groupId )
+			sendingGroupIsTask = TRUE;
+		else
+			sendingGroupIsTask = FALSE;
+
 		portIsInCurrentTask = FALSE;
 
 		do {
@@ -203,6 +212,8 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 			if(	sendingGroupIsTask && portIsInCurrentCntrlGroup )
 			{
 				if(	event->ctrlEvent == e_FADE_START ) { defaultAction = a_FADE_MASTER_ARBITRATION; }
+				if(	event->ctrlEvent == e_SWITCH_ON )  { defaultAction = a_SWITCH_ON; }
+				if(	event->ctrlEvent == e_SWITCH_OFF ) { defaultAction = a_SWITCH_OFF; }
 			}
 		}
 		while( *configPtr != DELIMITER );
@@ -231,6 +242,8 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 		while( *configPtr == DELIMITER ) { configPtr++; }
 	}
 	while( *configPtr != END_OF_FILE );
+
+	eventType = eev + edata + egid + edev + eport;
 
 	return defaultAction;
 }

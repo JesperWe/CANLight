@@ -153,6 +153,8 @@ unsigned char hw_IsPWM( unsigned short hw_Port );
 
 unsigned char hw_IsActuator( unsigned short hw_Port );
 
+unsigned char hw_IsSwitch( unsigned short hw_Port );
+
 void hw_Sleep( void );
 
 void hw_AcknowledgeSwitch( unsigned char function, int setting );

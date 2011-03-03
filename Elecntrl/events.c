@@ -155,11 +155,13 @@ void event_Task() {
 				takeAction = config_GetPortActionFromEvent( port, &event );
 				if( takeAction == a_NO_ACTION ) continue;
 
-				if( hw_IsPWM(port) ) led_ProcessEvent( &event, port, takeAction );
+				if( hw_IsPWM(port) )
+					led_ProcessEvent( &event, port, takeAction );
 
 				if( hw_IsActuator(port) )
 					engine_ProcessEvent( &event, port, takeAction );
-				else
+
+				if( hw_IsSwitch(port) )
 					switch_ProcessEvent( &event, port, takeAction );
 
 				switch( takeAction ) {
@@ -188,21 +190,17 @@ void event_Task() {
 						break;
 					}
 
-					case e_SWITCH_ON: {
+					case a_SWITCH_ON: {
 						hw_AcknowledgeSwitch( port, 1 );
 						break;
 					}
 
-					case e_SWITCH_OFF: {
+					case a_SWITCH_OFF: {
 						hw_AcknowledgeSwitch( port, 0 );
 						break;
 					}
 
-					case e_SWITCH_FAIL: { // XXX !
-						break;
-					}
-
-					case e_THROTTLE_MASTER: {
+					case a_SET_THROTTLE_MASTER: {
 						if( hw_Throttle_Installed ) engine_SetMaster( &event );
 						break;
 					}
