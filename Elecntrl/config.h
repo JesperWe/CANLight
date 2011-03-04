@@ -4,7 +4,7 @@
 #define 	END_OF_FILE		0xFF
 #define 	DELIMITER		0xFE	// End of Group Entry
 #define 	hw_DEVICE_ANY	0xFF
-#define 	config_GROUP_UNDEFINED	0xFF
+#define 	config_GROUP_BROADCAST	0xFF
 
 extern unsigned char config_Invalid;
 extern unsigned char config_CurrentGroup;

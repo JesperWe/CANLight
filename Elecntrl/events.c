@@ -125,7 +125,7 @@ void event_Task() {
 
 				case e_SET_BACKLIGHT_LEVEL: {
 					if( hw_Type != hw_SWITCH ) break;
-					if( hw_IsPWM(port) ) led_SetBacklight( &event );
+					led_SetBacklight( &event );
 					return;
 				}
 
@@ -157,14 +157,20 @@ void event_Task() {
 				takeAction = config_GetPortActionFromEvent( port, &event );
 				if( takeAction == a_NO_ACTION ) continue;
 
-				if( hw_IsPWM(port) )
+				if( hw_IsPWM(port) ) {
 					led_ProcessEvent( &event, port, takeAction );
+					continue;
+				}
 
-				if( hw_IsActuator(port) )
+				if( hw_IsActuator(port) ) {
 					engine_ProcessEvent( &event, port, takeAction );
+					continue;
+				}
 
-				if( hw_IsSwitch(port) )
+				if( hw_IsSwitch(port) ) {
 					switch_ProcessEvent( &event, port, takeAction );
+					continue;
+				}
 
 				switch( takeAction ) {
 

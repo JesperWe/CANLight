@@ -122,8 +122,9 @@ void ctrlkey_task() {
 				}
 
 				groupId = config_GetGroupIdForPort( port );
+				if( groupId == config_GROUP_BROADCAST ) groupId = config_CurrentGroup;
 
-				events_Push( e_IO_EVENT, 0,
+ 				events_Push( e_IO_EVENT, 0,
 						groupId, hw_DeviceID,
 						port, event, keyNo,
 						(short)ctrlkey_Presstime[ keyNo ] );
@@ -143,10 +144,11 @@ void ctrlkey_task() {
 
 				ctrlkey_Holding[ keyNo ] = TRUE;
 				groupId = config_GetGroupIdForPort( port );
+				// XXX WHY??--> if( groupId == config_GROUP_BROADCAST ) groupId = config_CurrentGroup;
 
 				led_FadeMaster = 0xFF;
 
-				if( groupId != config_GROUP_UNDEFINED ) {
+				if( groupId != config_GROUP_BROADCAST ) {
 					events_Push( e_IO_EVENT, 0,
 						groupId, hw_DeviceID,
 						port, e_KEY_HOLDING, keyNo,
@@ -194,6 +196,8 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 
 	_CNIE = 0;
 	_CNIF = 0;
+
+	hw_SleepTimer = schedule_SECOND;
 
 	currentState = ctrlkey_ReadKeys();
 

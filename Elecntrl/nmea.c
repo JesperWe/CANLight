@@ -428,7 +428,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 
 	if( C1INTFbits.WAKIF ) {
 		C1INTFbits.WAKIF = 0;
-		hw_SleepTimer = schedule_SECOND/10; // Stay awake for a while to look for traffic.
+		hw_SleepTimer = schedule_SECOND/2; // Stay awake for a while to look for traffic.
 	}
 
 	// Message in TX buffer has been transmitted. Any more messages?

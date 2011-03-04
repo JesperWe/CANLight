@@ -26,7 +26,7 @@ unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];	// True if we are fading
 unsigned short led_FadeStep[led_MAX_NO_CHANNELS];			// Current step in the fade.
 unsigned short led_FadeSteps[led_MAX_NO_CHANNELS];			// Total steps in the fade.
 unsigned short led_NoChannels;
-unsigned short led_CurrentColor;
+unsigned char led_CurrentColor;
 unsigned char led_DimmerTicks;
 unsigned char led_CurrentPort;
 unsigned char led_FadeMaster;
@@ -86,7 +86,7 @@ void led_Initialize( void ) {
 	PR2 = led_PWM_PERIOD;
 	T2CONbits.TON = 1;  		// Start Timer.
 
-	hw_CanSleep = 1;
+	hw_CanSleep = TRUE;
 	led_SetLevel( 0, 0.0, led_NO_ACK );
 	led_SetLevel( 1, 0.0, led_NO_ACK );
 
@@ -108,8 +108,6 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 	float modLevel, lastLevel;
 	short dutycycle;
 	event_t response;
-
-	if( level != 0 ) hw_CanSleep = 0;
 
 	lastLevel = led_CurrentLevel[color];
 	led_CurrentLevel[color] = modLevel = level;
@@ -135,10 +133,10 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 
 	// Check if any channel is under PWM. In that case we can't goto deep sleep.
 
-	hw_CanSleep = 1;
+	hw_CanSleep = TRUE;
 	for( i=0; i<led_NoChannels; i++ ) {
 		if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
-			hw_CanSleep = 0;
+			hw_CanSleep = FALSE;
 	}
 
 	if( ! sendAck ) return;
@@ -336,32 +334,46 @@ void led_SetBacklight( event_t *event ) {
 
 void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action ) {
 	event_t fadeEvent;
+	unsigned char eventColor;
 
-	led_CurrentPort = port;
+	eventColor = led_CurrentColor;
 
-	if( port != hw_LED_LIGHT ) led_CurrentColor = (port==hw_LED_RED) ? led_RED : led_WHITE;
+	if( port == hw_LED_RED ) eventColor =  led_RED;
+	if( port == hw_LED_WHITE ) eventColor =  led_WHITE;
+
+	if( port == hw_BACKLIGHT ) {
+		if( hw_Type != hw_SWITCH ) return;
+		eventColor = led_RED;
+	}
 
 	switch( action ) {
+
+		case a_CHANGE_COLOR: {
+			if( hw_Type == hw_LEDLAMP && port == hw_LED_LIGHT ) {
+				led_CurrentColor = (led_CurrentColor==led_RED) ? led_WHITE : led_RED;
+			}
+			break;
+		}
 		case a_SET_LEVEL: {
 			float value;
 			led_DimmerTicks = 0;
 			value = event->info / 1000.0;
-			led_CurrentColor = event->data;
-			led_SetLevel( led_CurrentColor, value, led_NO_ACK );
+			eventColor = event->data;
+			led_SetLevel( eventColor, value, led_NO_ACK );
 			break;
 		}
 		case a_START_FADE: {
 
 			fadeEvent.groupId = config_CurrentTaskGroup;
 			fadeEvent.ctrlDev = hw_DeviceID;
-			fadeEvent.ctrlPort = led_CurrentPort;
+			fadeEvent.ctrlPort = port;
 			fadeEvent.ctrlEvent = e_FADE_START;
-			fadeEvent.info = (unsigned short)(led_CurrentLevel[led_CurrentColor] * 1000);
-			fadeEvent.data = led_CurrentColor;
+			fadeEvent.info = (unsigned short)(led_CurrentLevel[eventColor] * 1000);
+			fadeEvent.data = eventColor;
 
 			nmea_SendEvent( &fadeEvent );
 
-			if( led_CurrentLevel[led_CurrentColor] > 0.5 ) led_CurFadeStep = -0.05;
+			if( led_CurrentLevel[eventColor] > 0.5 ) led_CurFadeStep = -0.05;
 			else led_CurFadeStep = 0.05;
 
 			led_FadeMaster = led_FADE_MASTER_EXPECTED;
@@ -374,27 +386,28 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 			break;
 		}
 		case a_TOGGLE_STATE: {
-			led_LastLevel = led_CurrentLevel[led_CurrentColor];
-			led_Toggle( led_CurrentColor, 1.5 );
-			break;
-		}
-		case a_CHANGE_COLOR: {
-			if( hw_Type == hw_LEDLAMP && port == hw_LED_LIGHT ) {
-				led_CurrentColor = (led_CurrentColor==led_RED) ? led_WHITE : led_RED;
+			led_LastLevel = led_CurrentLevel[eventColor];
+			led_Toggle( eventColor, 1.5 );
+			if( port == hw_BACKLIGHT ) {
+				if( led_FadeTargetLevel[led_RED] > 0.0 && led_FadeTargetLevel[led_RED] < 1.0 )
+					led_IndicatorPWM( TRUE );
+				else
+					led_IndicatorPWM( FALSE );
 			}
 			break;
 		}
 		case a_GOTO_MINIMUM: {
-			if( led_CurrentLevel[led_CurrentColor] < 0.5 ) {
-				led_SetLevel( led_CurrentColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
+			if( led_CurrentLevel[eventColor] < 0.5 ) {
+				led_SetLevel( eventColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
 			}
 
 			else {
-				led_SetLevel( led_CurrentColor, 1.0, led_NO_ACK );
+				led_SetLevel( eventColor, 1.0, led_NO_ACK );
 			}
 			break;
 		}
 	}
+
 }
 
 
@@ -479,7 +492,7 @@ void led_StepDimmer( float *step, unsigned char color, unsigned char function, u
 	float value;
 	event_t	levelEvent;
 
-	if( led_FadeMaster != hw_DeviceID ) return;
+	if( (led_FadeMaster != hw_DeviceID) && (event!=e_SET_BACKLIGHT_LEVEL) ) return;
 
 	value = led_CurrentLevel[color];
 	value += *step;
@@ -504,8 +517,6 @@ void led_FadeTask() {
 	unsigned short curStep;
 
 	float fadePos, multiplier, value;
-
-	hw_CanSleep = 1;
 
 	for( i=0; i<led_NoChannels; i++ ) {
 
@@ -536,13 +547,28 @@ void led_FadeTask() {
 }
 
 
+//--------------------------------------------------------------------------------------------
+
+int led_CalibrationParams() {
+
+	if( menu_ActiveHandler == 0 ) {
+		menu_ActiveHandler = led_CalibrationParams;
+		hw_ReadConfigFlash();
+	}
+
+	return menu_ParameterSetter( led_ParamNames, led_NO_CALIBRATION_PARAMS, &(hw_Config->led_ConfigStart) );
+}
+
+
 //---------------------------------------------------------------------------------------------
 // If we are running with dimmed back-light, we also need to dim the indicator LEDs.
+// They are not connected to PWM capable outputs, so as a workaround we use a timer
+// interrupt to control turning the led on or off.
 
 void led_IndicatorPWM( unsigned char run ) {
 	if( run ) {
-		OC2R = 0;
-		OC2RS = 3 * OC1RS;
+		OC2R = OC1R;
+		OC2RS = OC1RS;
 		_OC2IE = 1;
 		_T2IE = 1;
 		_OC2IF = 0;
@@ -581,18 +607,6 @@ done:
 	_T2IE= 1;
 }
 
-
-//--------------------------------------------------------------------------------------------
-
-int led_CalibrationParams() {
-
-	if( menu_ActiveHandler == 0 ) {
-		menu_ActiveHandler = led_CalibrationParams;
-		hw_ReadConfigFlash();
-	}
-
-	return menu_ParameterSetter( led_ParamNames, led_NO_CALIBRATION_PARAMS, &(hw_Config->led_ConfigStart) );
-}
 
 //---------------------------------------------------------------------------------------------
 // Output Compare 2 Interrupt. Used when we are following the OC1 PWM for Status LED dimming.

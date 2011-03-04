@@ -16,7 +16,7 @@ extern float led_LastLevel, led_CurFadeStep;
 
 extern unsigned char led_CurrentPort;
 extern unsigned short led_NoChannels;
-extern unsigned short led_CurrentColor;
+extern unsigned char led_CurrentColor;
 extern unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];
 extern unsigned char led_DimmerTicks;
 extern unsigned char led_FadeMaster;

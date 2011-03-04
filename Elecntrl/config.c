@@ -104,8 +104,10 @@ unsigned char config_GetGroupIdForPort( unsigned char port ) {
 
 			// Special flagging of events broadcast to all devices.
 
-			if( ( confDevice == hw_DEVICE_ANY ) &&
-				( groupId != 0 ) ) groupId = config_GROUP_UNDEFINED;
+			if( ( confDevice == hw_DEVICE_ANY ) && ( groupId != 0 ) ) {
+				groupId = config_GROUP_BROADCAST;
+				config_CurrentGroup = controllerGroupID;
+			}
 		}
 		while( *configPtr != DELIMITER );
 

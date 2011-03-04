@@ -262,7 +262,7 @@ void engine_JoystickTask() {
 
 	// Check that this appliance is configured as a throttle sender.
 
-	if( config_GetGroupIdForPort( hw_ANALOG ) == config_GROUP_UNDEFINED ) return;
+	if( config_GetGroupIdForPort( hw_ANALOG ) == config_GROUP_BROADCAST ) return;
 
 	if( engine_ReadThrottleLevel() ) {
 

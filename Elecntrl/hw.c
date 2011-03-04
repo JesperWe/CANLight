@@ -8,6 +8,7 @@
 #include "hw.h"
 #include "config.h"
 #include "nmea.h"
+#include "schedule.h"
 
 const short __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2)))
 						hw_ConfigData[_FLASH_PAGE*2];
@@ -72,16 +73,16 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_PortCount] =
 	{ &PORTB, &TRISB, 1 },	// CAN_EN
 	{ &PORTB, &TRISB, 5 },	// LED_RED
 	{ &PORTB, &TRISB, 0 },	// LED_WHITE
-	{ &PORTC, &TRISC, 6 },	// LED1
+	{ &PORTA, &TRISA, 9 },	// LED1
 	{ &PORTC, &TRISC, 4 },	// LED2
-	{ &PORTA, &TRISA, 9 },	// LED3
+	{ &PORTC, &TRISC, 6 },	// LED3
 	{ &PORTA, &TRISA, 8 },	// SWITCH1
 	{ &PORTA, &TRISA, 2 },	// SWITCH2
 	{ &PORTC, &TRISC, 1 },	// SWITCH3
 	{ &PORTB, &TRISB, 3 },	// SWITCH4
-	{ &PORTC, &TRISC, 7 },	// KEY1
+	{ &PORTC, &TRISC, 3 },	// KEY1
 	{ &PORTC, &TRISC, 5 },	// KEY2
-	{ &PORTC, &TRISC, 3 }	// KEY3
+	{ &PORTC, &TRISC, 7 }	// KEY3
 }};
 
 const unsigned short hw_NoKeys[hw_NoVariants] = { 0, 3 };
@@ -326,6 +327,10 @@ void hw_Initialize( void ) {
 	PMD3bits.CRCMD = 1;
 	PMD3bits.PMPMD = 1;
 
+	// Finally, don't fall asleep the first thing we do...
+
+	hw_SleepTimer = schedule_SECOND;
+
 	return;
 }
 
@@ -359,7 +364,8 @@ unsigned char hw_IsPWM( unsigned short hw_Port ) {
 
 	if( hw_Port == hw_LED_RED ||
 		hw_Port == hw_LED_WHITE ||
-		hw_Port == hw_LED_LIGHT
+		hw_Port == hw_LED_LIGHT ||
+		hw_Port == hw_BACKLIGHT
 	) return 1;
 
 	return 0;
@@ -392,28 +398,28 @@ unsigned char hw_IsSwitch( unsigned short hw_Port ) {
 
 //---------------------------------------------------------------------------------------------
 
-void hw_AcknowledgeSwitch( unsigned char function, int setting ) {
+void hw_AcknowledgeSwitch( unsigned char port, int setting ) {
 
 
-	switch( function ) {
-	case hw_KEY1: {
-		hw_WritePort( hw_LED1, setting );
-		hw_LEDStatus = hw_LEDStatus & 6;
-		hw_LEDStatus = hw_LEDStatus | setting;
-		break;
-	}
-	case hw_KEY2: {
-		hw_WritePort( hw_LED2, setting );
-		hw_LEDStatus = hw_LEDStatus & 5;
-		hw_LEDStatus = hw_LEDStatus | setting<<1;
-		break;
-	}
-	case hw_KEY3: {
-		hw_WritePort( hw_LED3, setting );
-		hw_LEDStatus = hw_LEDStatus & 3;
-		hw_LEDStatus = hw_LEDStatus | setting<<2;
-		break;
-	}
+	switch( port ) {
+		case hw_KEY1: {
+			hw_WritePort( hw_LED1, setting );
+			hw_LEDStatus = hw_LEDStatus & 6;
+			hw_LEDStatus = hw_LEDStatus | setting;
+			break;
+		}
+		case hw_KEY2: {
+			hw_WritePort( hw_LED2, setting );
+			hw_LEDStatus = hw_LEDStatus & 5;
+			hw_LEDStatus = hw_LEDStatus | setting<<1;
+			break;
+		}
+		case hw_KEY3: {
+			hw_WritePort( hw_LED3, setting );
+			hw_LEDStatus = hw_LEDStatus & 3;
+			hw_LEDStatus = hw_LEDStatus | setting<<2;
+			break;
+		}
 	}
 }
 
@@ -428,7 +434,7 @@ void hw_Sleep( void ) {
 	nmea_ControllerMode( hw_ECAN_MODE_DISABLE );
 
 	if( hw_CanSleep ) {
-		asm volatile ("PWRSAV #1"); // Sleep mode selection needs work before we can deep sleep.
+		asm volatile ("PWRSAV #0"); // Sleep mode selection needs work before we can deep sleep.
 	}
 	else { // Idle with PWM clocks still running.
 		asm volatile ("PWRSAV #1");

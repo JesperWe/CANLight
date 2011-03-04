@@ -27,7 +27,7 @@ void switch_Acknowledge( unsigned char port, unsigned char setting ) {
 	// If we can't find what group we are in the event was a hw_DEVICE_ANY event.
 	// Don't acknowledge in this case.
 
-	if( groupId == config_GROUP_UNDEFINED ) return;
+	if( groupId == config_GROUP_BROADCAST ) return;
 
 	response.PGN = 0;
 	response.info = 0;
