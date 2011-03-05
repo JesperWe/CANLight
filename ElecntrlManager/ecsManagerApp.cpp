@@ -31,6 +31,7 @@ ecsManagerApp::ecsManagerApp() {
     eventSourceIcons[ ecsManager::hw_SWITCH2 ] = QImage(":/graphics/outlet.svg");
     eventSourceIcons[ ecsManager::hw_SWITCH3 ] = QImage(":/graphics/outlet.svg");
     eventSourceIcons[ ecsManager::hw_SWITCH4 ] = QImage(":/graphics/outlet.svg");
+    eventSourceIcons[ ecsManager::hw_BACKLIGHT ] = QImage(":/graphics/icon-orange.svg");
 
     eventIcons[ ecsManager::e_KEY_CLICKED ] = QPixmap(":/graphics/click-single.svg");
     eventIcons[ ecsManager::e_KEY_DOUBLECLICKED ] = QPixmap(":/graphics/click-double.svg");

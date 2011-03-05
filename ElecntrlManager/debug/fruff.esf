@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<systemdescription version="58">
+<systemdescription version="63">
     <appliance id="-1" description="*"/>
     <appliance id="1" description="Steering Stbd Switch 1"/>
     <appliance id="2" description="Engine Control Box"/>
@@ -17,9 +17,13 @@
         <appliance-function id="2" function="10"/>
     </controlgroup>
     <controlgroup id="12" description="Running Lights" type="2"/>
-    <controlgroup id="13" description="Deckhouse Lights" type="2">
-        <appliance-function id="64" function="15"/>
-        <appliance-function id="65" function="15"/>
+    <controlgroup id="13" description="Deckhouse Red Lights" type="2">
+        <appliance-function id="64" function="3"/>
+        <appliance-function id="65" function="3"/>
+    </controlgroup>
+    <controlgroup id="16" description="Deckhouse White Lights" type="2">
+        <appliance-function id="64" function="4"/>
+        <appliance-function id="65" function="4"/>
     </controlgroup>
     <controlgroup id="6" description="Throttle" type="1">
         <appliance-function id="1" function="17"/>
@@ -57,19 +61,34 @@
             <targetgroup id="11"/>
         </controlevent>
     </controlgroup>
-    <controlgroup id="14" description="Deckhouse Light Ctrl" type="1">
-        <appliance-function id="4" function="12"/>
+    <controlgroup id="14" description="Deckhouse Red Light Ctrl" type="1">
+        <appliance-function id="4" function="13"/>
         <controlevent type="1" action="5">
-            <targetgroup id="13"/>
-        </controlevent>
-        <controlevent type="4" action="6">
-            <targetgroup id="13"/>
+            <targetgroup id="13" parented="1"/>
         </controlevent>
         <controlevent type="2" action="2">
-            <targetgroup id="13" parented="1"/>
+            <targetgroup id="13"/>
         </controlevent>
         <controlevent type="3" action="3">
             <targetgroup id="13"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="13"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="15" description="Deckhouse White Light Ctrl" type="1">
+        <appliance-function id="4" function="14"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="16"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="16"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="16" parented="1"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="16"/>
         </controlevent>
     </controlgroup>
 </systemdescription>

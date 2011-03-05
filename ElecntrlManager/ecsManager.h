@@ -85,7 +85,7 @@ public:
 		/* 18 */ hw_DIGITAL_IN,
 		/* 19 */ hw_PWM1,
 		/* 20 */ hw_PWM2,
-		/* 21 */ hw_NoFunctions
+                /* 21 */ hw_NoFunctions
 	};
 
 	enum statuses_e  {

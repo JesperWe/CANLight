@@ -502,6 +502,7 @@ void MainWindow::onKeypress( QKeyEvent *event ) {
     case Qt::Key_W: { func = ecsManager::hw_LED_WHITE; break; }
     case Qt::Key_L: { func = ecsManager::hw_LED_LIGHT; break; }
     case Qt::Key_O: { func = ecsManager::hw_PWM1; break; }
+    case Qt::Key_B: { func = ecsManager::hw_BACKLIGHT; break; }
     default:  { return; } // Ignore unknow keypress.
     }
 

@@ -206,10 +206,11 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 			case 16: eventName = "e_BLACKOUT"; break;
 			case 17: eventName = "e_SLOW_HEARTBEAT"; break;
 			case 18: eventName = "e_THROTTLE_MASTER"; break;
-                        case 19: eventName = "e_LEVEL_CHANGED"; break;
+                        case 19: eventName = "e_LED_LEVEL_CHANGED"; break;
 			case 20: eventName = "e_CONFIG_FILE_UPDATE"; break;
 			case 21: eventName = "e_SET_BACKLIGHT_LEVEL"; break;
-			default: eventName = "<unknown>";
+                        case 22: eventName = "e_THROTTLE_CHANGE"; break;
+                        default: eventName = "<unknown>";
 			}
 
 			line += buf.sprintf( "Dev %02d: %ls/%ls  Group %03d, Data %d, Info %d",

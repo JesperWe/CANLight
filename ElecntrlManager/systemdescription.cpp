@@ -177,6 +177,7 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 		if( cGroup->events[0]->eventAction->targetGroups.count() == 0 ) continue;
 
 		configFile.append( (uint8_t)( cGroup->id )); // Start new group.
+                qDebug() << "Starting Group " << cGroup->id;
 
 		int linkNumber = 0;
 		foreach( QGraphicsItem* link, cGroup->graphic->childItems() ) {
@@ -186,30 +187,35 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 			configFile.append( (uint8_t)( linkedApp->id ));
 			configFile.append( (uint8_t)( func ));
 			linkNumber++;
+                        qDebug() << "    Device " << linkedApp->id << " port " << func;
 		}
 		configFile.append( END_GROUP_APPLIANCES );
 
 		// Now find our listening group.
 		// XXX Support multiple targets?
 
-		ecsControlGroup* listenGroup = cGroup->events[0]->eventAction->targetGroups[0]->srcGroup;
+                ecsControlGroup* taskGroup = cGroup->events[0]->eventAction->targetGroups[0]->srcGroup;
 
-		configFile.append( (uint8_t)( listenGroup->id )); // Start new group.
+                configFile.append( (uint8_t)( taskGroup->id )); // Start new group.
+                qDebug() << "  Task Group " << taskGroup->id;
 
 		linkNumber = 0;
-		foreach( QGraphicsItem* link, listenGroup->graphic->childItems() ) {
+                foreach( QGraphicsItem* link, taskGroup->graphic->childItems() ) {
 			if( link->type() != QGraphicsSimpleTextItem::Type ) continue;
 			ecsControlGroup* linkedApp = (ecsControlGroup*)(link->data(0).value<void*>());
-			int func = listenGroup->functions[ linkNumber ];
+                        int func = taskGroup->functions[ linkNumber ];
 			configFile.append( (uint8_t)( linkedApp->id ));
 			configFile.append( (uint8_t)( func ));
 			linkNumber++;
-		}
+                        qDebug() << "    Device " << linkedApp->id << " port " << func;
+                }
 		configFile.append( END_GROUP_APPLIANCES );
 
 		foreach( ecsEvent* event, cGroup->events ) {
 			configFile.append( (uint8_t)( event->eventType ) );
 			configFile.append( (uint8_t)( event->eventAction->actionType ) );
+                        qDebug() << "    Event " << event->eventType << " -> " << event->eventAction->actionType;
+
 		}
 		configFile.append( END_GROUP_EVENTS );
 
@@ -311,10 +317,15 @@ bool SysDescrHandler::startElement( const QString&, const QString&, const QStrin
 	else if(name == "targetgroup") {
 		attrVal = attrs.value("id");
 		if( attrVal != "" ) {
-			qDebug() << "Targetgroup " << attrVal;
-			currentEvent->eventAction->targetGroups.append( cGroups->findItem( attrVal.toInt() )->graphic );
-			if( attrs.value("parented") != "" )
-				currentEvent->eventAction->targetGroups.last()->setParentItem(currentEvent->eventAction);
+
+                    ecsControlGroup* targetGroup = cGroups->findItem( attrVal.toInt() );
+
+                    if( targetGroup->itemType == ecsControlGroup::Activity ) {
+                        qDebug() << "Targetgroup " << attrVal;
+                        currentEvent->eventAction->targetGroups.append( targetGroup->graphic );
+                        if( attrs.value("parented") != "" )
+                            currentEvent->eventAction->targetGroups.last()->setParentItem(currentEvent->eventAction);
+                    }
 		}
 
 	}
