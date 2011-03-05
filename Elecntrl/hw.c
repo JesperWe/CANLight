@@ -441,7 +441,7 @@ void hw_Sleep( void ) {
 
 	if( hw_CPUStopPossible ) { 
 		// Deep sleep, clocks stopped.
-		asm volatile ("PWRSAV #1");
+		asm volatile ("PWRSAV #0");
 	}
 	else { 
 		// Idle with PWM clocks still running.
