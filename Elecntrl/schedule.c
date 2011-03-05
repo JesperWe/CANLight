@@ -97,7 +97,6 @@ void schedule_Run() {
 		}
 
 		if( idle ) {
-			_TRISB15 = 0;  // Set CAN Bus transceiver to standby listener.
 			hw_Sleep();
 		}
 	}
@@ -152,7 +151,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void) {
 	}
 
 	schedule_time++;
-	if( hw_SleepTimer > 0 ) hw_SleepTimer--;
+	if( hw_StayAwakeTimer > 0 ) hw_StayAwakeTimer--;
 
     _T1IF = 0;
     _T1IE = 1;

@@ -26,4 +26,6 @@ char queue_Send( queue_t* toQueue, void* object );
 
 char queue_Receive( queue_t* fromQueue, void* object );
 
+unsigned char queue_Empty( queue_t* queue );
+
 #endif /* QUEUE_H_ */

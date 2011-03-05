@@ -248,10 +248,13 @@ unsigned char nmea_SendEvent( event_t *event )
 // Since they do not occur often we need to make sure the receiver
 // has time to wake from sleep by sending a dummy event first.
 
-unsigned char nmea_SendKeyEvent( event_t *event ) {
-	hw_SleepTimer = schedule_SECOND/10;
+unsigned char nmea_SendIOEvent( event_t *event ) {
+	unsigned char status;
 	nmea_Wakeup();
-	return nmea_SendEvent( event );
+	__delay32(1500000);
+
+	status = nmea_SendEvent( event );
+	return status;
 }
 
 //---------------------------------------------------------------------------------------------
@@ -283,9 +286,16 @@ unsigned char nmea_SendMessage()
 
 	memcpy( (&msg[3]), nmea_OutgoingPDU.data, nmea_OutgoingPDU.bytes );
 
+	// Turn of Transmit Buffer interrupts while we are messing with the transmit queue.
+
+	C1INTEbits.TBIE = 0;
+
 	if( nmea_TX_REQUEST_BIT ) {
 
-		if( nmea_TxQueueFull ) return nmea_TRANSMITTER_BUSY;
+		if( nmea_TxQueueFull ) {
+			C1INTEbits.TBIE = 1;
+			return nmea_TRANSMITTER_BUSY;
+		}
 
 		memcpy( &(nmea_TxQueue[nmea_TxQueueTail]), &msg, nmea_MSG_BUFFER_BYTES );
 
@@ -294,15 +304,17 @@ unsigned char nmea_SendMessage()
 
 		if( nmea_TxQueueTail == nmea_TxQueueHead ) nmea_TxQueueFull = 1;
 
+		C1INTEbits.TBIE = 1;
 		return nmea_SUCCESS;
 	}
+
+	C1INTEbits.TBIE = 1;
 
 	// Put completed message in transmit DMA buffer and send it.
 
 	memcpy( &(nmea_MsgBuf[0]), &msg, nmea_MSG_BUFFER_BYTES );
 
 	nmea_TX_REQUEST_BIT = 1;
-	hw_SleepTimer = schedule_SECOND/10; // Don't fall asleep in the middle of a transmission.
 
 	return nmea_SUCCESS;
 }
@@ -428,7 +440,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 
 	if( C1INTFbits.WAKIF ) {
 		C1INTFbits.WAKIF = 0;
-		hw_SleepTimer = schedule_SECOND/2; // Stay awake for a while to look for traffic.
+		hw_StayAwakeTimer = schedule_SECOND/2; // Stay awake for a while to look for traffic.
 	}
 
 	// Message in TX buffer has been transmitted. Any more messages?

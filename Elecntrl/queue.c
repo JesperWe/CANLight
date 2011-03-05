@@ -14,6 +14,10 @@
 #include <string.h>
 
 #include "hw.h"
+#include "queue.h"
+
+
+//---------------------------------------------------------------------------------------------
 
 queue_t* queue_Create( short maxEntries, short objectSize ) {
 	queue_t *newQueue = malloc( sizeof( queue_t ));
@@ -31,6 +35,9 @@ queue_t* queue_Create( short maxEntries, short objectSize ) {
 
 	return newQueue;
 }
+
+
+//---------------------------------------------------------------------------------------------
 
 char queue_Send( queue_t* toQueue, void* object ) {
 	char curSize;
@@ -64,11 +71,13 @@ char queue_Send( queue_t* toQueue, void* object ) {
 	return TRUE;
 }
 
+
+//---------------------------------------------------------------------------------------------
+
 char queue_Receive( queue_t* fromQueue, void* object ) {
 	void** objectPtr;
 
-	// Empty?
-	if( fromQueue->first == fromQueue->last && fromQueue->status != 0xFF ) return FALSE;
+	if( queue_Empty( fromQueue ) ) return FALSE;
 
 	objectPtr = fromQueue->objects + ( fromQueue->objectSize * fromQueue->first);
 
@@ -79,4 +88,12 @@ char queue_Receive( queue_t* fromQueue, void* object ) {
 	fromQueue->status = 0; // If we were full, we are not anymore.
 
 	return TRUE;
+}
+
+
+//---------------------------------------------------------------------------------------------
+
+unsigned char queue_Empty( queue_t* queue ) {
+	if( queue->first == queue->last && queue->status != 0xFF ) return TRUE;
+	return FALSE;
 }

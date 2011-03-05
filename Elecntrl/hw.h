@@ -132,8 +132,8 @@ extern unsigned char 		hw_AutoBacklightMode;
 extern const unsigned short hw_NoKeys[hw_NoVariants];
 extern unsigned char 		hw_AmbientLevel;
 extern unsigned char 		hw_LEDStatus;
-extern unsigned char 		hw_CanSleep;
-extern unsigned short		hw_SleepTimer;
+extern unsigned char 		hw_CPUStopPossible;
+extern unsigned short		hw_StayAwakeTimer;
 
 unsigned int hw_ReadPort(enum hw_Ports_e port);
 

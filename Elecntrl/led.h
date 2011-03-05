@@ -7,6 +7,7 @@
 #define led_NO_ACK				0
 #define led_SEND_ACK			1
 #define led_FADE_MASTER_EXPECTED 0xFF
+#define led_INDICATOR_BRIGTNESS_MULTIPLIER 2
 
 extern float led_PresetLevel[];
 extern float led_FadeTargetLevel[];
@@ -21,6 +22,7 @@ extern unsigned short led_FadeInProgress[led_MAX_NO_CHANNELS];
 extern unsigned char led_DimmerTicks;
 extern unsigned char led_FadeMaster;
 extern unsigned char led_LevelControlGroup;
+extern unsigned char led_DimmingBacklight;
 
 extern const char* led_ParamNames[];
 

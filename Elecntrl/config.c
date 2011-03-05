@@ -384,4 +384,5 @@ void config_Update( unsigned short configBytes ) {
 	schedule_Parameter = 4;
 	schedule_AddTask( led_TaskComplete, schedule_SECOND/10 );
 
+	hw_StayAwakeTimer = schedule_SECOND * 5; // So we don't sleep before blinking is done!
 }

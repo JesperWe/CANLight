@@ -9,6 +9,7 @@
 #include "config.h"
 #include "nmea.h"
 #include "schedule.h"
+#include "queue.h"
 
 const short __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2)))
 						hw_ConfigData[_FLASH_PAGE*2];
@@ -41,8 +42,8 @@ unsigned char		hw_DeviceID;
 
 unsigned char		hw_AmbientLevel;
 
-unsigned char 		hw_CanSleep;	// If all PWM outputs are fully on or off we can sleep.
-unsigned short		hw_SleepTimer;	// Count ticks before we can go to sleep.
+unsigned char 		hw_CPUStopPossible;	// If all PWM outputs are fully on or off we can sleep.
+unsigned short		hw_StayAwakeTimer;	// Count ticks before we can go to sleep.
 
 
 //-------------------------------------------------------------------------------
@@ -327,9 +328,9 @@ void hw_Initialize( void ) {
 	PMD3bits.CRCMD = 1;
 	PMD3bits.PMPMD = 1;
 
-	// Finally, don't fall asleep the first thing we do...
+	// Finally, don't fall asleep the first thing we do. Need a few seconds for boot sequence.
 
-	hw_SleepTimer = schedule_SECOND;
+	hw_StayAwakeTimer = schedule_SECOND * 5;
 
 	return;
 }
@@ -427,20 +428,25 @@ void hw_AcknowledgeSwitch( unsigned char port, int setting ) {
 
 void hw_Sleep( void ) {
 
-	if( hw_SleepTimer > 0 ) return;
+	// Check for things that need us to stay awake:
 
-	_RB15 = 1;
+	if( hw_StayAwakeTimer > 0 ) return;
+	if( ! queue_Empty( events_Queue ) ) return;
+	if( nmea_TX_REQUEST_BIT ) return;
+
+	// OK, We can sleep now.
+
 	hw_WritePort( hw_CAN_RATE, 1 );
 	nmea_ControllerMode( hw_ECAN_MODE_DISABLE );
 
-	if( hw_CanSleep ) {
-		asm volatile ("PWRSAV #0"); // Sleep mode selection needs work before we can deep sleep.
-	}
-	else { // Idle with PWM clocks still running.
+	if( hw_CPUStopPossible ) { 
+		// Deep sleep, clocks stopped.
 		asm volatile ("PWRSAV #1");
 	}
-
-	_RB15 = 0;
+	else { 
+		// Idle with PWM clocks still running.
+		asm volatile ("PWRSAV #1");
+	}
 
 	nmea_ControllerMode( hw_ECAN_MODE_NORMAL );
 	hw_WritePort( hw_CAN_RATE, 0 );

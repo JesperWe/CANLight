@@ -96,6 +96,9 @@ void ctrlkey_task() {
 
 		if( ctrlkey_Holding[ keyNo ] ) {
 
+			// Don't fall asleep while holding.
+			hw_StayAwakeTimer += schedule_SECOND;
+
 			if( hw_ReadPort( port ) == 0 ) continue;
 	
 			groupId = config_GetGroupIdForPort( port );
@@ -197,7 +200,7 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 	_CNIE = 0;
 	_CNIF = 0;
 
-	hw_SleepTimer = schedule_SECOND;
+	hw_StayAwakeTimer = schedule_SECOND*2;
 
 	currentState = ctrlkey_ReadKeys();
 

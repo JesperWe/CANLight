@@ -31,6 +31,7 @@ unsigned char led_DimmerTicks;
 unsigned char led_CurrentPort;
 unsigned char led_FadeMaster;
 unsigned char led_LevelControlGroup;
+unsigned char led_DimmingBacklight;
 
 float led_PresetLevel[led_MAX_NO_CHANNELS];
 float led_FadeTargetLevel[led_MAX_NO_CHANNELS];
@@ -72,6 +73,7 @@ void led_Initialize( void ) {
 			OC2R = 0;
 			OC2RS = led_PWM_PERIOD;
 			led_PresetLevel[ led_RED ] = 1.0;
+			led_DimmingBacklight = FALSE;
 			break;
 		}
 		default:			led_NoChannels = 0; return;
@@ -86,7 +88,7 @@ void led_Initialize( void ) {
 	PR2 = led_PWM_PERIOD;
 	T2CONbits.TON = 1;  		// Start Timer.
 
-	hw_CanSleep = TRUE;
+	hw_CPUStopPossible = TRUE;
 	led_SetLevel( 0, 0.0, led_NO_ACK );
 	led_SetLevel( 1, 0.0, led_NO_ACK );
 
@@ -131,12 +133,19 @@ void led_SetLevel( unsigned char color, float level, unsigned char sendAck ) {
 		case led_WHITE: { OC2RS = dutycycle; break; }
 	}
 
+	// Make sure all LEDs follow the backlight brightness.
+
+	if( led_DimmingBacklight ) {
+		OC2R = OC1R;
+		OC2RS = OC1RS * led_INDICATOR_BRIGTNESS_MULTIPLIER;
+	}
+
 	// Check if any channel is under PWM. In that case we can't goto deep sleep.
 
-	hw_CanSleep = TRUE;
+	hw_CPUStopPossible = TRUE;
 	for( i=0; i<led_NoChannels; i++ ) {
 		if( led_CurrentLevel[i] != 0 && led_CurrentLevel[i] != 1.0 )
-			hw_CanSleep = FALSE;
+			hw_CPUStopPossible = FALSE;
 	}
 
 	if( ! sendAck ) return;
@@ -288,29 +297,6 @@ void led_SetBacklight( event_t *event ) {
 			break;
 		}
 
-		case e_KEY_CLICKED: {
-			hw_AutoBacklightMode = FALSE;
-			if( led_CurrentLevel[led_RED] == 0.0 ) {
-				value = led_LastLevel;
-			}
-			else {
-				led_LastLevel = led_CurrentLevel[led_RED];
-				value = 0;
-			}
-			break;
-		}
-
-		case e_KEY_DOUBLECLICKED: {
-			hw_AutoBacklightMode = TRUE;
-			break;
-		}
-
-		case e_KEY_TRIPLECLICKED: {
-			hw_AutoBacklightMode = FALSE;
-			value = 0.01;
-			break;
-		}
-
 		default: return;
 	}
 
@@ -318,7 +304,7 @@ void led_SetBacklight( event_t *event ) {
 		display_SetBrightness( ambientLevel );
 	}
 
-	if( value == 0 ) {
+	if( value == 0 || value == 1.0 ) {
 		led_SetLevel( led_RED, 0.0, led_NO_ACK );
 		led_IndicatorPWM( FALSE );
 	}
@@ -337,6 +323,7 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 	unsigned char eventColor;
 
 	eventColor = led_CurrentColor;
+	led_CurrentPort = port;
 
 	if( port == hw_LED_RED ) eventColor =  led_RED;
 	if( port == hw_LED_WHITE ) eventColor =  led_WHITE;
@@ -349,9 +336,15 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 	switch( action ) {
 
 		case a_CHANGE_COLOR: {
+
 			if( hw_Type == hw_LEDLAMP && port == hw_LED_LIGHT ) {
 				led_CurrentColor = (led_CurrentColor==led_RED) ? led_WHITE : led_RED;
 			}
+
+			if( hw_Type == hw_SWITCH && port == hw_BACKLIGHT ) {
+				hw_AutoBacklightMode = TRUE;
+			}
+
 			break;
 		}
 		case a_SET_LEVEL: {
@@ -359,6 +352,7 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 			led_DimmerTicks = 0;
 			value = event->info / 1000.0;
 			eventColor = event->data;
+			led_CurrentColor = eventColor;
 			led_SetLevel( eventColor, value, led_NO_ACK );
 			break;
 		}
@@ -389,6 +383,7 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 			led_LastLevel = led_CurrentLevel[eventColor];
 			led_Toggle( eventColor, 1.5 );
 			if( port == hw_BACKLIGHT ) {
+				hw_AutoBacklightMode = FALSE;
 				if( led_FadeTargetLevel[led_RED] > 0.0 && led_FadeTargetLevel[led_RED] < 1.0 )
 					led_IndicatorPWM( TRUE );
 				else
@@ -407,7 +402,6 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 			break;
 		}
 	}
-
 }
 
 
@@ -568,15 +562,19 @@ int led_CalibrationParams() {
 void led_IndicatorPWM( unsigned char run ) {
 	if( run ) {
 		OC2R = OC1R;
-		OC2RS = OC1RS;
+		OC2RS = OC1RS * led_INDICATOR_BRIGTNESS_MULTIPLIER;
 		_OC2IE = 1;
 		_T2IE = 1;
 		_OC2IF = 0;
 		_T2IF = 0;
+
+		led_DimmingBacklight = TRUE;
 	}
 	else {
 		_OC2IE = 0;
 		_T2IE = 0;
+
+		led_DimmingBacklight = FALSE;
 
 		// Now make sure current settings are reflected at outputs.
 		// (PWM stops at all indicators off most of the time).
@@ -592,10 +590,10 @@ void led_IndicatorPWM( unsigned char run ) {
 
 void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void) {
 
-    _T2IF = 0;
     _T2IE = 0;
+    _T2IF = 0;
 
-	if( ! hw_LEDStatus ) goto done;
+	if( hw_LEDStatus == 0 ) goto done;
 	if( led_CurrentLevel[ led_RED ] == 0.0 ) goto done;
 	if( led_CurrentLevel[ led_RED ] == 1.0 ) goto done;
 

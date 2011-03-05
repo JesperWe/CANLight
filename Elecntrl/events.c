@@ -82,12 +82,10 @@ void event_Task() {
 	static event_t event;
 
 
-	//if( led_SleepTimer > 250 ) hw_Sleep();
-
 	if( queue_Receive( events_Queue, &event ) ) {
 
 		if( event.type == e_IO_EVENT ) {
-				nmea_SendKeyEvent( &event );
+				nmea_SendIOEvent( &event );
 		}
 
 		if( event.type == e_NMEA_MESSAGE ) {
@@ -96,11 +94,6 @@ void event_Task() {
 			// so we first check for these.
 
 			switch( event.ctrlEvent ) {
-
-				case e_AMBIENT_LIGHT_LEVEL: {
-					led_SetBacklight( &event );
-					return;
-				}
 
 				// Capture e_THROTTLE_CHANGE events if we have I2C installed.
 				// This allows monitoring of system levels even if our current device
@@ -118,13 +111,17 @@ void event_Task() {
 				case e_LED_LEVEL_CHANGED: {
 					if( led_FadeMaster != 0 ) {
 						led_ProcessEvent( &event, 0, a_SET_LEVEL );
-						hw_SleepTimer += schedule_SECOND;  // Wait for next level event in the fade.
+						hw_StayAwakeTimer += schedule_SECOND;  // Wait for next level event in the fade.
 					}
 					return;
 				}
 
 				case e_SET_BACKLIGHT_LEVEL: {
-					if( hw_Type != hw_SWITCH ) break;
+					led_SetBacklight( &event );
+					return;
+				}
+
+				case e_AMBIENT_LIGHT_LEVEL: {
 					led_SetBacklight( &event );
 					return;
 				}
@@ -139,7 +136,7 @@ void event_Task() {
 
 						// We are not the master. Stop fade. Also make sure we stay awake!
 						led_CurFadeStep = 0;
-						hw_SleepTimer += schedule_SECOND;
+						hw_StayAwakeTimer += schedule_SECOND;
 					} else {
 
 						// We are master. Save controller group ID for set_level events.
