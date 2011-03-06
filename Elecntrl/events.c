@@ -177,7 +177,7 @@ void event_Task() {
 
 					case a_FADE_MASTER_ARBITRATION: {
 
-						// led_FADE_MASTER_EXPECTED means this arbitration was initiated by this device,
+						// a_FADE_MASTER_ARBITRATION means this arbitration was initiated by this device,
 						// so we are the ones to decide. led_FadeMaster == 0 means we are another controller
 						// in this group and should shut up.
 
@@ -192,6 +192,11 @@ void event_Task() {
 						event.info = 0;
 
 						nmea_SendEvent( &event );
+
+						// We are not listeners to this fade ourselves, so reset led_FadeMaster.
+
+						led_FadeMaster = 0;
+
 						break;
 					}
 
