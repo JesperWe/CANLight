@@ -22,16 +22,10 @@ unsigned char switch_timedFunction;
 
 void switch_Acknowledge( unsigned char port, unsigned char setting ) {
 	event_t response;
-	unsigned char groupId = config_GetGroupIdForPort( port );
-
-	// If we can't find what group we are in the event was a hw_DEVICE_ANY event.
-	// Don't acknowledge in this case.
-
-	if( groupId == config_GROUP_BROADCAST ) return;
 
 	response.PGN = 0;
 	response.info = 0;
-	response.groupId = groupId;
+	response.groupId = config_CurrentTaskGroup;
 	response.ctrlDev = hw_DeviceID;
 	response.ctrlPort = port;
 	response.ctrlEvent = (setting) ? e_SWITCH_ON : e_SWITCH_OFF;

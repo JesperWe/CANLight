@@ -136,7 +136,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 	unsigned char portIsInCurrentTask;
 	unsigned char eventType;
 	unsigned char action;
-	unsigned char defaultAction;
+	unsigned char implicitAction;
 	unsigned char eventIsInCurrentGroup;
 	unsigned char sendingGroupIsTask;
 	unsigned char portIsInCurrentCntrlGroup;
@@ -151,9 +151,9 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 	configPtr += 4;	// Skip magic and sequence numbers.
 
 	config_CurrentGroup = 0;
+	implicitAction = a_NO_ACTION;
 
 	do {
-		defaultAction = a_NO_ACTION;
 		portIsInCurrentTask = FALSE;
 		portIsInCurrentCntrlGroup = FALSE;
 		eventIsInCurrentGroup = FALSE;
@@ -214,22 +214,24 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 			if(	sendingGroupIsTask && portIsInCurrentCntrlGroup )
 			{
 				if(	event->ctrlEvent == e_FADE_START ) {
-					defaultAction = a_FADE_MASTER_ARBITRATION;
+					implicitAction = a_FADE_MASTER_ARBITRATION;
 					config_CurrentGroup = controllerGroupID;
 				}
 
 				if(	event->ctrlEvent == e_SWITCH_ON ) {
-					defaultAction = a_SWITCH_ON;
+					implicitAction = a_SWITCH_ON;
 					config_CurrentGroup = controllerGroupID;
 				}
 
 				if(	event->ctrlEvent == e_SWITCH_OFF ) {
-					defaultAction = a_SWITCH_OFF;
+					implicitAction = a_SWITCH_OFF;
 					config_CurrentGroup = controllerGroupID;
 				}
 			}
 		}
 		while( *configPtr != DELIMITER );
+
+		if( implicitAction != a_NO_ACTION ) break;
 
 		// OK, so what action does this event generate for this port?
 
@@ -258,7 +260,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 
 	eventType = eev + edata + egid + edev + eport;
 
-	return defaultAction;
+	return implicitAction;
 }
 
 

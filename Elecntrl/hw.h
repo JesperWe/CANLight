@@ -20,12 +20,6 @@
 #ifndef HW_H_
 #define HW_H_
 
-//---------------------------------------------------------------------------------------------
-// Missing in pps.h:
-#define OUT_FN_PPS_OC3				0x0014				/* RPn tied to Output Compare 3 */
-#define OUT_FN_PPS_OC4				0x0015				/* RPn tied to Output Compare 4 */
-//---------------------------------------------------------------------------------------------
-
 #define NOP __builtin_nop()
 
 #define DEBUG 1
