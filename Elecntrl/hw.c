@@ -10,6 +10,7 @@
 #include "nmea.h"
 #include "schedule.h"
 #include "queue.h"
+#include "display.h"
 
 const short __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2)))
 						hw_ConfigData[_FLASH_PAGE*2];
@@ -433,6 +434,7 @@ void hw_Sleep( void ) {
 	if( hw_StayAwakeTimer > 0 ) return;
 	if( ! queue_Empty( events_Queue ) ) return;
 	if( nmea_TX_REQUEST_BIT ) return;
+	if( display_IsOn ) return;
 
 	// OK, We can sleep now.
 
