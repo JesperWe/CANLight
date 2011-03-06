@@ -54,7 +54,7 @@ void display_Initialize() {
 
 	display_SetContrast( display_Contrast );
 
-	if( display_Queue == 0 ) display_Queue = queue_Create( 5, 1 );
+	if( display_Queue == 0 ) display_Queue = queue_Create( 5, 2 );
 
 /* Code below only needed when initializing a factory reset display.
    Maybe we should set up a RS232 connection to do this is the future?
@@ -206,7 +206,7 @@ void display_NumberFormat( char outString[], short digits, short number ) {
 // So we put read keystrokes in a queue, and process them in another task.
 
 void display_Task() {
-	char key;
+	unsigned short key;
 	static unsigned char failCount = 0;
 
 	if( display_IsOn ) {

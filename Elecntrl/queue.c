@@ -18,13 +18,17 @@
 
 
 //---------------------------------------------------------------------------------------------
+// Allocate memory for a new queue.
+//
+// NB!! objectSize must be an even number of bytes.
 
 queue_t* queue_Create( short maxEntries, short objectSize ) {
+
 	queue_t *newQueue = malloc( sizeof( queue_t ));
-	if( ! newQueue ) queue_OUTOFMEMORY;
+	if( ! newQueue ) queue_STOP_ON_OUTOFMEMORY;
 
 	newQueue->objects = malloc( maxEntries * objectSize );
-	if( ! newQueue->objects ) queue_OUTOFMEMORY;
+	if( ! newQueue->objects ) queue_STOP_ON_OUTOFMEMORY;
 
 	newQueue->capacity = maxEntries;
 	newQueue->objectSize = objectSize;
@@ -40,7 +44,7 @@ queue_t* queue_Create( short maxEntries, short objectSize ) {
 //---------------------------------------------------------------------------------------------
 
 char queue_Send( queue_t* toQueue, void* object ) {
-	char curSize;
+	unsigned char curSize;
 	void** objectPtr;
 
     // We really can't handle a full queue in any meaningful way.
@@ -49,7 +53,7 @@ char queue_Send( queue_t* toQueue, void* object ) {
 
 	if( toQueue->status == 0xFF ) return FALSE;
 
-	objectPtr = toQueue->objects + ( toQueue->objectSize * toQueue->last);
+	objectPtr = toQueue->objects + ( toQueue->objectSize * toQueue->last)/2;
 
     memcpy( objectPtr, object, toQueue->objectSize );
     toQueue->last++;
@@ -79,7 +83,7 @@ char queue_Receive( queue_t* fromQueue, void* object ) {
 
 	if( queue_Empty( fromQueue ) ) return FALSE;
 
-	objectPtr = fromQueue->objects + ( fromQueue->objectSize * fromQueue->first);
+	objectPtr = fromQueue->objects + ( fromQueue->objectSize * fromQueue->first)/2;
 
 	memcpy( object, objectPtr, fromQueue->objectSize );
     fromQueue->first++;

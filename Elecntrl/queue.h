@@ -8,7 +8,7 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
-#define queue_OUTOFMEMORY while(1) {} // Looping forever is easily detectable in the debugger....
+#define queue_STOP_ON_OUTOFMEMORY while(1) {} // Looping forever is easily detectable in the debugger....
 
 typedef struct queue_s {
 	unsigned char capacity;

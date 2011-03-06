@@ -350,7 +350,7 @@ char menu_ProcessKey( unsigned char keypress ) {
 // a key is pressed, or if no keys are pressed twice per second.
 
 void menu_Task() {
-	char key;
+	unsigned short key;
 
 	if( ! display_IsOn ) return;
 
