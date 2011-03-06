@@ -72,7 +72,10 @@ void schedule_Run() {
 	schedule_Running = TRUE;
 
 	while(1) {
+
 		idle = TRUE;
+		asm volatile ("CLRWDT");
+
 		for( schedule_Active=0; schedule_Active < schedule_NoTasks; schedule_Active++ ) {
 
 			curTask = &schedule_Tasks[ schedule_Active ];
