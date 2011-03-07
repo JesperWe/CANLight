@@ -393,11 +393,11 @@ void led_ProcessEvent( event_t *event, unsigned char port, unsigned char action 
 		}
 		case a_GOTO_MINIMUM: {
 			if( led_CurrentLevel[eventColor] < 0.5 ) {
-				led_SetLevel( eventColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_NO_ACK );
+				led_SetLevel( eventColor, (float)hw_Config->led_MinimumDimmedLevel / 100.0, led_SEND_ACK );
 			}
 
 			else {
-				led_SetLevel( eventColor, 1.0, led_NO_ACK );
+				led_SetLevel( eventColor, 1.0, led_SEND_ACK );
 			}
 			break;
 		}
