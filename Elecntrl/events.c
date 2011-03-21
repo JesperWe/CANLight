@@ -154,6 +154,35 @@ void event_Task() {
 				takeAction = config_GetPortActionFromEvent( port, &event );
 				if( takeAction == a_NO_ACTION ) continue;
 
+				// Fade Starts: If we are originating the fade, led_FadeMaster is undefined until
+				// the first response from a listener is received. This first responder becomes
+				// the master for the rest of the fade.
+
+				if( takeAction == a_FADE_MASTER_ARBITRATION ) {
+
+					// a_FADE_MASTER_ARBITRATION means this arbitration was initiated by this device,
+					// so we are the ones to decide. led_FadeMaster == 0 means we are another controller
+					// in this group and should shut up.
+
+					if( led_FadeMaster != led_FADE_MASTER_EXPECTED ) break;
+					led_FadeMaster = event.ctrlDev;
+
+					event.groupId = config_CurrentGroup;
+					event.ctrlDev = hw_DeviceID;
+					event.ctrlEvent = e_FADE_MASTER;
+					event.ctrlPort = port;
+					event.data = led_FadeMaster;
+					event.info = 0;
+
+					nmea_SendEvent( &event );
+
+					// We are not listeners to this fade ourselves, so reset led_FadeMaster.
+
+					led_FadeMaster = 0;
+
+					continue;
+				}
+
 				if( hw_IsPWM(port) ) {
 					led_ProcessEvent( &event, port, takeAction );
 					continue;
@@ -170,36 +199,6 @@ void event_Task() {
 				}
 
 				switch( takeAction ) {
-
-					// Fade Starts: If we are originating the fade, led_FadeMaster is undefined until
-					// the first response from a listener is received. This first responder becomes
-					// the master for the rest of the fade.
-
-					case a_FADE_MASTER_ARBITRATION: {
-
-						// a_FADE_MASTER_ARBITRATION means this arbitration was initiated by this device,
-						// so we are the ones to decide. led_FadeMaster == 0 means we are another controller
-						// in this group and should shut up.
-
-						if( led_FadeMaster != led_FADE_MASTER_EXPECTED ) break;
-						led_FadeMaster = event.ctrlDev;
-
-						event.groupId = config_CurrentGroup;
-						event.ctrlDev = hw_DeviceID;
-						event.ctrlEvent = e_FADE_MASTER;
-						event.ctrlPort = port;
-						event.data = led_FadeMaster;
-						event.info = 0;
-
-						nmea_SendEvent( &event );
-
-						// We are not listeners to this fade ourselves, so reset led_FadeMaster.
-
-						led_FadeMaster = 0;
-
-						break;
-					}
-
 					case a_SWITCH_ON: {
 						hw_AcknowledgeSwitch( port, 1 );
 						break;
