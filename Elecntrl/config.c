@@ -12,43 +12,42 @@
 
 /*------------------------------------------------------------------------------------
 
-The system config represents the entire yacht network, and is stored in each appliance.
-The config "file" is actually a byte sequence sent on update from some master controller
-to all appliances. This "file" is stored in User Flash memory and parsed at runtime.
+ The system config represents the entire yacht network, and is stored in each appliance.
+ The config "file" is actually a byte sequence sent on update from some master controller
+ to all appliances. This "file" is stored in User Flash memory and parsed at runtime.
 
-A "appliance" in the system is a single piece of hardware with its own CPU.
-It has an address (Appliance ID) in the range 0-253.
+ A "appliance" in the system is a single piece of hardware with its own CPU.
+ It has an address (Appliance ID) in the range 0-253.
 
-A "function" is one individually controllable I/O channel on this appliance. A function can also
-bundle several channels, like the "Lamp" function is a bundle of all colors of a lamp appliance.
+ A "function" is one individually controllable I/O channel on this appliance. A function can also
+ bundle several channels, like the "Lamp" function is a bundle of all colors of a lamp appliance.
 
-A "group" is a collection of functions on one or many appliances that listen to the same events.
-Group ID is also in the 0-253 range.
-A group can consist of only a single function of a single appliance.
-A function must be part of a group to be able to listen for events.
+ A "group" is a collection of functions on one or many appliances that listen to the same events.
+ Group ID is also in the 0-253 range.
+ A group can consist of only a single function of a single appliance.
+ A function must be part of a group to be able to listen for events.
 
-The config "file" byte sequence follows this pattern:
+ The config "file" byte sequence follows this pattern:
 
 
-The events sent between the controllers and the listeners are always send as broadcast messages,
-but each message uses the group IDs to mark which groups are communicating.
+ The events sent between the controllers and the listeners are always send as broadcast messages,
+ but each message uses the group IDs to mark which groups are communicating.
 
-Communication flow:
+ Communication flow:
 
-Controller Group (GID)
-        Appliance (AID)/Function
+ Controller Group (GID)
+ Appliance (AID)/Function
 
->>> Sends: Controller Group ID + Event
+ >>> Sends: Controller Group ID + Event
 
-Bindings: [Event/Action], ...
+ Bindings: [Event/Action], ...
 
-<<< Sends: Listener Group ID + Event
+ <<< Sends: Listener Group ID + Event
 
-Listener Group (GID)
-        Appliance (AID)/Function
+ Listener Group (GID)
+ Appliance (AID)/Function
 
-*/
-
+ */
 
 //-------------------------------------------------------------------------------
 // Globals
@@ -64,21 +63,19 @@ unsigned char config_CurrentTaskGroup;
 // The Configuration File lives in program memory.
 // The size limited to one Flash page, currently 1024 byte.
 
-const unsigned char __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2))) config_Data[_FLASH_PAGE*2];
-
+const unsigned char __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2))) config_Data[_FLASH_PAGE * 2];
 
 //-------------------------------------------------------------------------------
 // Find the first group that a port on this device is a member of.
 
-unsigned char config_GetGroupIdForPort( unsigned char port ) {
+unsigned char config_GetGroupIdForPort(unsigned char port) {
 	unsigned char controllerGroupID;
 	unsigned char confDevice;
 	unsigned char confPort;
 	unsigned char groupId;
 
-
 	const unsigned char* configPtr = config_Data;
-	configPtr += 4;	// Skip magic and sequence numbers.
+	configPtr += 4; // Skip magic and sequence numbers.
 	groupId = 0;
 
 	do {
@@ -114,8 +111,12 @@ unsigned char config_GetGroupIdForPort( unsigned char port ) {
 		// Roll passed event/actions.
 
 		configPtr++;
-		while( *configPtr != DELIMITER ) { configPtr++; }
-		while( *configPtr == DELIMITER ) { configPtr++; }
+		while( *configPtr != DELIMITER ) {
+			configPtr++;
+		}
+		while( *configPtr == DELIMITER ) {
+			configPtr++;
+		}
 
 		if( groupId != 0 ) break;
 	}
@@ -124,11 +125,10 @@ unsigned char config_GetGroupIdForPort( unsigned char port ) {
 	return groupId;
 }
 
-
 //-------------------------------------------------------------------------------
 // Return the action to take if we are listening to this event, or NO_ACTION if we are not.
 
-unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event ) {
+unsigned char config_GetPortActionFromEvent(unsigned char port, event_t* event) {
 	unsigned char controllerGroupID;
 	unsigned char confDevice;
 	unsigned char confPort;
@@ -148,7 +148,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 	unsigned char eport = event->ctrlPort;
 
 	const unsigned char* configPtr = config_Data;
-	configPtr += 4;	// Skip magic and sequence numbers.
+	configPtr += 4; // Skip magic and sequence numbers.
 
 	config_CurrentGroup = 0;
 	implicitAction = a_NO_ACTION;
@@ -162,7 +162,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 
 		controllerGroupID = *configPtr++;
 
-		if ( controllerGroupID == event->groupId ) {
+		if( controllerGroupID == event->groupId ) {
 			eventIsInCurrentGroup = TRUE;
 			config_CurrentGroup = controllerGroupID;
 		}
@@ -174,8 +174,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 			// For acknowledge events, we need to remember if this control group
 			// contains the current device and port.
 
-			if( confDevice == hw_DeviceID && confPort == port )
-				portIsInCurrentCntrlGroup = TRUE;
+			if( confDevice == hw_DeviceID && confPort == port ) portIsInCurrentCntrlGroup = TRUE;
 
 		}
 		while( *configPtr != DELIMITER );
@@ -185,7 +184,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 		configPtr++;
 		taskGroupID = *configPtr++;
 
-		if ( taskGroupID == event->groupId )
+		if( taskGroupID == event->groupId )
 			sendingGroupIsTask = TRUE;
 		else
 			sendingGroupIsTask = FALSE;
@@ -198,9 +197,7 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 
 			if( eventIsInCurrentGroup ) {
 
-				if(	( confDevice == hw_DeviceID || confDevice == hw_DEVICE_ANY ) &&
-					( port == confPort ) )
-				{
+				if( ( confDevice == hw_DeviceID || confDevice == hw_DEVICE_ANY ) && ( port == confPort ) ) {
 					portIsInCurrentTask = TRUE;
 					config_CurrentTaskGroup = taskGroupID;
 					continue;
@@ -211,19 +208,18 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 			// Fade Master (but not the fade master itself!) then we map some events
 			// to the corresponding actions.
 
-			if(	sendingGroupIsTask && portIsInCurrentCntrlGroup )
-			{
-				if(	event->ctrlEvent == e_FADE_START ) {
+			if( sendingGroupIsTask && portIsInCurrentCntrlGroup ) {
+				if( event->ctrlEvent == e_FADE_START ) {
 					implicitAction = a_FADE_MASTER_ARBITRATION;
 					config_CurrentGroup = controllerGroupID;
 				}
 
-				if(	event->ctrlEvent == e_SWITCH_ON ) {
+				if( event->ctrlEvent == e_SWITCH_ON ) {
 					implicitAction = a_SWITCH_ON;
 					config_CurrentGroup = controllerGroupID;
 				}
 
-				if(	event->ctrlEvent == e_SWITCH_OFF ) {
+				if( event->ctrlEvent == e_SWITCH_OFF ) {
 					implicitAction = a_SWITCH_OFF;
 					config_CurrentGroup = controllerGroupID;
 				}
@@ -240,8 +236,8 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 			eventType = *configPtr++;
 			action = *configPtr++;
 
-			if( ! eventIsInCurrentGroup ) continue;
-			if( ! portIsInCurrentTask ) continue;
+			if( !eventIsInCurrentGroup ) continue;
+			if( !portIsInCurrentTask ) continue;
 
 			if( eventType == event->ctrlEvent ) {
 
@@ -254,7 +250,9 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 		}
 		while( *configPtr != DELIMITER );
 
-		while( *configPtr == DELIMITER ) { configPtr++; }
+		while( *configPtr == DELIMITER ) {
+			configPtr++;
+		}
 	}
 	while( *configPtr != END_OF_FILE );
 
@@ -262,7 +260,6 @@ unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event 
 
 	return implicitAction;
 }
-
 
 //-------------------------------------------------------------------------------
 // Initialize System Configuration.
@@ -282,16 +279,14 @@ void config_Initialize() {
 
 	// Check for valid config file.
 
-	if( (((unsigned short)config_Data[0])<<8 | ((unsigned short)config_Data[1])) != hw_CONFIG_MAGIC_WORD ) {
+	if( ( ( (unsigned short) config_Data[0] ) << 8 | ( (unsigned short) config_Data[1] ) ) != hw_CONFIG_MAGIC_WORD ) {
 		config_Invalid = TRUE;
 		return;
 	}
 
 	config_Invalid = FALSE;
-	configSequenceNumber = ((short)config_Data[2])<<8 | config_Data[3];
+	configSequenceNumber = ( (short) config_Data[2] ) << 8 | config_Data[3];
 }
-
-
 
 //-------------------------------------------------------------------------------
 
@@ -303,13 +298,13 @@ void config_UninitializedTask() {
 	unsigned long timer;
 	short i;
 
-	if( ! config_Invalid ) {
-		schedule_AddTask( led_PowerOnTest, schedule_SECOND/10 );
+	if( !config_Invalid ) {
+		schedule_AddTask( led_PowerOnTest, schedule_SECOND / 10 );
 		schedule_Finished();
 		return;
 	}
 
-	while ( config_Invalid ) {
+	while( config_Invalid ) {
 
 		// We hijack the scheduler in this loop.
 		// We will hang here until the NMEA Interrupt Service Routine has received
@@ -320,20 +315,23 @@ void config_UninitializedTask() {
 		if( hw_Type == hw_LEDLAMP ) led_SetLevel( led_WHITE, 0.0, led_NO_ACK );
 
 		timer = schedule_time + schedule_SECOND;
-		while( schedule_time < timer );
+		while( schedule_time < timer )
+			;
 
 		// Number of flashes indicates type of config problem.
 
-		for( i=0; i< config_Invalid; i++ ) {
+		for( i = 0; i < config_Invalid; i++ ) {
 			led_SetLevel( led_RED, 1.0, led_NO_ACK );
 
-			timer = schedule_time + schedule_SECOND/5;
-			while( schedule_time < timer );
+			timer = schedule_time + schedule_SECOND / 5;
+			while( schedule_time < timer )
+				;
 
-			led_SetLevel( led_RED, 0.0, led_NO_ACK);
+			led_SetLevel( led_RED, 0.0, led_NO_ACK );
 
-			timer = schedule_time + schedule_SECOND/5;
-			while( schedule_time < timer );
+			timer = schedule_time + schedule_SECOND / 5;
+			while( schedule_time < timer )
+				;
 
 			asm volatile ("CLRWDT");
 		}
@@ -348,20 +346,18 @@ void config_UninitializedTask() {
 // We have received a new system configuration over the NMEA bus.
 // Store it in flash and start using it.
 
-void config_Update( unsigned short configBytes ) {
+void config_Update(unsigned short configBytes) {
 	unsigned short i;
 	int *newConfigData;
 	_prog_addressT config_FlashPage;
 
 	// Does it have a magic number?
 
-	if( hw_1kBuffer[0] != 0x12 ||
-		hw_1kBuffer[1] != 0x69 ) return;
+	if( hw_1kBuffer[0] != 0x12 || hw_1kBuffer[1] != 0x69 ) return;
 
 	// Don't save the new config if it is the same we already have in flash.
 
-	if( hw_1kBuffer[2] == config_Data[2] &&
-		hw_1kBuffer[3] == config_Data[3] ) return;
+	if( hw_1kBuffer[2] == config_Data[2] && hw_1kBuffer[3] == config_Data[3] ) return;
 
 	// Reality check on the length.
 
@@ -373,9 +369,9 @@ void config_Update( unsigned short configBytes ) {
 
 	_erase_flash( config_FlashPage );
 
-	newConfigData = (int*)hw_1kBuffer;
+	newConfigData = (int*) hw_1kBuffer;
 
-	for( i = 0; i < (_FLASH_PAGE / _FLASH_ROW); i++ ) {
+	for( i = 0; i < ( _FLASH_PAGE / _FLASH_ROW ); i++ ) {
 		_write_flash16( config_FlashPage, newConfigData );
 		config_FlashPage += _FLASH_ROW * 2;
 		newConfigData += _FLASH_ROW;
@@ -384,7 +380,7 @@ void config_Update( unsigned short configBytes ) {
 	config_Invalid = FALSE;
 	config_Initialize();
 	schedule_Parameter = 4;
-	schedule_AddTask( led_TaskComplete, schedule_SECOND/10 );
+	schedule_AddTask( led_TaskComplete, schedule_SECOND / 10 );
 
 	hw_StayAwakeTimer = schedule_SECOND * 5; // So we don't sleep before blinking is done!
 }

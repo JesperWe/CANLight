@@ -103,25 +103,21 @@ const menu_State_t menu_States[] = {
 	} }
 };
 
-
-
 unsigned short menu_CurStateId, menu_NextStateId, menu_ParentStateId, menu_HandlerStateId;
 unsigned char menu_NextIndex;
 unsigned char menu_SubItemCount;
 unsigned char menu_Parameter = 0;
 unsigned char menu_Keypress = 0;
-unsigned char menu_HandlerInControl;
 
 menu_State_t* menu_CurState;
 int (*menu_ActiveHandler)(void);
-
 
 //---------------------------------------------------------------------------------------------
 // General purpose handler for parameter modifications.
 // Each subsystem is responsible for maintaining its own menu texts etc.
 // paramNames[0] is a header text, the rest are names of parameters that can be set.
 
-int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, short parameters[] ) {
+int menu_ParameterSetter(const char* paramNames[], unsigned char noParameters, short parameters[]) {
 	static char delta;
 	static char step;
 	static char newParameter;
@@ -132,15 +128,12 @@ int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, 
 
 	switch( menu_Keypress ) {
 
-		case DISPLAY_KEY_UP: {
+		case DISPLAY_KEY_PLAY: {
 			delta = 0;
-			step = 10;
-			break;
-		}
-
-		case DISPLAY_KEY_DOWN: {
-			delta = 0;
-			step = 1;
+			if( step == 1 )
+				step = 10;
+			else
+				step = 1;
 			break;
 		}
 
@@ -164,7 +157,7 @@ int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, 
 		case DISPLAY_KEY_EAST: {
 			delta = 0;
 			newParameter = TRUE;
-			if( menu_Parameter+1 < noParameters ) menu_Parameter++;
+			if( menu_Parameter + 1 < noParameters ) menu_Parameter++;
 			break;
 		}
 	}
@@ -172,36 +165,35 @@ int menu_ParameterSetter( const char* paramNames[], unsigned char noParameters, 
 	// Now update display and values based on key press.
 
 	if( menu_Parameter == 0 ) {
-			menu_Parameter = 1;
-			step = 10;
-			delta = 0;
-			newParameter = TRUE;
+		menu_Parameter = 1;
+		step = 10;
+		delta = 0;
+		newParameter = TRUE;
 	}
-
 
 	if( newParameter ) {
 		newParameter = FALSE;
 
 		display_Clear();
 		display_Write( paramNames[0] );
-		display_SetPosition(1,2);
-		display_Write( paramNames[ menu_Parameter ] );
+		display_SetPosition( 1, 2 );
+		display_Write( paramNames[menu_Parameter] );
 	}
 
 	else {
-		if( ((short)(parameters[ menu_Parameter ]) + delta) < 0 ) {
-			parameters[ menu_Parameter ] = 0;
+		if( ( (short) ( parameters[menu_Parameter] ) + delta ) < 0 ) {
+			parameters[menu_Parameter] = 0;
 		}
-		else if( ((short)(parameters[ menu_Parameter ]) + delta) > 9999 ) {
-				parameters[ menu_Parameter ] = 9999;
+		else if( ( (short) ( parameters[menu_Parameter] ) + delta ) > 9999 ) {
+			parameters[menu_Parameter] = 9999;
 		}
 		else {
-			parameters[ menu_Parameter ] += delta;
+			parameters[menu_Parameter] += delta;
 		}
 	}
 
-	display_SetPosition(10,3);
-	display_NumberFormat( line1, 4, parameters[ menu_Parameter ] );
+	display_SetPosition( 10, 3 );
+	display_NumberFormat( line1, 4, parameters[menu_Parameter] );
 	display_Write( line1 );
 
 	return menu_NO_DISPLAY_UPDATE;
@@ -226,8 +218,7 @@ void menu_Initialize() {
 	menu_SetState( S_HOMESCREEN );
 }
 
-
-void menu_SetState( unsigned char state ) {
+void menu_SetState(unsigned char state) {
 	int result;
 	short StateIndex;
 
@@ -239,7 +230,7 @@ void menu_SetState( unsigned char state ) {
 		StateIndex++;
 	}
 
-	menu_CurState = &(menu_States[ StateIndex ]);
+	menu_CurState = &( menu_States[StateIndex] );
 	menu_CurStateId = menu_CurState->id;
 
 	// Execute our handler if there is one.
@@ -248,15 +239,14 @@ void menu_SetState( unsigned char state ) {
 	if( menu_CurState->handler != NULL ) {
 		menu_HandlerStateId = menu_CurStateId;
 		result = menu_CurState->handler();
-		if( result < 0 )
-			menu_CurStateId = S_TERMINATE;
+		if( result < 0 ) menu_CurStateId = S_TERMINATE;
 	}
 
 	menu_SubItemCount = menu_CurState->noEvents;
 
 	// Any text to display for this state?
 
-	if( menu_CurState->descr && (result != menu_NO_DISPLAY_UPDATE) ) {
+	if( menu_CurState->descr && ( result != menu_NO_DISPLAY_UPDATE ) ) {
 		display_Clear();
 		display_Home();
 		display_Write( menu_CurState->descr );
@@ -268,24 +258,22 @@ void menu_SetState( unsigned char state ) {
 
 		if( menu_CurState->events[menu_NextIndex].id ) {
 			display_SetPosition( 1, display_ROWS_HIGH );
-			display_Write( menu_CurState->events[ menu_NextIndex ].descr );
+			display_Write( menu_CurState->events[menu_NextIndex].descr );
 		}
 
-		if( menu_CurState->noEvents > menu_NextIndex+1 ) {
+		if( menu_CurState->noEvents > menu_NextIndex + 1 ) {
 
-			unsigned char textLength =
-					strlen( menu_CurState->events[ menu_NextIndex+1 ].descr );
+			unsigned char textLength = strlen( menu_CurState->events[menu_NextIndex + 1].descr );
 
-			display_SetPosition( display_COLS_WIDE-textLength+1, display_ROWS_HIGH );
-			display_Write( menu_CurState->events[ menu_NextIndex+1 ].descr );
+			display_SetPosition( display_COLS_WIDE - textLength + 1, display_ROWS_HIGH );
+			display_Write( menu_CurState->events[menu_NextIndex + 1].descr );
 		}
 	}
 }
 
-
 //---------------------------------------------------------------------------------------------
 
-char menu_ProcessKey( unsigned char keypress ) {
+char menu_ProcessKey(unsigned char keypress) {
 
 	// Pressing the STOP button always stops the current active handler,
 	// even if it has taken over the display control.
@@ -293,50 +281,49 @@ char menu_ProcessKey( unsigned char keypress ) {
 	menu_Keypress = 0;
 	if( keypress == DISPLAY_KEY_STOP ) {
 		menu_ActiveHandler = 0;
-		menu_HandlerInControl = FALSE;
 	}
-
-	if( menu_HandlerInControl ) return 0;
 
 	menu_NextStateId = menu_CurStateId;
 
 	switch( keypress ) {
 
 		case DISPLAY_KEY_STOP: {
-				menu_Parameter = 0;
-				if( menu_CurState->id == S_HOMESCREEN ) return 1;
-				if( menu_CurState->parent > 0 )
-					menu_NextStateId = menu_CurState->parent;
-				menu_NextIndex = 0;
-				engine_JoystickCalibrationMonitor = FALSE;
-				break;;
-			}
+			menu_Parameter = 0;
+			if( menu_CurState->id == S_HOMESCREEN ) return 1;
+			if( menu_CurState->parent > 0 ) menu_NextStateId = menu_CurState->parent;
+			menu_NextIndex = 0;
+			engine_JoystickCalibrationMonitor = FALSE;
+			break;;
+		}
 
 		case DISPLAY_KEY_PLAY: { // Show more available commands if there are any.
-				if( menu_NextIndex+2 < menu_SubItemCount )
-					{ menu_NextIndex += 2;	}
-				else
-					{ menu_NextIndex = 0; }
-				break;
+			if( menu_NextIndex + 2 < menu_SubItemCount ) {
+				menu_NextIndex += 2;
 			}
+			else {
+				menu_NextIndex = 0;
+			}
+			break;
+		}
 
 		case DISPLAY_KEY_LEFT: {
-				if( ! menu_CurState->events[menu_NextIndex].id ) return 1;
-				menu_ParentStateId = menu_CurStateId;
-				menu_NextStateId = menu_CurState->events[menu_NextIndex].id;
-				menu_NextIndex = 0;
-				break;
-			}
+			if( !menu_CurState->events[menu_NextIndex].id ) return 1;
+			menu_ParentStateId = menu_CurStateId;
+			menu_NextStateId = menu_CurState->events[menu_NextIndex].id;
+			menu_NextIndex = 0;
+			break;
+		}
 
 		case DISPLAY_KEY_RIGHT: {
-				if( ! menu_CurState->events[menu_NextIndex+1].id ) return 1;
-				menu_ParentStateId = menu_CurStateId;
-				menu_NextStateId = menu_CurState->events[menu_NextIndex+1].id;
-				menu_NextIndex = 0;
-				break;
-			}
+			if( !menu_CurState->events[menu_NextIndex + 1].id ) return 1;
+			menu_ParentStateId = menu_CurStateId;
+			menu_NextStateId = menu_CurState->events[menu_NextIndex + 1].id;
+			menu_NextIndex = 0;
+			break;
+		}
 
-		default: return 0; // Means we don't know what to do with this key.
+		default:
+			return 0; // Means we don't know what to do with this key.
 	}
 
 	menu_SetState( menu_NextStateId );
@@ -352,7 +339,7 @@ char menu_ProcessKey( unsigned char keypress ) {
 void menu_Task() {
 	unsigned short key;
 
-	if( ! display_IsOn ) return;
+	if( !display_IsOn ) return;
 
 	// First see if there are any special display tricks to be done.
 
@@ -361,7 +348,7 @@ void menu_Task() {
 		static short lastLevel;
 
 		if( lastLevel != engine_LastJoystickLevel ) {
-			display_SetPosition(10,4);
+			display_SetPosition( 10, 4 );
 			display_NumberFormat( line1, 4, engine_LastJoystickLevel );
 			display_Write( line1 );
 			lastLevel = engine_LastJoystickLevel;

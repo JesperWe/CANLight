@@ -13,38 +13,38 @@
 #include "display.h"
 
 const short __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2)))
-						hw_ConfigData[_FLASH_PAGE*2];
+hw_ConfigData[_FLASH_PAGE * 2];
 
 // Define 1k of general purpose RAM. Note that theoretically some modules risk trying to
 // use this area simultaneously. For example sending a config file update on the NMEA bus
 // at the same time as the I2C display is editing config parameters will completely
 // mess up this buffer!
 
-unsigned char 		hw_1kBuffer[1024];
+unsigned char hw_1kBuffer[1024];
 
-hw_Config_t*		hw_Config;
+hw_Config_t* hw_Config;
 
-_prog_addressT		hw_ConfigPtr;
-unsigned short 	hw_HeartbeatCounter = 0;
-unsigned short		hw_PWMInverted = 0;
+_prog_addressT hw_ConfigPtr;
+unsigned short hw_HeartbeatCounter = 0;
+unsigned short hw_PWMInverted = 0;
 
-unsigned short		hw_Type;
-unsigned char		hw_I2C_Installed = 0;
-unsigned char		hw_Photodetector_Installed = 0;
-unsigned char		hw_Throttle_Installed = 0;
-unsigned char		hw_Actuators_Installed = 0;
-unsigned char		hw_ConfigByte = 0;
-unsigned char		hw_DetectorADCChannel;
-unsigned char 		hw_AutoBacklightMode = TRUE;
-unsigned char		hw_AmbientLevel;
-unsigned char 		hw_LEDStatus;
+unsigned short hw_Type;
+unsigned char hw_I2C_Installed = 0;
+unsigned char hw_Photodetector_Installed = 0;
+unsigned char hw_Throttle_Installed = 0;
+unsigned char hw_Actuators_Installed = 0;
+unsigned char hw_ConfigByte = 0;
+unsigned char hw_DetectorADCChannel;
+unsigned char hw_AutoBacklightMode = TRUE;
+unsigned char hw_AmbientLevel;
+unsigned char hw_LEDStatus;
 
-unsigned char		hw_DeviceID;
+unsigned char hw_DeviceID;
 
-unsigned char		hw_AmbientLevel;
+unsigned char hw_AmbientLevel;
 
-unsigned char 		hw_CPUStopPossible;	// If all PWM outputs are fully on or off we can sleep.
-unsigned short		hw_StayAwakeTimer;	// Count ticks before we can go to sleep.
+unsigned char hw_CPUStopPossible; // If all PWM outputs are fully on or off we can sleep.
+unsigned short hw_StayAwakeTimer; // Count ticks before we can go to sleep.
 
 
 //-------------------------------------------------------------------------------
@@ -89,51 +89,52 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_PortCount] =
 
 const unsigned short hw_NoKeys[hw_NoVariants] = { 0, 3 };
 
-
 unsigned int hw_ReadPort(enum hw_Ports_e port) {
-    return (*(hw_Port[hw_Type][port].port) >> hw_Port[hw_Type][port].bit) & 1;
+	return ( *( hw_Port[hw_Type][port].port ) >> hw_Port[hw_Type][port].bit ) & 1;
 }
 
 void hw_OutputPort(enum hw_Ports_e port) {
-	*(hw_Port[hw_Type][port].tris) &= ~(1 << hw_Port[hw_Type][port].bit);
+	*( hw_Port[hw_Type][port].tris ) &= ~( 1 << hw_Port[hw_Type][port].bit );
 }
 
 void hw_InputPort(enum hw_Ports_e port) {
-	*(hw_Port[hw_Type][port].port) |= (1 << hw_Port[hw_Type][port].bit);
+	*( hw_Port[hw_Type][port].port ) |= ( 1 << hw_Port[hw_Type][port].bit );
 }
 
 void hw_WritePort(enum hw_Ports_e port, int value) {
 	NOP;
-	if (value) *(hw_Port[hw_Type][port].port) |= (1 << hw_Port[hw_Type][port].bit);
-	else *(hw_Port[hw_Type][port].port) &= ~(1 << hw_Port[hw_Type][port].bit);
+	if( value )
+		*( hw_Port[hw_Type][port].port ) |= ( 1 << hw_Port[hw_Type][port].bit );
+	else
+		*( hw_Port[hw_Type][port].port ) &= ~( 1 << hw_Port[hw_Type][port].bit );
 	NOP;
 }
 
-
 //-------------------------------------------------------------------------------
 
-void hw_Initialize( void ) {
+void hw_Initialize(void) {
 	DWORD_VAL fidc, fidc_data;
 
-	CLKDIVbits.DOZE = 0;			// To make fCY = fOSC/2
+	CLKDIVbits.DOZE = 0; // To make fCY = fOSC/2
 
-	AD1PCFGL = 0x1FFF;				// ANx eats ECAN1 SNAFU!
+	AD1PCFGL = 0x1FFF; // ANx eats ECAN1 SNAFU!
 
-	if(RCONbits.POR) RCON=0; 		// If Power-On-Reset, clear RCON
-	RCONbits.SWDTEN = 0;			// No Watchdog if FWDTEN set to User Software.
-	RCONbits.VREGS = 1;				// Keep Voltage regulator active during sleep.
-	
+	if( RCONbits.POR ) RCON = 0; // If Power-On-Reset, clear RCON
+	RCONbits.SWDTEN = 0; // No Watchdog if FWDTEN set to User Software.
+	RCONbits.VREGS = 1; // Keep Voltage regulator active during sleep.
+
 	// Set up clock oscillator. Nominal fOSC=7.37MHz
 	// This is too low for the ECAN unit to work well at 250kBit.
 	// So we use PLL to increase it to 14MHz.
 
-	_PLLPRE = 2;	// Prescale = PLLPRE+2=4 > fRef = 7.37/4=1.84MHz
-	_PLLDIV = 59;	// Multiply = PLLDIV+2=61 > fVCO = 1.84x61 = 112.4MHz
-	_PLLPOST = 3;	// Postscale = 8 > fOSC = 112.4/8 = 14.05MHz
+	_PLLPRE = 2; // Prescale = PLLPRE+2=4 > fRef = 7.37/4=1.84MHz
+	_PLLDIV = 59; // Multiply = PLLDIV+2=61 > fVCO = 1.84x61 = 112.4MHz
+	_PLLPOST = 3; // Postscale = 8 > fOSC = 112.4/8 = 14.05MHz
 
 	// Resulting fCY = 7024531 Hz nominal
 
-	while(OSCCONbits.LOCK!=1); 	// Wait for PLL to lock
+	while( OSCCONbits.LOCK != 1 )
+		; // Wait for PLL to lock
 
 	// Find out what hardware we are using.
 	// Currently we have two versions: Lamp and Switch/Controller.
@@ -145,13 +146,13 @@ void hw_Initialize( void ) {
 	fidc.Val = 0xf80016;
 	TBLPAG = fidc.word.HW;
 
-	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+	fidc_data.word.HW = __builtin_tblrdh( fidc.word.LW );
+	fidc_data.word.LW = __builtin_tblrdl( fidc.word.LW );
 
 	hw_DeviceID = fidc_data.byte.LB;
 
 	// If ID memory was not programmed we have no clue what type of hardware we are.
-	
+
 	if( hw_DeviceID == 0xFF ) {
 
 		// First turn off LED of hw_LED_LAMP.
@@ -167,41 +168,40 @@ void hw_Initialize( void ) {
 
 		// Now hang flashing some lights...
 
-		while(1) {
+		while( 1 ) {
 			_RC4 = 1;
 			_RB5 = 1;
-			__delay32(1500000);
+			__delay32( 1500000 );
 			_RC4 = 0;
 			_RB5 = 0;
-			__delay32(20000000);
+			__delay32( 20000000 );
 		}
 	}
-	
-	
+
 	// Find out additional individual config parameters from Unit ID byte 1.
 
 	fidc.Val = 0xf80014;
-	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+	fidc_data.word.HW = __builtin_tblrdh( fidc.word.LW );
+	fidc_data.word.LW = __builtin_tblrdl( fidc.word.LW );
 
 	hw_ConfigByte = fidc_data.byte.LB;
 
-	hw_I2C_Installed =       ((hw_ConfigByte & 0x10) != 0);
-	hw_Photodetector_Installed =  ((hw_ConfigByte & 0x20) != 0); // XXX Fix bug where unit hangs in ADC if disabled!
-	hw_Throttle_Installed =  ((hw_ConfigByte & 0x40) != 0);
-	hw_Actuators_Installed = ((hw_ConfigByte & 0x80) != 0);
+	hw_I2C_Installed = ( ( hw_ConfigByte & 0x10 ) != 0 );
+	hw_Photodetector_Installed = ( ( hw_ConfigByte & 0x20 ) != 0 ); // XXX Fix bug where unit hangs in ADC if disabled!
+	hw_Throttle_Installed = ( ( hw_ConfigByte & 0x40 ) != 0 );
+	hw_Actuators_Installed = ( ( hw_ConfigByte & 0x80 ) != 0 );
 
 	// Byte 2 is the type of circuit board we are on.
 
 	fidc.Val = 0xf80012;
-	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+	fidc_data.word.HW = __builtin_tblrdh( fidc.word.LW );
+	fidc_data.word.LW = __builtin_tblrdl( fidc.word.LW );
 
 	hw_Type = fidc_data.byte.LB;
 
 	fidc.Val = 0xf80010;
-	fidc_data.word.HW = __builtin_tblrdh(fidc.word.LW);
-	fidc_data.word.LW = __builtin_tblrdl(fidc.word.LW);
+	fidc_data.word.HW = __builtin_tblrdh( fidc.word.LW );
+	fidc_data.word.LW = __builtin_tblrdl( fidc.word.LW );
 
 	// Check configuration area, erase it if it seems corrupted.
 
@@ -221,15 +221,15 @@ void hw_Initialize( void ) {
 
 		// Load some sensible values if we have lost calibrations.
 
-		hw_Config->engine_Calibration[ p_ThrottleMin ] = 152;
-		hw_Config->engine_Calibration[ p_ThrottleMax ] = 130;
-		hw_Config->engine_Calibration[ p_GearNeutral ] = 151;
-		hw_Config->engine_Calibration[ p_GearReverse ] = 185;
-		hw_Config->engine_Calibration[ p_GearForward ] = 127;
+		hw_Config->engine_Calibration[p_ThrottleMin] = 152;
+		hw_Config->engine_Calibration[p_ThrottleMax] = 130;
+		hw_Config->engine_Calibration[p_GearNeutral] = 151;
+		hw_Config->engine_Calibration[p_GearReverse] = 185;
+		hw_Config->engine_Calibration[p_GearForward] = 127;
 
-		hw_Config->engine_Calibration[ p_JoystickMin ] = 100;
-		hw_Config->engine_Calibration[ p_JoystickMid ] = 390;
-		hw_Config->engine_Calibration[ p_JoystickMax ] = 660;
+		hw_Config->engine_Calibration[p_JoystickMin] = 100;
+		hw_Config->engine_Calibration[p_JoystickMid] = 390;
+		hw_Config->engine_Calibration[p_JoystickMax] = 660;
 
 		hw_Config->led_BacklightMultiplier = 2;
 		hw_Config->led_BacklightOffset = 10;
@@ -254,8 +254,8 @@ void hw_Initialize( void ) {
 	hw_OutputPort( hw_CAN_EN );
 	hw_OutputPort( hw_CAN_RATE );
 
-	hw_WritePort( hw_CAN_EN, 0 );		// Chip Enable = 0, go off bus.
-	hw_WritePort( hw_CAN_RATE, 0 );		// RS = 0 -> Not in sleep mode.
+	hw_WritePort( hw_CAN_EN, 0 ); // Chip Enable = 0, go off bus.
+	hw_WritePort( hw_CAN_RATE, 0 ); // RS = 0 -> Not in sleep mode.
 
 	// Peripheral mappings
 
@@ -270,10 +270,10 @@ void hw_Initialize( void ) {
 			hw_OutputPort( hw_LED_WHITE );
 
 			PPSUnLock;
-			PPSOutput( PPS_OC1, PPS_RP20 ); 	// Red PWM to RP20.
-			PPSOutput( PPS_OC2, PPS_RP21 ); 	// White PWM to RP21.
-			RPOR6bits.RP12R = 0x10;				// CAN Transmit to RP12.
-			RPINR26bits.C1RXR = 13;				// CAN Receive from pin RP13.
+			PPSOutput( PPS_OC1, PPS_RP20 ); // Red PWM to RP20.
+			PPSOutput( PPS_OC2, PPS_RP21 ); // White PWM to RP21.
+			RPOR6bits.RP12R = 0x10; // CAN Transmit to RP12.
+			RPINR26bits.C1RXR = 13; // CAN Receive from pin RP13.
 			PPSLock;
 			break;
 		}
@@ -298,14 +298,14 @@ void hw_Initialize( void ) {
 			// They get configured on first use instead.
 
 			PPSUnLock;
-			PPSOutput( PPS_OC1, PPS_RP5 );	 	// Red Backlight PWM to pin 41.
+			PPSOutput( PPS_OC1, PPS_RP5 ); // Red Backlight PWM to pin 41.
 			hw_PWMInverted = 1;
-			RPOR6bits.RP12R = 0x10;				// CAN Transmit to pin 10.
-			RPINR26bits.C1RXR = 0;				// CAN Receive from pin 21.
+			RPOR6bits.RP12R = 0x10; // CAN Transmit to pin 10.
+			RPINR26bits.C1RXR = 0; // CAN Receive from pin 21.
 
 			if( hw_Actuators_Installed ) {
-				PPSOutput( PPS_OC3, PPS_RP2 );	// Ch1: Throttle to pin 23.
-				PPSOutput( PPS_OC4, PPS_RP18 );	// Ch1: Gear box to pin 27.
+				PPSOutput( PPS_OC3, PPS_RP2 ); // Ch1: Throttle to pin 23.
+				PPSOutput( PPS_OC4, PPS_RP18 ); // Ch1: Gear box to pin 27.
 				hw_OutputPort( hw_SWITCH3 );
 				hw_WritePort( hw_SWITCH3, 0 );
 			}
@@ -321,9 +321,9 @@ void hw_Initialize( void ) {
 
 	PMD1 = 0x0078; // Disable UART1, UART2, SPI1, SPI2
 
-	if( ! hw_I2C_Installed ) PMD1bits.I2C1MD = 1;
+	if( !hw_I2C_Installed ) PMD1bits.I2C1MD = 1;
 
-	if( (!hw_Photodetector_Installed) && (!hw_Throttle_Installed) ) PMD1bits.AD1MD = 1;
+	if( ( !hw_Photodetector_Installed ) && ( !hw_Throttle_Installed ) ) PMD1bits.AD1MD = 1;
 
 	PMD2 = 0xC300; // Disable all Input Captures.
 
@@ -338,72 +338,57 @@ void hw_Initialize( void ) {
 	return;
 }
 
-
 //-------------------------------------------------------------------------------
 // Copy parameters from Flash to RAM.
 // Not that if hw_CONFIG_SIZE exceeds 64 more rows will need to be read.
 
 void hw_ReadConfigFlash() {
-    _init_prog_address( hw_ConfigPtr, hw_ConfigData);
-    _memcpy_p2d16( &hw_1kBuffer, hw_ConfigPtr, _FLASH_ROW );
+	_init_prog_address( hw_ConfigPtr, hw_ConfigData);
+	_memcpy_p2d16( &hw_1kBuffer, hw_ConfigPtr, _FLASH_ROW );
 
-    hw_Config = (hw_Config_t*)hw_1kBuffer;
+	hw_Config = (hw_Config_t*) hw_1kBuffer;
 }
-
 
 //-------------------------------------------------------------------------------
 // Copy parameters from RAM to Flash.
 // Note that only one row is written although the whole page is erased.
 
 void hw_WriteSettingsFlash() {
-    _init_prog_address( hw_ConfigPtr, hw_ConfigData);
+	_init_prog_address( hw_ConfigPtr, hw_ConfigData);
 	_erase_flash( hw_ConfigPtr );
-	_write_flash16( hw_ConfigPtr, (int*)hw_1kBuffer );
+	_write_flash16( hw_ConfigPtr, (int*) hw_1kBuffer );
 }
-
 
 //-------------------------------------------------------------------------------
 
-unsigned char hw_IsPWM( unsigned short hw_Port ) {
+unsigned char hw_IsPWM(unsigned short hw_Port) {
 
-	if( hw_Port == hw_LED_RED ||
-		hw_Port == hw_LED_WHITE ||
-		hw_Port == hw_LED_LIGHT ||
-		hw_Port == hw_BACKLIGHT
-	) return 1;
+	if( hw_Port == hw_LED_RED || hw_Port == hw_LED_WHITE || hw_Port == hw_LED_LIGHT || hw_Port == hw_BACKLIGHT ) return 1;
 
 	return 0;
 }
 
-
 //-------------------------------------------------------------------------------
 
-unsigned char hw_IsActuator( unsigned short hw_Port ) {
+unsigned char hw_IsActuator(unsigned short hw_Port) {
 
-	if( hw_Port == hw_PWM1 ||
-		hw_Port == hw_PWM2
-	) return 1;
+	if( hw_Port == hw_PWM1 || hw_Port == hw_PWM2 ) return 1;
 
 	return 0;
 }
 
-
 //-------------------------------------------------------------------------------
 
-unsigned char hw_IsSwitch( unsigned short hw_Port ) {
+unsigned char hw_IsSwitch(unsigned short hw_Port) {
 
-	if( hw_Port >= hw_SWITCH1 &&
-		hw_Port <= hw_SWITCH4
-		) return 1;
+	if( hw_Port >= hw_SWITCH1 && hw_Port <= hw_SWITCH4 ) return 1;
 
 	return 0;
 }
-
 
 //---------------------------------------------------------------------------------------------
 
-void hw_AcknowledgeSwitch( unsigned char port, int setting ) {
-
+void hw_AcknowledgeSwitch(unsigned char port, int setting) {
 
 	switch( port ) {
 		case hw_KEY1: {
@@ -415,13 +400,13 @@ void hw_AcknowledgeSwitch( unsigned char port, int setting ) {
 		case hw_KEY2: {
 			hw_WritePort( hw_LED2, setting );
 			hw_LEDStatus = hw_LEDStatus & 5;
-			hw_LEDStatus = hw_LEDStatus | setting<<1;
+			hw_LEDStatus = hw_LEDStatus | setting << 1;
 			break;
 		}
 		case hw_KEY3: {
 			hw_WritePort( hw_LED3, setting );
 			hw_LEDStatus = hw_LEDStatus & 3;
-			hw_LEDStatus = hw_LEDStatus | setting<<2;
+			hw_LEDStatus = hw_LEDStatus | setting << 2;
 			break;
 		}
 	}
@@ -429,12 +414,12 @@ void hw_AcknowledgeSwitch( unsigned char port, int setting ) {
 
 //-------------------------------------------------------------------------------
 
-void hw_Sleep( void ) {
+void hw_Sleep(void) {
 
 	// Check for things that need us to stay awake:
 
 	if( hw_StayAwakeTimer > 0 ) return;
-	if( ! queue_Empty( events_Queue ) ) return;
+	if( !queue_Empty( events_Queue ) ) return;
 	if( nmea_TX_REQUEST_BIT ) return;
 	if( display_IsOn ) return;
 
@@ -443,11 +428,11 @@ void hw_Sleep( void ) {
 	hw_WritePort( hw_CAN_RATE, 1 );
 	nmea_ControllerMode( hw_ECAN_MODE_DISABLE );
 
-	if( hw_CPUStopPossible ) { 
+	if( hw_CPUStopPossible ) {
 		// Deep sleep, clocks stopped.
 		asm volatile ("PWRSAV #0");
 	}
-	else { 
+	else {
 		// Idle with PWM clocks still running.
 		asm volatile ("PWRSAV #1");
 	}
@@ -456,35 +441,34 @@ void hw_Sleep( void ) {
 	hw_WritePort( hw_CAN_RATE, 0 );
 }
 
-
 //-------------------------------------------------------------------------------
 
 void ADC_Initialize(void) {
 
 	AD1CON1bits.ADON = 0;
 
-	AD1CON1 = 0x00E0;			// Idle=Stop, 10bit, unsigned, Auto conversion.
-	AD1CON2bits.VCFG = 0x0;		// AVss/AVdd
-	AD1CON2bits.CHPS = 0x0;		// 1 Channel conversion.
-	AD1CON2bits.ALTS = 0x0;		// Only use MUX A.
-	AD1CON3 = 0x0800;			// System clock, Ts = 8xTad, Tad=1xTcy.
+	AD1CON1 = 0x00E0; // Idle=Stop, 10bit, unsigned, Auto conversion.
+	AD1CON2bits.VCFG = 0x0; // AVss/AVdd
+	AD1CON2bits.CHPS = 0x0; // 1 Channel conversion.
+	AD1CON2bits.ALTS = 0x0; // Only use MUX A.
+	AD1CON3 = 0x0800; // System clock, Ts = 8xTad, Tad=1xTcy.
 
-	AD1CSSL = 0x0000;			// No scanning.
+	AD1CSSL = 0x0000; // No scanning.
 	IFS0bits.AD1IF = 0;
 
 }
 
-
 //-------------------------------------------------------------------------------
 
-unsigned int ADC_Read( unsigned char channel ) {
+unsigned int ADC_Read(unsigned char channel) {
 
-	AD1CHS0bits.CH0SA = channel;	// Channel 0 MUX A input.
+	AD1CHS0bits.CH0SA = channel; // Channel 0 MUX A input.
 
 	AD1CON1bits.ADON = 1;
 
 	AD1CON1bits.SAMP = 1;
-	while (!AD1CON1bits.DONE);
+	while( !AD1CON1bits.DONE )
+		;
 
 	AD1CON1bits.ADON = 0;
 

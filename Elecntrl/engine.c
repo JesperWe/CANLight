@@ -14,35 +14,27 @@
 #include "engine.h"
 #include "events.h"
 
-short	engine_ThrottlePW;
-short	engine_GearPW;
-short	engine_CurThrottlePW;
-short	engine_CurGearPW;
+short engine_ThrottlePW;
+short engine_GearPW;
+short engine_CurThrottlePW;
+short engine_CurGearPW;
 
-unsigned char	engine_CurMasterDevice;
-short			engine_Joystick_Level;
-short			engine_LastJoystickLevel;
-char			engine_Throttle; // Used by both Joystick, Actuators and I2C!
-short			engine_Gear;
-unsigned long	engine_LastTimer;
-short			engine_ThrottleTimeSteps;
+unsigned char engine_CurMasterDevice;
+short engine_Joystick_Level;
+short engine_LastJoystickLevel;
+char engine_Throttle; // Used by both Joystick, Actuators and I2C!
+short engine_Gear;
+unsigned long engine_LastTimer;
+short engine_ThrottleTimeSteps;
 unsigned char engine_JoystickCalibrationMonitor;
 
-unsigned char	engine_TargetThrottle;
+unsigned char engine_TargetThrottle;
 
-char	engine_CurrentGear;
-char	engine_TargetGear;
+char engine_CurrentGear;
+char engine_TargetGear;
 
 const char* engine_ParamNames[] = {
-	"Engine Calibration",
-	"Throttle Full",
-	"Throttle Idle",
-	"Gear Neutral",
-	"Gear Forward",
-	"Gear Reverse",
-	"Joystick Min",
-	"Joystick Center",
-	"Joystick Max",
+"Engine Calibration", "Throttle Full", "Throttle Idle", "Gear Neutral", "Gear Forward", "Gear Reverse", "Joystick Min", "Joystick Center", "Joystick Max",
 };
 
 //---------------------------------------------------------------------------------------------
@@ -53,14 +45,14 @@ const char* engine_ParamNames[] = {
 
 void engine_Initialize() {
 
-	OC3CONbits.OCSIDL = 0; 		// Stop in idle mode.
-	OC3CONbits.OCM = 6; 		// PWM mode.
+	OC3CONbits.OCSIDL = 0; // Stop in idle mode.
+	OC3CONbits.OCM = 6; // PWM mode.
 
-	OC4CONbits.OCSIDL = 0; 		// Stop in idle mode.
-	OC4CONbits.OCM = 6; 		// PWM mode.
+	OC4CONbits.OCSIDL = 0; // Stop in idle mode.
+	OC4CONbits.OCM = 6; // PWM mode.
 
-	engine_SetGear(0);			// Gear to neutral.
-	engine_SetThrottle(0);		// Throttle to idle.
+	engine_SetGear( 0 ); // Gear to neutral.
+	engine_SetThrottle( 0 ); // Throttle to idle.
 
 	hw_WritePort( hw_SWITCH3, 0 );
 	hw_OutputPort( hw_SWITCH3 ); // Power to Roboteq.
@@ -95,25 +87,23 @@ unsigned char engine_ReadThrottleLevel() {
 	// Require a significant movement before taking action.
 
 	diff = engine_Joystick_Level - engine_LastJoystickLevel;
-	if( diff<engine_THROTTLE_MIN_CHANGE && diff>-engine_THROTTLE_MIN_CHANGE ) return 0;
+	if( diff < engine_THROTTLE_MIN_CHANGE && diff > -engine_THROTTLE_MIN_CHANGE ) return 0;
 	engine_LastJoystickLevel = engine_Joystick_Level;
 
 	// Scale A/D Converted level down to -100 --  +100 integer, calibrated.
 
-	calibratedLevel = engine_Joystick_Level - hw_Config->engine_Calibration[ p_JoystickMid ];
+	calibratedLevel = engine_Joystick_Level - hw_Config->engine_Calibration[p_JoystickMid];
 
-	if( calibratedLevel < engine_IDLE_DEADBAND && (-calibratedLevel < engine_IDLE_DEADBAND) ) {
+	if( calibratedLevel < engine_IDLE_DEADBAND && ( -calibratedLevel < engine_IDLE_DEADBAND ) ) {
 		engine_Throttle = 0;
 	}
-	else if( calibratedLevel > 0  ) {
-		engine_Throttle = 100.0 * (float)(calibratedLevel - engine_IDLE_DEADBAND) /
-				(float)( hw_Config->engine_Calibration[ p_JoystickMax ] -
-						  hw_Config->engine_Calibration[ p_JoystickMid ] );
+	else if( calibratedLevel > 0 ) {
+		engine_Throttle = 100.0 * (float) ( calibratedLevel - engine_IDLE_DEADBAND ) / (float) ( hw_Config->engine_Calibration[p_JoystickMax]
+				- hw_Config->engine_Calibration[p_JoystickMid] );
 	}
 	else {
-		engine_Throttle = 100.0 * (float)(calibratedLevel + engine_IDLE_DEADBAND) /
-				(float)( hw_Config->engine_Calibration[ p_JoystickMid ] -
-						  hw_Config->engine_Calibration[ p_JoystickMin ] );
+		engine_Throttle = 100.0 * (float) ( calibratedLevel + engine_IDLE_DEADBAND ) / (float) ( hw_Config->engine_Calibration[p_JoystickMid]
+				- hw_Config->engine_Calibration[p_JoystickMin] );
 	}
 
 	if( engine_Throttle > 100 ) engine_Throttle = 100;
@@ -122,7 +112,6 @@ unsigned char engine_ReadThrottleLevel() {
 	return 1;
 }
 
-
 void engine_UpdateActuators() {
 
 	if( engine_ThrottlePW != engine_CurThrottlePW ) {
@@ -130,17 +119,16 @@ void engine_UpdateActuators() {
 		engine_CurThrottlePW = engine_ThrottlePW;
 	}
 
-	if (engine_GearPW != engine_CurGearPW ) {
+	if( engine_GearPW != engine_CurGearPW ) {
 		OC4RS = engine_GearPW;
 		engine_CurGearPW = engine_GearPW;
 	}
 }
 
-
 //---------------------------------------------------------------------------------------------
 // Request a throttle level from 0 to 100.
 
-void engine_RequestThrottle( unsigned char level ) {
+void engine_RequestThrottle(unsigned char level) {
 
 	engine_TargetThrottle = level;
 
@@ -157,11 +145,10 @@ void engine_RequestThrottle( unsigned char level ) {
 	engine_SetThrottle( 0 );
 }
 
-
 //---------------------------------------------------------------------------------------------
 // Request a gear setting. The actual gear will not be set until engine RPM allows it.
 
-void engine_RequestGear( char direction ) {
+void engine_RequestGear(char direction) {
 
 	// Do nothing if we are already in the right gear.
 
@@ -174,11 +161,10 @@ void engine_RequestGear( char direction ) {
 	engine_TargetGear = direction;
 }
 
-
 //---------------------------------------------------------------------------------------------
 // Actually set throttle to a level from 0 to 100.
 
-void engine_SetThrottle( unsigned char level ) {
+void engine_SetThrottle(unsigned char level) {
 	float fLevel;
 	float range;
 
@@ -186,25 +172,33 @@ void engine_SetThrottle( unsigned char level ) {
 
 	engine_Throttle = level;
 
-	fLevel = ((float)level) / 100.0;
+	fLevel = ( (float) level ) / 100.0;
 
-	range = hw_Config->engine_Calibration[ p_ThrottleMax ] - hw_Config->engine_Calibration[ p_ThrottleMin ];
+	range = hw_Config->engine_Calibration[p_ThrottleMax] - hw_Config->engine_Calibration[p_ThrottleMin];
 	fLevel = fLevel * range;
 
-	engine_ThrottlePW = hw_Config->engine_Calibration[ p_ThrottleMin ] + (short)fLevel;
+	engine_ThrottlePW = hw_Config->engine_Calibration[p_ThrottleMin] + (short) fLevel;
 	engine_UpdateActuators();
 }
-
 
 //---------------------------------------------------------------------------------------------
 // Actually set gear.
 
-void engine_SetGear( char direction ) {
+void engine_SetGear(char direction) {
 
 	switch( direction ) {
-		case 0: { engine_GearPW = hw_Config->engine_Calibration[ p_GearNeutral ]; break; }
-		case 1: { engine_GearPW = hw_Config->engine_Calibration[ p_GearForward ]; break; }
-		case -1: { engine_GearPW = hw_Config->engine_Calibration[ p_GearReverse ]; break; }
+		case 0: {
+			engine_GearPW = hw_Config->engine_Calibration[p_GearNeutral];
+			break;
+		}
+		case 1: {
+			engine_GearPW = hw_Config->engine_Calibration[p_GearForward];
+			break;
+		}
+		case -1: {
+			engine_GearPW = hw_Config->engine_Calibration[p_GearReverse];
+			break;
+		}
 	}
 
 	// Now do the gear change.
@@ -213,7 +207,6 @@ void engine_SetGear( char direction ) {
 	engine_CurrentGear = direction;
 	engine_LastTimer = schedule_time;
 }
-
 
 //--------------------------------------------------------------------------------------------
 // Engine Task:
@@ -251,7 +244,6 @@ void engine_ActuatorTask() {
 	}
 }
 
-
 //--------------------------------------------------------------------------------------------
 // This task reads the joystick and sends it out as a new throttle level if it has changed.
 
@@ -268,7 +260,7 @@ void engine_JoystickTask() {
 
 		// Only send wakeup if there has been a significant pause since last event.
 
-		if( schedule_time - engine_LastTimer > schedule_SECOND/2 ) {
+		if( schedule_time - engine_LastTimer > schedule_SECOND / 2 ) {
 			nmea_Wakeup();
 		}
 
@@ -284,7 +276,6 @@ void engine_JoystickTask() {
 	}
 }
 
-
 //--------------------------------------------------------------------------------------------
 // Menu state machine handlers for engine settings:
 // engine_ThrottleMonitor - Set up the display for monitoring throttle levels.
@@ -292,12 +283,12 @@ void engine_JoystickTask() {
 //
 
 int engine_ThrottleMonitor() {
-	display_SetPosition(1,2);
-	display_Write("Throttle:");
-	display_SetPosition(1,3);
-	display_Write("Gearbox:");
+	display_SetPosition( 1, 2 );
+	display_Write( "Throttle:" );
+	display_SetPosition( 1, 3 );
+	display_Write( "Gearbox:" );
 
-	schedule_AddTask( engine_ThrottleMonitorUpdater, schedule_SECOND/2 );
+	schedule_AddTask( engine_ThrottleMonitorUpdater, schedule_SECOND / 2 );
 	return menu_NO_DISPLAY_UPDATE;
 }
 
@@ -313,7 +304,7 @@ void engine_ThrottleMonitorUpdater() {
 	// First show exact joystick levels read.
 
 	display_NumberFormat( numberString, 4, engine_LastJoystickLevel );
-	display_SetPosition( 17,1 );
+	display_SetPosition( 17, 1 );
 	display_Write( numberString );
 
 	// Now show a graphical representation of the resulting actuator positions.
@@ -331,9 +322,18 @@ void engine_ThrottleMonitorUpdater() {
 	display_HorizontalBar( 10, 2, throttle );
 
 	switch( gear ) {
-		case 0:  { gear = 25; break; }
-		case 1:  { gear = 49; break; }
-		case -1: { gear =  1; break; }
+		case 0: {
+			gear = 25;
+			break;
+		}
+		case 1: {
+			gear = 49;
+			break;
+		}
+		case -1: {
+			gear = 1;
+			break;
+		}
 	}
 
 	display_HorizontalBar( 10, 3, gear );
@@ -356,11 +356,11 @@ int engine_CalibrationParams() {
 
 //--------------------------------------------------------------------------------------------
 
-int engine_ProcessEvent( event_t *event, unsigned char port, unsigned char action ) {
+int engine_ProcessEvent(event_t *event, unsigned char port, unsigned char action) {
 	event_t masterEvent;
-	char	throttle;
+	char throttle;
 
-	if( ! hw_Actuators_Installed ) return 0;
+	if( !hw_Actuators_Installed ) return 0;
 
 	switch( event->ctrlEvent ) {
 
@@ -438,7 +438,7 @@ int engine_ProcessEvent( event_t *event, unsigned char port, unsigned char actio
 
 //--------------------------------------------------------------------------------------------
 
-void engine_SetMaster( event_t *event ) {
+void engine_SetMaster(event_t *event) {
 	short port;
 
 	engine_CurMasterDevice = event->info;
@@ -452,7 +452,7 @@ void engine_SetMaster( event_t *event ) {
 	// our config to find which indicator to turn off.
 
 	else {
-		for( port=0; port<hw_PortCount; port++ ) {
+		for( port = 0; port < hw_PortCount; port++ ) {
 			if( config_GetGroupIdForPort( port ) == event->groupId ) {
 				hw_AcknowledgeSwitch( port, 0 );
 			}
