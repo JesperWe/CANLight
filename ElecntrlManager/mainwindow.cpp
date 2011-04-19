@@ -8,6 +8,7 @@
 
 #include <QtGui>
 #include <QtSvg>
+#include <QStringBuilder>
 
 #include "ecsManager.h"
 #include "ecsManagerApp.h"
@@ -371,7 +372,7 @@ void MainWindow::on_actionDouble_Click_triggered() { _AddEvent( ecsManager::e_KE
 void MainWindow::on_actionTriple_Click_triggered() { _AddEvent( ecsManager::e_KEY_TRIPLECLICKED ); }
 void MainWindow::on_actionPress_Hold_triggered() { _AddEvent( ecsManager::e_KEY_HOLDING ); }
 void MainWindow::on_actionRelease_triggered() { _AddEvent( ecsManager::e_KEY_RELEASED ); }
-void MainWindow::on_actionSignal_Change_triggered() { _AddEvent( ecsManager::e_LEVEL_CHANGED ); }
+void MainWindow::on_actionSignal_Change_triggered() { _AddEvent( ecsManager::e_THROTTLE_CHANGED ); }
 
 
 //-------------------------------------------------------------------------------------------------
@@ -521,13 +522,20 @@ void MainWindow::onKeypress( QKeyEvent *event ) {
 void MainWindow::on_actionUpload_to_Yacht_triggered()
 {
     QByteArray configFile;
-    SystemDescription::buildNMEAConfig( configFile );
+    int fubar = SystemDescription::buildNMEAConfig( configFile );
+    if( fubar != 0 ) {
+        QString msg = "Config file FUBAR " % QString::number(fubar) % " !";
+        QMessageBox msgBox;
+        msgBox.setText( msg );
+        msgBox.setIcon( QMessageBox::Critical );
+        msgBox.exec();
+        return;
+    }
 
     if( configFile.length() > 1024 ) {
-        QString msg = "Configuration file size ";
-        msg.append( QString::number(configFile.length()) );
-        msg.append( " exceeds maximum supported size of 1024 bytes." );
-
+        QString msg = "Configuration file size "
+                      % QString::number(configFile.length())
+                      % " exceeds maximum supported size of 1024 bytes.";
         QMessageBox msgBox;
         msgBox.setText( msg );
         msgBox.setIcon( QMessageBox::Critical );

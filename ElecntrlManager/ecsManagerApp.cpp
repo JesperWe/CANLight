@@ -38,7 +38,8 @@ ecsManagerApp::ecsManagerApp() {
     eventIcons[ ecsManager::e_KEY_TRIPLECLICKED ] = QPixmap(":/graphics/click-triple.svg");
     eventIcons[ ecsManager::e_KEY_HOLDING ] = QPixmap(":/graphics/click-hold.svg");
     eventIcons[ ecsManager::e_KEY_RELEASED ] = QPixmap(":/graphics/click-release.svg");
-    eventIcons[ ecsManager::e_LEVEL_CHANGED ] = QPixmap(":/graphics/signal.svg");
+    eventIcons[ ecsManager::e_LED_LEVEL_CHANGED ] = QPixmap(":/graphics/signal.svg");
+    eventIcons[ ecsManager::e_THROTTLE_CHANGED ] = QPixmap(":/graphics/signal.svg");
 
     statusIcons[ ecsManager::StatusRed ] = QPixmap(":/graphics/icon-red.svg");
     statusIcons[ ecsManager::StatusYellow ] = QPixmap(":/graphics/icon-yellow.svg");

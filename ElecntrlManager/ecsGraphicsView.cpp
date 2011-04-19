@@ -89,7 +89,7 @@ void ecsGraphicsView::setupUI() {
             tr("Release Key"), this
             );
     QAction* makeSignalChange = new QAction(
-            ecsManagerApp::inst()->eventIcons[ecsManager::e_LEVEL_CHANGED],
+            ecsManagerApp::inst()->eventIcons[ecsManager::e_THROTTLE_CHANGED],
             tr("Signal Change"), this
             );
 
@@ -98,7 +98,7 @@ void ecsGraphicsView::setupUI() {
     makeTripleClick->setData( ecsManager::e_KEY_TRIPLECLICKED );
     makePressHold->setData( ecsManager::e_KEY_HOLDING );
     makeRelease->setData( ecsManager::e_KEY_RELEASED );
-    makeSignalChange->setData( ecsManager::e_LEVEL_CHANGED );
+    makeSignalChange->setData( ecsManager::e_THROTTLE_CHANGED );
 
     ecsGraphicsEventMenu->addAction( makeSingleClick );
     ecsGraphicsEventMenu->addAction( makeDoubleClick );

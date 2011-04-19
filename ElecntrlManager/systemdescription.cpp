@@ -152,7 +152,7 @@ void SystemDescription::saveFile( QString toFile )
 #define END_GROUP 0xFE
 #define END_OF_FILE 0xFF
 
-void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
+int SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 
 	configFile.clear();
 
@@ -191,6 +191,10 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 		}
 		configFile.append( END_GROUP_APPLIANCES );
 
+                if( linkNumber == 0 ) {
+                    // XXX Houston! We have a problem!
+                    return -1;
+                }
 		// Now find our listening group.
 		// XXX Support multiple targets?
 
@@ -211,6 +215,11 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
                 }
 		configFile.append( END_GROUP_APPLIANCES );
 
+                if( linkNumber == 0 ) {
+                    // XXX Houston! We have a problem!
+                    return -2;
+                }
+
 		foreach( ecsEvent* event, cGroup->events ) {
 			configFile.append( (uint8_t)( event->eventType ) );
 			configFile.append( (uint8_t)( event->eventAction->actionType ) );
@@ -222,6 +231,7 @@ void  SystemDescription::buildNMEAConfig( 	QByteArray &configFile ) {
 		configFile.append( END_GROUP ); // End of the whole group.
 	}
 	configFile.append( END_OF_FILE );
+        return 0;
 }
 
 //-------------------------------------------------------------------------------------------------

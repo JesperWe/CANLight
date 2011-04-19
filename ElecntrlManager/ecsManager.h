@@ -43,11 +43,12 @@ public:
 		/* 16 */ e_BLACKOUT,
 		/* 17 */ e_SLOW_HEARTBEAT,
 		/* 18 */ e_THROTTLE_MASTER,
-		/* 19 */ e_LEVEL_CHANGED,
-		/* 20 */ e_CONFIG_FILE_UPDATE,
-		/* 21 */ e_SET_BACKLIGHT_LEVEL,
-		/* 22 */ e_NO_EVENTS
-	};
+                /* 19 */ e_LED_LEVEL_CHANGED,
+                /* 20 */ e_CONFIG_FILE_UPDATE,
+                /* 21 */ e_SET_BACKLIGHT_LEVEL,
+                /* 22 */ e_THROTTLE_CHANGED,
+                /* 23 */ e_NO_EVENTS
+        };
 
 	enum actionType_e {
 		/* 00 */ a_SWITCH_ON,
