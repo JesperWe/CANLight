@@ -12,7 +12,9 @@
 #define engine_UNKNOWN_GEAR		17
 #define engine_UNKNOWN_JOYSTICK	4711
 #define engine_JOYSTICK_AD_CHANNEL	10
-
+#define engine_IDLE_DEADBAND 		8
+#define engine_THROTTLE_MIN_CHANGE 5
+#define engine_GEARBOX_DELAY		10 // Number of ActuatorTask cycles.
 
 enum engine_CalibrationParameters {
 	/* 00 */ p_None,
@@ -24,7 +26,8 @@ enum engine_CalibrationParameters {
 	/* 06 */ p_JoystickMin,
 	/* 07 */ p_JoystickMid,
 	/* 08 */ p_JoystickMax,
-	/* 09 */ engine_NO_CALIBRATION_PARAMS
+	/* 09 */ p_ActuatorsTimeout,
+	/* 10 */ engine_NO_CALIBRATION_PARAMS
 };
 
 extern short	engine_Calibration[];
@@ -38,9 +41,11 @@ extern short			engine_LastJoystickLevel;
 extern unsigned char	engine_CurMasterDevice;
 extern short 			engine_CurrentRPM;
 extern short 			engine_CurrentRPM;
-extern unsigned long	engine_LastTimer;
+extern unsigned long	engine_LastGearTime;
+extern unsigned long engine_LastActuatorUpdate;
 extern unsigned char	engine_TargetThrottle;
 extern short			engine_ThrottleTimeSteps;
+extern short			engine_GearTimeSteps;
 
 extern char			engine_CurrentGear;
 extern char			engine_TargetGear;
@@ -48,6 +53,7 @@ extern char			engine_TargetGear;
 extern short			engine_Joystick_Level;
 extern short			engine_Gear;
 extern char			engine_Throttle;
+extern char			engine_LastThrottle;
 
 extern unsigned char 	engine_JoystickCalibrationMonitor;
 
@@ -58,7 +64,7 @@ unsigned char engine_ReadThrottleLevel();
 void engine_UpdateActuators();
 
 void engine_RequestGear( char direction );
-void engine_RequestThrottle( unsigned char level );
+void engine_RequestThrottleAndGear( char throttle, char gear );
 
 void engine_SetThrottle( unsigned char level );
 void engine_SetGear( char direction );

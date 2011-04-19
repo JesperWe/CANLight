@@ -105,7 +105,7 @@ void event_Task() {
 						engine_Gear = event.ctrlPort;
 						engine_LastJoystickLevel = event.info;
 					}
-					return;
+					break;
 				}
 
 				case e_LED_LEVEL_CHANGED: {
@@ -142,6 +142,11 @@ void event_Task() {
 						// We are master. Save controller group ID for set_level events.
 						led_LevelControlGroup = event.groupId;
 					}
+					return;
+				}
+
+				case e_THROTTLE_MASTER: {
+					if( hw_Joystick_Installed ) engine_SetMaster( &event );
 					return;
 				}
 			}
@@ -183,7 +188,7 @@ void event_Task() {
 					continue;
 				}
 
-				if( hw_IsPWM(port) ) {
+				if( hw_IsLED(port) ) {
 					led_ProcessEvent( &event, port, takeAction );
 					continue;
 				}
@@ -206,11 +211,6 @@ void event_Task() {
 
 					case a_SWITCH_OFF: {
 						hw_AcknowledgeSwitch( port, 0 );
-						break;
-					}
-
-					case a_SET_THROTTLE_MASTER: {
-						if( hw_Throttle_Installed ) engine_SetMaster( &event );
 						break;
 					}
 				}

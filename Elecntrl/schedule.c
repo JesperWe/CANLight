@@ -21,11 +21,13 @@ short schedule_NoTasks;
 schedule_Task_t schedule_Tasks[schedule_MAX_NO_TASKS];
 short schedule_Active;
 unsigned char schedule_Running = FALSE;
+unsigned char schedule_HaveSleepingTask;
 unsigned long schedule_time = 0;
 short schedule_Parameter;
 
 void schedule_Initialize() {
 	schedule_NoTasks = 0;
+	schedule_HaveSleepingTask = FALSE;
 
     // Timer 1 will be our main task timer.
 
@@ -116,7 +118,9 @@ void schedule_Sleep( short forTicks ) {
 	curTask->waitedTicks = 0;
 	curTask->sleepForTicks = forTicks;
 
+	schedule_HaveSleepingTask = TRUE;
 	schedule_Run();
+	schedule_HaveSleepingTask = FALSE;
 
 	curTask->sleepForTicks = 0;
 }

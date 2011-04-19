@@ -31,7 +31,7 @@ unsigned short hw_PWMInverted = 0;
 unsigned short hw_Type;
 unsigned char hw_I2C_Installed = 0;
 unsigned char hw_Photodetector_Installed = 0;
-unsigned char hw_Throttle_Installed = 0;
+unsigned char hw_Joystick_Installed = 0;
 unsigned char hw_Actuators_Installed = 0;
 unsigned char hw_ConfigByte = 0;
 unsigned char hw_DetectorADCChannel;
@@ -188,7 +188,7 @@ void hw_Initialize(void) {
 
 	hw_I2C_Installed = ( ( hw_ConfigByte & 0x10 ) != 0 );
 	hw_Photodetector_Installed = ( ( hw_ConfigByte & 0x20 ) != 0 ); // XXX Fix bug where unit hangs in ADC if disabled!
-	hw_Throttle_Installed = ( ( hw_ConfigByte & 0x40 ) != 0 );
+	hw_Joystick_Installed = ( ( hw_ConfigByte & 0x40 ) != 0 );
 	hw_Actuators_Installed = ( ( hw_ConfigByte & 0x80 ) != 0 );
 
 	// Byte 2 is the type of circuit board we are on.
@@ -221,8 +221,8 @@ void hw_Initialize(void) {
 
 		// Load some sensible values if we have lost calibrations.
 
-		hw_Config->engine_Calibration[p_ThrottleMin] = 152;
-		hw_Config->engine_Calibration[p_ThrottleMax] = 130;
+		hw_Config->engine_Calibration[p_ThrottleMin] = 160;
+		hw_Config->engine_Calibration[p_ThrottleMax] = 133;
 		hw_Config->engine_Calibration[p_GearNeutral] = 151;
 		hw_Config->engine_Calibration[p_GearReverse] = 185;
 		hw_Config->engine_Calibration[p_GearForward] = 127;
@@ -230,6 +230,7 @@ void hw_Initialize(void) {
 		hw_Config->engine_Calibration[p_JoystickMin] = 100;
 		hw_Config->engine_Calibration[p_JoystickMid] = 390;
 		hw_Config->engine_Calibration[p_JoystickMax] = 660;
+		hw_Config->engine_Calibration[p_ActuatorsTimeout] = schedule_SECOND * 5;
 
 		hw_Config->led_BacklightMultiplier = 2;
 		hw_Config->led_BacklightOffset = 10;
@@ -282,7 +283,7 @@ void hw_Initialize(void) {
 
 			hw_DetectorADCChannel = 0;
 			if( hw_Photodetector_Installed ) AD1PCFGLbits.PCFG0 = 0;
-			if( hw_Throttle_Installed ) AD1PCFGLbits.PCFG10 = 0;
+			if( hw_Joystick_Installed ) AD1PCFGLbits.PCFG10 = 0;
 
 			hw_OutputPort( hw_LED_RED );
 			hw_OutputPort( hw_LED1 );
@@ -323,7 +324,7 @@ void hw_Initialize(void) {
 
 	if( !hw_I2C_Installed ) PMD1bits.I2C1MD = 1;
 
-	if( ( !hw_Photodetector_Installed ) && ( !hw_Throttle_Installed ) ) PMD1bits.AD1MD = 1;
+	if( ( !hw_Photodetector_Installed ) && ( !hw_Joystick_Installed ) ) PMD1bits.AD1MD = 1;
 
 	PMD2 = 0xC300; // Disable all Input Captures.
 
@@ -361,7 +362,7 @@ void hw_WriteSettingsFlash() {
 
 //-------------------------------------------------------------------------------
 
-unsigned char hw_IsPWM(unsigned short hw_Port) {
+unsigned char hw_IsLED(unsigned short hw_Port) {
 
 	if( hw_Port == hw_LED_RED || hw_Port == hw_LED_WHITE || hw_Port == hw_LED_LIGHT || hw_Port == hw_BACKLIGHT ) return 1;
 
@@ -422,6 +423,9 @@ void hw_Sleep(void) {
 	if( !queue_Empty( events_Queue ) ) return;
 	if( nmea_TX_REQUEST_BIT ) return;
 	if( display_IsOn ) return;
+	if( engine_CurMasterDevice == hw_DeviceID ) return;
+	if( engine_CurMasterDevice && hw_Actuators_Installed ) return;
+	if( schedule_HaveSleepingTask ) return;
 
 	// OK, We can sleep now.
 

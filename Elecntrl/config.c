@@ -70,6 +70,7 @@ const unsigned char __attribute__((space(auto_psv),aligned(_FLASH_PAGE*2))) conf
 
 unsigned char config_GetGroupIdForPort(unsigned char port) {
 	unsigned char controllerGroupID;
+	unsigned char listenerGroupID;
 	unsigned char confDevice;
 	unsigned char confPort;
 	unsigned char groupId;
@@ -94,7 +95,9 @@ unsigned char config_GetGroupIdForPort(unsigned char port) {
 		// Listener groups.
 
 		configPtr++; // Delimiter
-		configPtr++; // Listener Group Id
+
+		listenerGroupID = *configPtr++;
+
 		do {
 			confDevice = *configPtr++;
 			confPort = *configPtr++;
@@ -104,6 +107,10 @@ unsigned char config_GetGroupIdForPort(unsigned char port) {
 			if( ( confDevice == hw_DEVICE_ANY ) && ( groupId != 0 ) ) {
 				groupId = config_GROUP_BROADCAST;
 				config_CurrentGroup = controllerGroupID;
+			}
+
+			if( confDevice == hw_DeviceID && confPort == port ) {
+				groupId = listenerGroupID;
 			}
 		}
 		while( *configPtr != DELIMITER );
@@ -123,6 +130,61 @@ unsigned char config_GetGroupIdForPort(unsigned char port) {
 	while( *configPtr != END_OF_FILE );
 
 	return groupId;
+}
+
+//-------------------------------------------------------------------------------
+// Return the controller group for a specific listener group.
+
+unsigned char config_GetControllingGroup( unsigned char listenerGroup ) {
+	unsigned char controllerGroupID;
+	unsigned char listenerGroupID;
+	unsigned char confDevice;
+	unsigned char confPort;
+	unsigned char groupId;
+
+	const unsigned char* configPtr = config_Data;
+	configPtr += 4; // Skip magic and sequence numbers.
+	groupId = 0;
+
+	do {
+		controllerGroupID = *configPtr++;
+
+		do {
+			confDevice = *configPtr++;
+			confPort = *configPtr++;
+		}
+		while( *configPtr != DELIMITER );
+
+		// Listener groups.
+
+		configPtr++; // Delimiter
+
+		listenerGroupID = *configPtr++;
+
+		do {
+			confDevice = *configPtr++;
+			confPort = *configPtr++;
+		}
+		while( *configPtr != DELIMITER );
+
+		if( listenerGroupID == listenerGroup ) {
+			return controllerGroupID;
+		}
+
+		// Roll passed event/actions.
+
+		configPtr++;
+		while( *configPtr != DELIMITER ) {
+			configPtr++;
+		}
+		while( *configPtr == DELIMITER ) {
+			configPtr++;
+		}
+
+	}
+	while( *configPtr != END_OF_FILE );
+
+	return 0;
 }
 
 //-------------------------------------------------------------------------------

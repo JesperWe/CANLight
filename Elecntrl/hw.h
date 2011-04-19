@@ -117,7 +117,7 @@ extern unsigned short		hw_HeartbeatCounter;
 extern unsigned short		hw_Type;
 extern unsigned char 		hw_I2C_Installed;
 extern unsigned char		hw_Photodetector_Installed;
-extern unsigned char		hw_Throttle_Installed;
+extern unsigned char		hw_Joystick_Installed;
 extern unsigned char		hw_Actuators_Installed;
 extern unsigned char 		hw_DeviceID;
 extern unsigned short		hw_PWMInverted;
@@ -143,7 +143,7 @@ void hw_ReadConfigFlash( void );
 
 void hw_WriteSettingsFlash( void );
 
-unsigned char hw_IsPWM( unsigned short hw_Port );
+unsigned char hw_IsLED( unsigned short hw_Port );
 
 unsigned char hw_IsActuator( unsigned short hw_Port );
 

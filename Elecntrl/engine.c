@@ -22,10 +22,15 @@ short engine_CurGearPW;
 unsigned char engine_CurMasterDevice;
 short engine_Joystick_Level;
 short engine_LastJoystickLevel;
-char engine_Throttle; // Used by both Joystick, Actuators and I2C!
+char engine_Throttle;
+char engine_LastThrottle;
 short engine_Gear;
-unsigned long engine_LastTimer;
+
+unsigned long engine_LastGearTime;
+unsigned long engine_LastActuatorUpdate;
+
 short engine_ThrottleTimeSteps;
+short engine_GearTimeSteps;
 unsigned char engine_JoystickCalibrationMonitor;
 
 unsigned char engine_TargetThrottle;
@@ -34,7 +39,7 @@ char engine_CurrentGear;
 char engine_TargetGear;
 
 const char* engine_ParamNames[] = {
-"Engine Calibration", "Throttle Full", "Throttle Idle", "Gear Neutral", "Gear Forward", "Gear Reverse", "Joystick Min", "Joystick Center", "Joystick Max",
+"Engine Calibration", "Throttle Full", "Throttle Idle", "Gear Neutral", "Gear Forward", "Gear Reverse", "Joystick Min", "Joystick Center", "Joystick Max", "Actuator Timeout"
 };
 
 //---------------------------------------------------------------------------------------------
@@ -56,6 +61,8 @@ void engine_Initialize() {
 
 	hw_WritePort( hw_SWITCH3, 0 );
 	hw_OutputPort( hw_SWITCH3 ); // Power to Roboteq.
+
+	engine_LastActuatorUpdate = schedule_time;
 }
 
 //---------------------------------------------------------------------------------------------
@@ -67,9 +74,6 @@ void engine_ThrottleInitialize() {
 
 //---------------------------------------------------------------------------------------------
 // Read throttle settings and return True if there was any activity.
-
-#define engine_IDLE_DEADBAND 10
-#define engine_THROTTLE_MIN_CHANGE 5
 
 unsigned char engine_ReadThrottleLevel() {
 	short diff;
@@ -87,12 +91,14 @@ unsigned char engine_ReadThrottleLevel() {
 	// Require a significant movement before taking action.
 
 	diff = engine_Joystick_Level - engine_LastJoystickLevel;
-	if( diff < engine_THROTTLE_MIN_CHANGE && diff > -engine_THROTTLE_MIN_CHANGE ) return 0;
+	if( diff < 0 ) diff = - diff;
+	if( diff < engine_THROTTLE_MIN_CHANGE ) return 0;
 	engine_LastJoystickLevel = engine_Joystick_Level;
 
 	// Scale A/D Converted level down to -100 --  +100 integer, calibrated.
 
-	calibratedLevel = engine_Joystick_Level - hw_Config->engine_Calibration[p_JoystickMid];
+	calibratedLevel = hw_Config->engine_Calibration[p_JoystickMid];
+	calibratedLevel = engine_Joystick_Level - calibratedLevel;
 
 	if( calibratedLevel < engine_IDLE_DEADBAND && ( -calibratedLevel < engine_IDLE_DEADBAND ) ) {
 		engine_Throttle = 0;
@@ -114,6 +120,8 @@ unsigned char engine_ReadThrottleLevel() {
 
 void engine_UpdateActuators() {
 
+	hw_WritePort( hw_SWITCH3, 1 );
+
 	if( engine_ThrottlePW != engine_CurThrottlePW ) {
 		OC3RS = engine_ThrottlePW;
 		engine_CurThrottlePW = engine_ThrottlePW;
@@ -123,43 +131,62 @@ void engine_UpdateActuators() {
 		OC4RS = engine_GearPW;
 		engine_CurGearPW = engine_GearPW;
 	}
+	engine_LastActuatorUpdate = schedule_time;
 }
 
+
 //---------------------------------------------------------------------------------------------
-// Request a throttle level from 0 to 100.
+// Request a throttle level from 0 to 100 and a gear setting.
+// The actual gear will not be set until engine RPM allows it.
 
-void engine_RequestThrottle(unsigned char level) {
+void engine_RequestThrottleAndGear( char throttle, char gear ) {
 
-	engine_TargetThrottle = level;
+	short diff;
 
-	// We can execute the change immediately if no gear change is involved.
+	engine_TargetGear = gear;
+	engine_TargetThrottle = throttle;
 
-	if( engine_CurrentGear == engine_TargetGear ) {
-		engine_SetThrottle( level );
-		engine_ThrottleTimeSteps = 0;
-		return;
+	// engine_ThrottleTimeSteps maintains a simulated RPM counter.
+	// For 3000rpm = 3sek and 100ms task interval use / 3:
+
+	// Changing throttle in same gear.
+
+	if( engine_TargetGear == engine_CurrentGear ) {
+		diff = engine_Throttle - engine_TargetThrottle;
+		if( diff < 0 ) diff = -diff;
+		if( engine_GearTimeSteps == 0) {
+			engine_SetThrottle( throttle );
+		}
+		else {
+			engine_TargetThrottle = throttle;
+		}
 	}
 
-	// For 3000rpm = 3sek and 100ms task interval use / 3:
-	engine_ThrottleTimeSteps += engine_Throttle / 3;
-	engine_SetThrottle( 0 );
+	// Putting into gear from idle.
+
+	else if( engine_CurrentGear == 0 && engine_TargetGear != 0 ) {
+		diff = 0;
+		engine_SetGear( gear );
+		engine_GearTimeSteps += engine_GEARBOX_DELAY;
+	}
+
+	// Taking out of gear.
+
+	else if( engine_CurrentGear != 0 && engine_TargetGear == 0 ) {
+		diff = engine_Throttle;
+		engine_SetThrottle( 0 );
+	}
+
+	// Reversing.
+
+	else {
+		diff = engine_Throttle;
+		engine_SetThrottle( 0 );
+	}
+
+	engine_ThrottleTimeSteps += diff / 3;
 }
 
-//---------------------------------------------------------------------------------------------
-// Request a gear setting. The actual gear will not be set until engine RPM allows it.
-
-void engine_RequestGear(char direction) {
-
-	// Do nothing if we are already in the right gear.
-
-	if( direction == engine_CurrentGear ) return;
-
-	// Always go to idle throttle before changing gears.
-	// Wait for engine rev to settle. This time is dependent on how high the rev was before
-	// gear change was commanded.
-
-	engine_TargetGear = direction;
-}
 
 //---------------------------------------------------------------------------------------------
 // Actually set throttle to a level from 0 to 100.
@@ -167,8 +194,6 @@ void engine_RequestGear(char direction) {
 void engine_SetThrottle(unsigned char level) {
 	float fLevel;
 	float range;
-
-	// Maintain a simulated RPM counter.
 
 	engine_Throttle = level;
 
@@ -205,7 +230,7 @@ void engine_SetGear(char direction) {
 
 	engine_UpdateActuators();
 	engine_CurrentGear = direction;
-	engine_LastTimer = schedule_time;
+	engine_LastGearTime = schedule_time;
 }
 
 //--------------------------------------------------------------------------------------------
@@ -214,32 +239,50 @@ void engine_SetGear(char direction) {
 // If a gear change has been requested, do it when the target RPM has been  reached.
 
 void engine_ActuatorTask() {
+	long interval;
 
 	if( engine_ThrottleTimeSteps > 0 ) {
 		engine_ThrottleTimeSteps--;
-		return;
+	}
+
+	// When putting engine in gear the throttle needs to wait for the longer travel of the
+	// gear actuator.
+
+	if( engine_GearTimeSteps > 0 ) {
+		engine_GearTimeSteps--;
+		if( engine_GearTimeSteps == 0)
+			engine_SetThrottle( engine_TargetThrottle );
 	}
 
 	// Any gear change pending?
 
-	if( engine_CurrentGear != engine_TargetGear ) {
+	if( engine_ThrottleTimeSteps == 0 ) {
+		if( engine_CurrentGear != engine_TargetGear ) {
 
-		// Require at least 1 seconds between gear changes.
+			engine_GearTimeSteps += engine_GEARBOX_DELAY;
 
-		long interval;
-		interval = schedule_time - engine_LastTimer;
-		if( interval > schedule_SECOND ) {
+			// Extra delay if we go straight between fwd and rev.
 
-			// Go to neutral between forward and reverse.
-
-			if( engine_TargetGear != 0 && engine_CurrentGear != 0 ) {
-				engine_SetGear( 0 );
+			if( engine_CurrentGear != 0 && engine_TargetGear != 0 ) {
+				engine_GearTimeSteps += engine_GEARBOX_DELAY;
 			}
 
-			else {
-				engine_SetGear( engine_TargetGear );
-				engine_SetThrottle( engine_TargetThrottle );
-			}
+			engine_SetGear( engine_TargetGear );
+		}
+	}
+
+	// Turn off actuators after a timeout period.
+	// There is a small delay turning them on, but this is preferred
+	// over having the actuator burn down from overload by trying to counteract
+	// engine vibrations for an extended time.
+
+	if( engine_LastActuatorUpdate == 0 ) return;
+
+	if( schedule_time > engine_LastActuatorUpdate ) {
+		interval = schedule_time - engine_LastActuatorUpdate;
+		if( interval > hw_Config->engine_Calibration[p_ActuatorsTimeout] ) {
+			hw_WritePort( hw_SWITCH3, 0 );
+			engine_LastActuatorUpdate = 0;
 		}
 	}
 }
@@ -258,9 +301,16 @@ void engine_JoystickTask() {
 
 	if( engine_ReadThrottleLevel() ) {
 
-		// Only send wakeup if there has been a significant pause since last event.
+		// Don't send anything if the change was only 1.
 
-		if( schedule_time - engine_LastTimer > schedule_SECOND / 2 ) {
+		short diff = engine_Throttle - engine_LastThrottle;
+		if( diff < 0 ) diff = -diff;
+		if( diff < 2 ) return;
+		engine_LastThrottle = engine_Throttle;
+
+		// Only send wake-up if there has been a significant pause since last event.
+
+		if( schedule_time - engine_LastGearTime > schedule_SECOND / 2 ) {
 			nmea_Wakeup();
 		}
 
@@ -268,11 +318,11 @@ void engine_JoystickTask() {
 		event.groupId = config_GetGroupIdForPort( hw_ANALOG );
 		event.ctrlDev = hw_DeviceID;
 		event.ctrlPort = hw_ANALOG;
-		event.ctrlEvent = e_LED_LEVEL_CHANGED;
+		event.ctrlEvent = e_THROTTLE_CHANGE;
 		event.data = engine_Throttle;
 		event.info = engine_Joystick_Level;
 		nmea_SendEvent( &event );
-		engine_LastTimer = schedule_time;
+		engine_LastGearTime = schedule_time;
 	}
 }
 
@@ -364,25 +414,22 @@ int engine_ProcessEvent(event_t *event, unsigned char port, unsigned char action
 
 	switch( event->ctrlEvent ) {
 
-		case e_LED_LEVEL_CHANGED: {
+		case e_THROTTLE_CHANGE: {
 
 			throttle = event->data; // Make a signed value from event->data which is unsigned.
 
 			if( event->ctrlDev != engine_CurMasterDevice ) break;
 
 			if( throttle == 0 ) {
-				engine_RequestGear( 0 );
-				engine_RequestThrottle( throttle );
+				engine_RequestThrottleAndGear( 0, 0 );
 			}
 
 			else if( throttle > 0 ) {
-				engine_RequestGear( 1 );
-				engine_RequestThrottle( throttle );
+				engine_RequestThrottleAndGear( throttle, 1 );
 			}
 
 			else {
-				engine_RequestGear( -1 );
-				engine_RequestThrottle( -throttle );
+				engine_RequestThrottleAndGear( -throttle, -1 );
 			}
 
 			break;
@@ -409,8 +456,7 @@ int engine_ProcessEvent(event_t *event, unsigned char port, unsigned char action
 
 				engine_CurMasterDevice = 0;
 
-				engine_RequestThrottle( 0 );
-				engine_RequestGear( 0 );
+				engine_RequestThrottleAndGear( 0, 0 );
 
 				masterEvent.info = 0;
 				masterEvent.data = 0;
@@ -424,7 +470,7 @@ int engine_ProcessEvent(event_t *event, unsigned char port, unsigned char action
 			nmea_Wakeup();
 
 			masterEvent.ctrlEvent = e_THROTTLE_MASTER;
-			masterEvent.ctrlPort = event->ctrlPort;
+			masterEvent.ctrlPort = port;
 			masterEvent.ctrlDev = hw_DeviceID;
 			masterEvent.groupId = config_GetGroupIdForPort( port );
 
@@ -439,23 +485,32 @@ int engine_ProcessEvent(event_t *event, unsigned char port, unsigned char action
 //--------------------------------------------------------------------------------------------
 
 void engine_SetMaster(event_t *event) {
-	short port;
+	unsigned char port;
+	unsigned char controlGroup;
+
+	// Finding what key on my device that is configured to control throttle mastering.
+	// This algorithm has dependency on keypad ports to come before analog inputs.
 
 	engine_CurMasterDevice = event->info;
 
-	if( engine_CurMasterDevice == hw_DeviceID ) {
-		hw_AcknowledgeSwitch( event->ctrlPort, 1 );
+	controlGroup = config_GetControllingGroup( event->groupId );
+
+	for( port = 0; port < hw_PortCount; port++ ) {
+
+		if( config_GetGroupIdForPort( port ) == controlGroup ) {
+
+			if( engine_CurMasterDevice == hw_DeviceID ) {
+				hw_AcknowledgeSwitch( port, 1 );
+			}
+			else {
+				hw_AcknowledgeSwitch( port, 0 );
+			}
+		}
 	}
+
 
 	// Our device lost master status. Our device doesn't necessarily use the same button
 	// to request master status as the new master, so we need to go through
 	// our config to find which indicator to turn off.
 
-	else {
-		for( port = 0; port < hw_PortCount; port++ ) {
-			if( config_GetGroupIdForPort( port ) == event->groupId ) {
-				hw_AcknowledgeSwitch( port, 0 );
-			}
-		}
-	}
 }
