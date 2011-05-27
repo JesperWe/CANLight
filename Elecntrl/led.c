@@ -60,7 +60,7 @@ void led_Initialize(void) {
 			led_PresetLevel[led_WHITE] = 0.5;
 			break;
 		}
-		case hw_SWITCH: {
+		case hw_KEYPAD: {
 			led_NoChannels = 1;
 			OC1CONbits.OCM = 6; // PWM mode.
 			OC1RS = led_PWM_PERIOD;
@@ -71,9 +71,10 @@ void led_Initialize(void) {
 			led_DimmingBacklight = FALSE;
 			break;
 		}
-		default:
+		default: {
 			led_NoChannels = 0;
 			return;
+		}
 	}
 
 	// So setup Timer 2.
@@ -151,7 +152,7 @@ void led_SetLevel(unsigned char color, float level, unsigned char sendAck) {
 	}
 
 	if( !sendAck ) return;
-	if( hw_Type == hw_SWITCH && color == led_RED ) return; // Don't Ack for backlight!
+	if( hw_Type == hw_KEYPAD && color == led_RED ) return; // Don't Ack for backlight!
 
 	// Response message back to controller.
 	// Going to or from level=0 (off) from/to any other level triggers a response.
@@ -270,7 +271,7 @@ void led_SetBacklight(event_t *event) {
 	float value;
 	unsigned short ambientLevel;
 
-	if( hw_Type != hw_SWITCH ) return; // Doesn't have backlight.
+	if( hw_Type != hw_KEYPAD ) return; // Doesn't have backlight.
 
 	switch( event->ctrlEvent ) {
 
@@ -327,7 +328,7 @@ void led_ProcessEvent(event_t *event, unsigned char port, unsigned char action) 
 	if( port == hw_LED_WHITE ) eventColor = led_WHITE;
 
 	if( port == hw_BACKLIGHT ) {
-		if( hw_Type != hw_SWITCH ) return;
+		if( hw_Type != hw_KEYPAD ) return;
 		eventColor = led_RED;
 	}
 
@@ -339,7 +340,7 @@ void led_ProcessEvent(event_t *event, unsigned char port, unsigned char action) 
 				led_CurrentColor = ( led_CurrentColor == led_RED ) ? led_WHITE : led_RED;
 			}
 
-			if( hw_Type == hw_SWITCH && port == hw_BACKLIGHT ) {
+			if( hw_Type == hw_KEYPAD && port == hw_BACKLIGHT ) {
 				hw_AutoBacklightMode = TRUE;
 			}
 
@@ -420,7 +421,7 @@ void led_PowerOnTest() {
 			break;
 		}
 
-		case hw_SWITCH: {
+		case hw_KEYPAD: {
 			hw_WritePort( hw_LED1, 1 );
 			schedule_Sleep( schedule_SECOND / 3 );
 			hw_WritePort( hw_LED1, 0 );
@@ -458,7 +459,7 @@ void led_TaskComplete() {
 				break;
 			}
 
-			case hw_SWITCH: {
+			case hw_KEYPAD: {
 				hw_WritePort( hw_LED1, 1 );
 				hw_WritePort( hw_LED2, 0 );
 				hw_WritePort( hw_LED3, 1 );

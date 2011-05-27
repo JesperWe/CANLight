@@ -32,12 +32,7 @@ void ctrlkey_Initialize( void ) {
 
 	switch( hw_Type ) {
 
-		case hw_LEDLAMP: {
-			ctrlkey_NoKeys = 0;
-			break;;
-		}
-
-		case hw_SWITCH:	 {
+		case hw_KEYPAD:	 {
 			ctrlkey_NoKeys = 3;
 			hw_InputPort( hw_KEY1 );
 			hw_InputPort( hw_KEY2 );
@@ -53,7 +48,9 @@ void ctrlkey_Initialize( void ) {
 			break;
 		}
 
-		default:			ctrlkey_NoKeys = 0; return;
+		default: {
+			ctrlkey_NoKeys = 0; return;
+		}
 	}
 }
 

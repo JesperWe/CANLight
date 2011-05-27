@@ -31,7 +31,7 @@ unsigned short hw_PWMInverted = 0;
 unsigned short hw_Type;
 unsigned char hw_I2C_Installed = 0;
 unsigned char hw_Photodetector_Installed = 0;
-unsigned char hw_Joystick_Installed = 0;
+unsigned char hw_ADConverter_Installed = 0;
 unsigned char hw_Actuators_Installed = 0;
 unsigned char hw_ConfigByte = 0;
 unsigned char hw_DetectorADCChannel;
@@ -85,6 +85,24 @@ static const hw_Port_t hw_Port[hw_NoVariants][hw_PortCount] =
 	{ &PORTC, &TRISC, 3 },	// KEY1
 	{ &PORTC, &TRISC, 5 },	// KEY2
 	{ &PORTC, &TRISC, 7 }	// KEY3
+},
+
+{
+	{ &PORTA, &TRISA, 0 },  // Unused
+	{ &PORTA, &TRISA, 1 },	// CAN_RATE
+	{ &PORTB, &TRISB, 1 },	// CAN_EN
+	{ &PORTA, &TRISA, 0 },	// Unused
+	{ &PORTA, &TRISA, 0 },	// Unused
+	{ &PORTA, &TRISA, 0 },	// Unused
+	{ &PORTA, &TRISA, 0 },	// Unused
+	{ &PORTA, &TRISA, 0 },	// Unused
+	{ &PORTA, &TRISA, 8 },	// SWITCH1
+	{ &PORTA, &TRISA, 2 },	// SWITCH2
+	{ &PORTC, &TRISC, 1 },	// SWITCH3
+	{ &PORTB, &TRISB, 3 },	// SWITCH4
+	{ &PORTA, &TRISA, 0 },	// Unused
+	{ &PORTA, &TRISA, 0 },	// Unused
+	{ &PORTA, &TRISA, 0 }	// Unused
 }};
 
 const unsigned short hw_NoKeys[hw_NoVariants] = { 0, 3 };
@@ -117,7 +135,10 @@ void hw_Initialize(void) {
 
 	CLKDIVbits.DOZE = 0; // To make fCY = fOSC/2
 
-	AD1PCFGL = 0x1FFF; // ANx eats ECAN1 SNAFU!
+	AD1PCFGL = 0x1FFF;	// ANx eats ECAN1 SNAFU!
+	PORTA = 0;			// ...and setting AD1PCFGL messes with ports!
+	PORTB = 0;
+	PORTC = 0;
 
 	if( RCONbits.POR ) RCON = 0; // If Power-On-Reset, clear RCON
 	RCONbits.SWDTEN = 0; // No Watchdog if FWDTEN set to User Software.
@@ -162,7 +183,7 @@ void hw_Initialize(void) {
 		_RC4 = 1;
 		_RC5 = 1;
 
-		// Enable keypad back-light of hw_SWITCH.
+		// Enable keypad back-light of hw_KEYPAD.
 
 		_TRISB5 = 0;
 
@@ -188,7 +209,7 @@ void hw_Initialize(void) {
 
 	hw_I2C_Installed = ( ( hw_ConfigByte & 0x10 ) != 0 );
 	hw_Photodetector_Installed = ( ( hw_ConfigByte & 0x20 ) != 0 ); // XXX Fix bug where unit hangs in ADC if disabled!
-	hw_Joystick_Installed = ( ( hw_ConfigByte & 0x40 ) != 0 );
+	hw_ADConverter_Installed = ( ( hw_ConfigByte & 0x40 ) != 0 );
 	hw_Actuators_Installed = ( ( hw_ConfigByte & 0x80 ) != 0 );
 
 	// Byte 2 is the type of circuit board we are on.
@@ -245,7 +266,7 @@ void hw_Initialize(void) {
 	// IO setup for SN65HVD234 CANBus driver.
 	// The wiring is different on different versions of the hardware.
 
-	// hw_Type					hw_LEDLAMP		hw_SWITCH
+	// hw_Type					hw_LEDLAMP		hw_KEYPAD
 	//--------------------------------------------------------------
 	// Slew Rate control pin	Pin  8 RB10		Pin 20 RA1
 	// Driver Enable			Pin  9 RB11		Pin 22 RB1
@@ -279,11 +300,11 @@ void hw_Initialize(void) {
 			break;
 		}
 
-		case hw_SWITCH: {
+		case hw_KEYPAD: {
 
 			hw_DetectorADCChannel = 0;
 			if( hw_Photodetector_Installed ) AD1PCFGLbits.PCFG0 = 0;
-			if( hw_Joystick_Installed ) AD1PCFGLbits.PCFG10 = 0;
+			if( hw_ADConverter_Installed ) AD1PCFGLbits.PCFG10 = 0;
 
 			hw_OutputPort( hw_LED_RED );
 			hw_OutputPort( hw_LED1 );
@@ -314,6 +335,34 @@ void hw_Initialize(void) {
 			PPSLock;
 			break;
 		}
+
+		case hw_SWITCH: {
+
+			hw_OutputPort( hw_SWITCH1 );
+			hw_OutputPort( hw_SWITCH2 );
+			hw_OutputPort( hw_SWITCH4 );
+
+			hw_WritePort( hw_SWITCH1, 0 );
+			hw_WritePort( hw_SWITCH2, 0 );
+			hw_WritePort( hw_SWITCH4, 0 );
+
+			if( hw_ADConverter_Installed ) {
+				AD1PCFGLbits.PCFG10 = 0;
+				hw_DetectorADCChannel = 0;
+			}
+
+			else {
+				hw_OutputPort( hw_SWITCH3 );
+			}
+
+			PPSUnLock;
+			RPOR6bits.RP12R = 0x10; // CAN Transmit to pin 10.
+			RPINR26bits.C1RXR = 0; // CAN Receive from pin 21.
+
+			PPSLock;
+			break;
+
+		}
 	}
 
 	hw_HeartbeatCounter = 0;
@@ -324,7 +373,7 @@ void hw_Initialize(void) {
 
 	if( !hw_I2C_Installed ) PMD1bits.I2C1MD = 1;
 
-	if( ( !hw_Photodetector_Installed ) && ( !hw_Joystick_Installed ) ) PMD1bits.AD1MD = 1;
+	if( ( !hw_Photodetector_Installed ) && ( !hw_ADConverter_Installed ) ) PMD1bits.AD1MD = 1;
 
 	PMD2 = 0xC300; // Disable all Input Captures.
 

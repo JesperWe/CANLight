@@ -146,7 +146,7 @@ void event_Task() {
 				}
 
 				case e_THROTTLE_MASTER: {
-					if( hw_Joystick_Installed ) engine_SetMaster( &event );
+					if( hw_ADConverter_Installed ) engine_SetMaster( &event );
 					return;
 				}
 			}

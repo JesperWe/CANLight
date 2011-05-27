@@ -93,7 +93,7 @@ void switch_ProcessEvent( event_t *event, unsigned char port, unsigned char acti
 		}
 	}
 
-	if( setting ) hw_OutputPort( port );
+	hw_OutputPort( port );
 
 	hw_WritePort( port, setting );
 

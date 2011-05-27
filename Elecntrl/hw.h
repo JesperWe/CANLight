@@ -64,6 +64,7 @@ enum hw_Ports_e {
 
 enum hw_Variants {
 	hw_LEDLAMP,
+	hw_KEYPAD,
 	hw_SWITCH,
 	hw_NoVariants
 };
@@ -117,7 +118,7 @@ extern unsigned short		hw_HeartbeatCounter;
 extern unsigned short		hw_Type;
 extern unsigned char 		hw_I2C_Installed;
 extern unsigned char		hw_Photodetector_Installed;
-extern unsigned char		hw_Joystick_Installed;
+extern unsigned char		hw_ADConverter_Installed;
 extern unsigned char		hw_Actuators_Installed;
 extern unsigned char 		hw_DeviceID;
 extern unsigned short		hw_PWMInverted;

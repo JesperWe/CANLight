@@ -60,7 +60,7 @@ int main (void)
 		engine_Initialize();
 	}
 
-	if( hw_Joystick_Installed ) {
+	if( hw_ADConverter_Installed ) {
 		ADC_Initialize();
 		engine_ThrottleInitialize();
 	}
@@ -96,7 +96,7 @@ int main (void)
 		schedule_AddTask( engine_ActuatorTask, schedule_SECOND/10 );
 	}
 
-	if( hw_Joystick_Installed ) {
+	if( hw_ADConverter_Installed ) {
 		schedule_AddTask( engine_JoystickTask, schedule_SECOND/25 );
 	}
 
