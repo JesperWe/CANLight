@@ -434,9 +434,7 @@ void MainWindow::onKeypress( QKeyEvent *event ) {
 
     if( selection.count() != 1 ) return;
 
-    switch( event->key() ) {
-
-    case Qt::Key_Delete: {
+    if( event->key() == Qt::Key_Delete ) {
         switch( selection[0]->type() ) {
         case ecsEvent::Type: {
                 ecsEvent* event = qgraphicsitem_cast<ecsEvent*>(selection[0]);
@@ -460,14 +458,13 @@ void MainWindow::onKeypress( QKeyEvent *event ) {
                 updateScene();
                 break; }
         }
-        break;
-    }
+        return;
     }
 
     QGraphicsItem* selectedItem = selection[0];
     if( selectedItem->type() != QGraphicsSimpleTextItem::Type ) return;
 
-     link = qgraphicsitem_cast<QGraphicsSimpleTextItem *>(selection[0]);
+    link = qgraphicsitem_cast<QGraphicsSimpleTextItem *>(selection[0]);
 
     int func = 0;
     switch( event->key() ) {
