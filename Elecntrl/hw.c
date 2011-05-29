@@ -128,10 +128,29 @@ void hw_WritePort(enum hw_Ports_e port, int value) {
 	NOP;
 }
 
+void hw_InitializeOutputSwitches( char mask ) {
+	if( mask & 0x08 ) {
+		hw_OutputPort( hw_SWITCH4 );
+		hw_WritePort( hw_SWITCH4, 0 );
+	}
+	if( mask & 0x04 ) {
+		hw_OutputPort( hw_SWITCH3 );
+		hw_WritePort( hw_SWITCH3, 0 );
+	}
+	if( mask & 0x02 ) {
+		hw_OutputPort( hw_SWITCH2 );
+		hw_WritePort( hw_SWITCH2, 0 );
+	}
+	if( mask & 0x01 ) {
+		hw_OutputPort( hw_SWITCH1 );
+		hw_WritePort( hw_SWITCH1, 0 );
+	}
+}
 //-------------------------------------------------------------------------------
 
 void hw_Initialize(void) {
 	DWORD_VAL fidc, fidc_data;
+	char hw_Mask;
 
 	CLKDIVbits.DOZE = 0; // To make fCY = fOSC/2
 
@@ -224,6 +243,8 @@ void hw_Initialize(void) {
 	fidc_data.word.HW = __builtin_tblrdh( fidc.word.LW );
 	fidc_data.word.LW = __builtin_tblrdl( fidc.word.LW );
 
+	hw_Mask = fidc_data.byte.LB;
+
 	// Check configuration area, erase it if it seems corrupted.
 
 	hw_Config = (hw_Config_t*) &hw_ConfigData;
@@ -315,6 +336,8 @@ void hw_Initialize(void) {
 			hw_WritePort( hw_LED2, 0 );
 			hw_WritePort( hw_LED3, 0 );
 
+			hw_InitializeOutputSwitches( hw_Mask );
+
 			// We don't configure the General Purpose Outputs here, since they
 			// are seldom used and we want to minimize current draw.
 			// They get configured on first use instead.
@@ -338,21 +361,11 @@ void hw_Initialize(void) {
 
 		case hw_SWITCH: {
 
-			hw_OutputPort( hw_SWITCH1 );
-			hw_OutputPort( hw_SWITCH2 );
-			hw_OutputPort( hw_SWITCH4 );
-
-			hw_WritePort( hw_SWITCH1, 0 );
-			hw_WritePort( hw_SWITCH2, 0 );
-			hw_WritePort( hw_SWITCH4, 0 );
+			hw_InitializeOutputSwitches( hw_Mask );
 
 			if( hw_ADConverter_Installed ) {
 				AD1PCFGLbits.PCFG10 = 0;
 				hw_DetectorADCChannel = 0;
-			}
-
-			else {
-				hw_OutputPort( hw_SWITCH3 );
 			}
 
 			PPSUnLock;
