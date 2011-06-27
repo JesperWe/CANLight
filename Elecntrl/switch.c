@@ -28,7 +28,7 @@ void switch_Acknowledge( unsigned char port, unsigned char setting ) {
 	response.groupId = config_CurrentTaskGroup;
 	response.ctrlDev = hw_DeviceID;
 	response.ctrlPort = port;
-	response.ctrlEvent = (setting) ? e_SWITCH_ON : e_SWITCH_OFF;
+	response.ctrlEvent = (setting) ? e_SWITCHED_ON : e_SWITCHED_OFF;
 
 	nmea_Wakeup();
 	nmea_SendEvent( &response );

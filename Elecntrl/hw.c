@@ -31,7 +31,8 @@ unsigned short hw_PWMInverted = 0;
 unsigned short hw_Type;
 unsigned char hw_I2C_Installed = 0;
 unsigned char hw_Photodetector_Installed = 0;
-unsigned char hw_ADConverter_Installed = 0;
+unsigned char hw_Joystick_Installed = 0;
+unsigned char hw_TankSensor_Installed = 0;
 unsigned char hw_Actuators_Installed = 0;
 unsigned char hw_ConfigByte = 0;
 unsigned char hw_DetectorADCChannel;
@@ -228,8 +229,9 @@ void hw_Initialize(void) {
 
 	hw_I2C_Installed = ( ( hw_ConfigByte & 0x10 ) != 0 );
 	hw_Photodetector_Installed = ( ( hw_ConfigByte & 0x20 ) != 0 ); // XXX Fix bug where unit hangs in ADC if disabled!
-	hw_ADConverter_Installed = ( ( hw_ConfigByte & 0x40 ) != 0 );
+	hw_Joystick_Installed = ( ( hw_ConfigByte & 0x40 ) != 0 );
 	hw_Actuators_Installed = ( ( hw_ConfigByte & 0x80 ) != 0 );
+	hw_TankSensor_Installed = ( ( hw_ConfigByte & 0x04 ) != 0 );
 
 	// Byte 2 is the type of circuit board we are on.
 
@@ -263,7 +265,7 @@ void hw_Initialize(void) {
 
 		// Load some sensible values if we have lost calibrations.
 
-		hw_Config->engine_Calibration[p_ThrottleMin] = 160;
+		hw_Config->engine_Calibration[p_ThrottleMin] = 159;
 		hw_Config->engine_Calibration[p_ThrottleMax] = 133;
 		hw_Config->engine_Calibration[p_GearNeutral] = 151;
 		hw_Config->engine_Calibration[p_GearReverse] = 185;
@@ -325,7 +327,7 @@ void hw_Initialize(void) {
 
 			hw_DetectorADCChannel = 0;
 			if( hw_Photodetector_Installed ) AD1PCFGLbits.PCFG0 = 0;
-			if( hw_ADConverter_Installed ) AD1PCFGLbits.PCFG10 = 0;
+			if( hw_Joystick_Installed ) AD1PCFGLbits.PCFG10 = 0;
 
 			hw_OutputPort( hw_LED_RED );
 			hw_OutputPort( hw_LED1 );
@@ -355,6 +357,10 @@ void hw_Initialize(void) {
 				hw_WritePort( hw_SWITCH3, 0 );
 			}
 
+			if( hw_Joystick_Installed ) {
+				hw_OutputPort( hw_SWITCH1 );
+			}
+
 			PPSLock;
 			break;
 		}
@@ -363,7 +369,7 @@ void hw_Initialize(void) {
 
 			hw_InitializeOutputSwitches( hw_Mask );
 
-			if( hw_ADConverter_Installed ) {
+			if( hw_Joystick_Installed ) {
 				AD1PCFGLbits.PCFG10 = 0;
 				hw_DetectorADCChannel = 0;
 			}
@@ -386,7 +392,7 @@ void hw_Initialize(void) {
 
 	if( !hw_I2C_Installed ) PMD1bits.I2C1MD = 1;
 
-	if( ( !hw_Photodetector_Installed ) && ( !hw_ADConverter_Installed ) ) PMD1bits.AD1MD = 1;
+	if( ( !hw_Photodetector_Installed ) && ( !hw_Joystick_Installed ) ) PMD1bits.AD1MD = 1;
 
 	PMD2 = 0xC300; // Disable all Input Captures.
 

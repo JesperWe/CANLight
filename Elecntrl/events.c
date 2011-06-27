@@ -22,7 +22,7 @@
 // Globals.
 
 queue_t* events_Queue;
-event_t *eventPtr;
+event_t* eventPtr;
 
 unsigned char loopbackEnabled = 1;
 
@@ -146,7 +146,7 @@ void event_Task() {
 				}
 
 				case e_THROTTLE_MASTER: {
-					if( hw_ADConverter_Installed ) engine_SetMaster( &event );
+					if( hw_Joystick_Installed ) engine_SetMaster( &event );
 					return;
 				}
 			}

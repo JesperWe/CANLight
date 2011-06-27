@@ -446,6 +446,7 @@ int engine_ProcessEvent(event_t *event, unsigned char port, unsigned char action
 
 				// Turn on power to the Roboteq.
 
+				hw_WritePort( hw_SWITCH1, 1 );
 				hw_WritePort( hw_SWITCH3, 1 );
 
 			}
@@ -464,6 +465,7 @@ int engine_ProcessEvent(event_t *event, unsigned char port, unsigned char action
 				// Wait a while for actuators to settle, then turn off power to the Roboteq.
 
 				schedule_Sleep( schedule_SECOND * 2 );
+				hw_WritePort( hw_SWITCH1, 0 );
 				hw_WritePort( hw_SWITCH3, 0 );
 			}
 
@@ -501,9 +503,13 @@ void engine_SetMaster(event_t *event) {
 
 			if( engine_CurMasterDevice == hw_DeviceID ) {
 				hw_AcknowledgeSwitch( port, 1 );
+
+				// Turn on joystick power
+				hw_WritePort( hw_SWITCH1, 1 );
 			}
 			else {
 				hw_AcknowledgeSwitch( port, 0 );
+				hw_WritePort( hw_SWITCH1, 0 );
 			}
 		}
 	}

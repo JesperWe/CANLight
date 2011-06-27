@@ -94,7 +94,7 @@ void ctrlkey_task() {
 		if( ctrlkey_Holding[ keyNo ] ) {
 
 			// Don't fall asleep while holding.
-			hw_StayAwakeTimer += schedule_SECOND;
+			hw_StayAwakeTimer = schedule_SECOND;
 
 			if( hw_ReadPort( port ) == 0 ) continue;
 	
@@ -122,12 +122,26 @@ void ctrlkey_task() {
 				}
 
 				groupId = config_GetGroupIdForPort( port );
-				if( groupId == config_GROUP_BROADCAST ) groupId = config_CurrentGroup;
 
- 				events_Push( e_IO_EVENT, 0,
-						groupId, hw_DeviceID,
-						port, event, keyNo,
-						(short)ctrlkey_Presstime[ keyNo ] );
+				// For backlight event we send the desired result rather than the event
+				// that caused it. This way listening devices cannot fall out of sync.
+
+				if( groupId == config_GROUP_BROADCAST ) {
+					if( led_CurrentLevel[ led_RED ] == 0 ) event = e_TURN_ON;
+					else event = e_TURN_OFF;
+	 				events_Push( e_IO_EVENT, 0,
+							config_CurrentGroup, hw_DeviceID,
+							port, event, keyNo,
+							(short)ctrlkey_Presstime[ keyNo ] );
+					groupId = config_CurrentGroup;
+				}
+
+				else {
+	 				events_Push( e_IO_EVENT, 0,
+							groupId, hw_DeviceID,
+							port, event, keyNo,
+							(short)ctrlkey_Presstime[ keyNo ] );
+				}
 
 				ctrlkey_ClickCount[ keyNo ] = 0;
 				ctrlkey_Presstime[ keyNo ] = 0;
@@ -144,7 +158,6 @@ void ctrlkey_task() {
 
 				ctrlkey_Holding[ keyNo ] = TRUE;
 				groupId = config_GetGroupIdForPort( port );
-				// XXX WHY??--> if( groupId == config_GROUP_BROADCAST ) groupId = config_CurrentGroup;
 
 				led_FadeMaster = 0xFF;
 

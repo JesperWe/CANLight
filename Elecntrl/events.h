@@ -22,9 +22,9 @@ enum event_Events_e {
 	/* 03 */ e_KEY_RELEASED,
 	/* 04 */ e_KEY_DOUBLECLICKED,
 	/* 05 */ e_KEY_TRIPLECLICKED,
-	/* 06 */ e_SWITCH_ON,
-	/* 07 */ e_SWITCH_OFF,
-	/* 08 */ e_SWITCH_FAIL,
+	/* 06 */ e_SWITCHED_ON,
+	/* 07 */ e_SWITCHED_OFF,
+	/* 08 */ e_SWITCH_FAILED,
 	/* 09 */ e_FADE_START,
 	/* 10 */ e_FADE_MASTER,
 	/* 11 */ e_FAST_HEARTBEAT,
@@ -39,7 +39,9 @@ enum event_Events_e {
 	/* 20 */ e_CONFIG_FILE_UPDATE,
 	/* 21 */ e_SET_BACKLIGHT_LEVEL,
 	/* 22 */ e_THROTTLE_CHANGE,
-	/* 23 */ e_NO_EVENTS
+	/* 23 */ e_TURN_ON,
+	/* 24 */ e_TURN_OFF,
+	/* 25 */ e_NO_EVENTS
 };
 
 enum event_Actions_e {

@@ -105,8 +105,8 @@ unsigned char config_GetGroupIdForPort(unsigned char port) {
 			// Special flagging of events broadcast to all devices.
 
 			if( ( confDevice == hw_DEVICE_ANY ) && ( groupId != 0 ) ) {
-				groupId = config_GROUP_BROADCAST;
 				config_CurrentGroup = controllerGroupID;
+				groupId = config_GROUP_BROADCAST;
 			}
 
 			if( confDevice == hw_DeviceID && confPort == port ) {
@@ -276,12 +276,12 @@ unsigned char config_GetPortActionFromEvent(unsigned char port, event_t* event) 
 					config_CurrentGroup = controllerGroupID;
 				}
 
-				if( event->ctrlEvent == e_SWITCH_ON ) {
+				if( event->ctrlEvent == e_SWITCHED_ON ) {
 					implicitAction = a_SWITCH_ON;
 					config_CurrentGroup = controllerGroupID;
 				}
 
-				if( event->ctrlEvent == e_SWITCH_OFF ) {
+				if( event->ctrlEvent == e_SWITCHED_OFF ) {
 					implicitAction = a_SWITCH_OFF;
 					config_CurrentGroup = controllerGroupID;
 				}
@@ -290,6 +290,20 @@ unsigned char config_GetPortActionFromEvent(unsigned char port, event_t* event) 
 		while( *configPtr != DELIMITER );
 
 		if( implicitAction != a_NO_ACTION ) break;
+
+		// Now check for "order" type events.
+
+		if( portIsInCurrentTask ) {
+			if(	event->ctrlEvent == e_TURN_ON ) {
+				implicitAction = a_SWITCH_ON;
+				break;
+			}
+
+			if(	event->ctrlEvent == e_TURN_OFF ) {
+				implicitAction = a_SWITCH_OFF;
+				break;
+			}
+		}
 
 		// OK, so what action does this event generate for this port?
 
