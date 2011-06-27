@@ -210,6 +210,8 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 			case 20: eventName = "e_CONFIG_FILE_UPDATE"; break;
 			case 21: eventName = "e_SET_BACKLIGHT_LEVEL"; break;
                         case 22: eventName = "e_THROTTLE_CHANGE"; break;
+                        case 23: eventName = "e_TURN_ON"; break;
+                        case 24: eventName = "e_TURN_OFF"; break;
                         default: eventName = "<unknown>";
 			}
 

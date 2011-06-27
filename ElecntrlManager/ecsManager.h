@@ -47,7 +47,9 @@ public:
                 /* 20 */ e_CONFIG_FILE_UPDATE,
                 /* 21 */ e_SET_BACKLIGHT_LEVEL,
                 /* 22 */ e_THROTTLE_CHANGED,
-                /* 23 */ e_NO_EVENTS
+                /* 23 */ e_TURN_ON,
+                /* 24 */ e_TURN_OFF,
+                /* 25 */ e_NO_EVENTS
         };
 
 	enum actionType_e {
