@@ -41,7 +41,8 @@ enum event_Events_e {
 	/* 22 */ e_THROTTLE_CHANGE,
 	/* 23 */ e_TURN_ON,
 	/* 24 */ e_TURN_OFF,
-	/* 25 */ e_NO_EVENTS
+	/* 25 */ e_BALLAST_STATE,
+	/* 26 */ e_NO_EVENTS
 };
 
 enum event_Actions_e {

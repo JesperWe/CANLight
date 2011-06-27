@@ -121,6 +121,7 @@ extern unsigned char		hw_Photodetector_Installed;
 extern unsigned char		hw_Joystick_Installed;
 extern unsigned char		hw_Actuators_Installed;
 extern unsigned char		hw_TankSensor_Installed;
+extern unsigned char		hw_Ballast_Cntrl;
 extern unsigned char 		hw_DeviceID;
 extern unsigned short		hw_PWMInverted;
 extern unsigned char 		hw_DetectorADCChannel;

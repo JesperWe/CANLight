@@ -33,6 +33,7 @@ unsigned char hw_I2C_Installed = 0;
 unsigned char hw_Photodetector_Installed = 0;
 unsigned char hw_Joystick_Installed = 0;
 unsigned char hw_TankSensor_Installed = 0;
+unsigned char hw_Ballast_Cntrl = 0;
 unsigned char hw_Actuators_Installed = 0;
 unsigned char hw_ConfigByte = 0;
 unsigned char hw_DetectorADCChannel;
@@ -232,6 +233,7 @@ void hw_Initialize(void) {
 	hw_Joystick_Installed = ( ( hw_ConfigByte & 0x40 ) != 0 );
 	hw_Actuators_Installed = ( ( hw_ConfigByte & 0x80 ) != 0 );
 	hw_TankSensor_Installed = ( ( hw_ConfigByte & 0x04 ) != 0 );
+	hw_Ballast_Cntrl = ( ( hw_ConfigByte & 0x02 ) != 0 );
 
 	// Byte 2 is the type of circuit board we are on.
 

@@ -12,6 +12,7 @@
 #include "engine.h"
 #include "schedule.h"
 #include "led.h"
+#include "ballast.h"
 
 //---------------------------------------------------------------------------------------------
 // Globals
@@ -152,6 +153,9 @@ void ctrlkey_task() {
 							groupId, hw_DeviceID,
 							port, event, keyNo,
 							(short)ctrlkey_Presstime[ keyNo ] );
+
+					if( hw_Ballast_Cntrl ) ballast_KeyClick( keyNo, event );
+
 				}
 
 				ctrlkey_ClickCount[ keyNo ] = 0;
@@ -177,6 +181,8 @@ void ctrlkey_task() {
 						groupId, hw_DeviceID,
 						port, e_KEY_HOLDING, keyNo,
 						(short)(schedule_time - ctrlkey_Presstime[ keyNo ]) );
+
+					if( hw_Ballast_Cntrl ) ballast_KeyClick( keyNo, e_KEY_HOLDING );
 				}
 				else {
 					// Everyone is listening to this key, send levels using current device as master,
