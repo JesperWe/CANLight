@@ -304,8 +304,10 @@ void led_SetBacklight(event_t *event) {
 		display_SetBrightness( ambientLevel );
 	}
 
+	led_PresetLevel[ led_RED ] = value;
+
 	if( value == 0 || value == 1.0 ) {
-		led_SetLevel( led_RED, 0.0, led_NO_ACK );
+		led_SetLevel( led_RED, value, led_NO_ACK );
 		led_IndicatorPWM( FALSE );
 	}
 	else {
@@ -336,7 +338,7 @@ void led_ProcessEvent(event_t *event, unsigned char port, unsigned char action) 
 		case a_SWITCH_ON: {
 			eventColor = event->data;
 			led_CurrentColor = eventColor;
-			led_SetLevel( eventColor, 1.0, led_NO_ACK );
+			led_SetLevel( eventColor, event->info / 1000.0 , led_NO_ACK );
 			break;
 		}
 		case a_SWITCH_OFF: {

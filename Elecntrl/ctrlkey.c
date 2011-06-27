@@ -127,12 +127,23 @@ void ctrlkey_task() {
 				// that caused it. This way listening devices cannot fall out of sync.
 
 				if( groupId == config_GROUP_BROADCAST ) {
-					if( led_CurrentLevel[ led_RED ] == 0 ) event = e_TURN_ON;
-					else event = e_TURN_OFF;
+					short info;
+
+					if( led_CurrentLevel[ led_RED ] == 0 ) {
+						event = e_TURN_ON;
+						info = 1000 * led_PresetLevel[ led_RED ];
+						if( info < 10 ) info = 1000;
+					}
+
+					else {
+						event = e_TURN_OFF;
+						info = 0;
+					}
+
 	 				events_Push( e_IO_EVENT, 0,
 							config_CurrentGroup, hw_DeviceID,
 							port, event, keyNo,
-							(short)ctrlkey_Presstime[ keyNo ] );
+							info );
 					groupId = config_CurrentGroup;
 				}
 

@@ -303,9 +303,7 @@ void engine_JoystickTask() {
 
 		// Don't send anything if the change was only 1.
 
-		short diff = engine_Throttle - engine_LastThrottle;
-		if( diff < 0 ) diff = -diff;
-		if( diff < 2 ) return;
+		if( engine_Throttle == engine_LastThrottle ) return;
 		engine_LastThrottle = engine_Throttle;
 
 		// Only send wake-up if there has been a significant pause since last event.

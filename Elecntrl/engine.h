@@ -13,7 +13,7 @@
 #define engine_UNKNOWN_JOYSTICK	4711
 #define engine_JOYSTICK_AD_CHANNEL	10
 #define engine_IDLE_DEADBAND 		8
-#define engine_THROTTLE_MIN_CHANGE 5
+#define engine_THROTTLE_MIN_CHANGE 4
 #define engine_GEARBOX_DELAY		10 // Number of ActuatorTask cycles.
 
 enum engine_CalibrationParameters {
