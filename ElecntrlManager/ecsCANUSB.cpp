@@ -212,6 +212,7 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
                         case 22: eventName = "e_THROTTLE_CHANGE"; break;
                         case 23: eventName = "e_TURN_ON"; break;
                         case 24: eventName = "e_TURN_OFF"; break;
+                        case 25: eventName = "e_BALLAST_STATE"; break;
                         default: eventName = "<unknown>";
 			}
 
