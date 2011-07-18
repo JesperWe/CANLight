@@ -26,13 +26,13 @@ char engine_Throttle;
 char engine_LastThrottle;
 short engine_Gear;
 
-unsigned long engine_LastGearTime;
+unsigned long engine_LastThrottleChangeTime;
 unsigned long engine_LastActuatorUpdate;
 
-short engine_ThrottleTimeSteps;
 short engine_GearTimeSteps;
 unsigned char engine_JoystickCalibrationMonitor;
 
+unsigned char engine_CurrentThrottle;
 unsigned char engine_TargetThrottle;
 
 char engine_CurrentGear;
@@ -122,15 +122,12 @@ void engine_UpdateActuators() {
 
 	hw_WritePort( hw_SWITCH3, 1 );
 
-	if( engine_ThrottlePW != engine_CurThrottlePW ) {
-		OC3RS = engine_ThrottlePW;
-		engine_CurThrottlePW = engine_ThrottlePW;
-	}
+	OC3RS = engine_ThrottlePW;
+	engine_CurThrottlePW = engine_ThrottlePW;
 
-	if( engine_GearPW != engine_CurGearPW ) {
-		OC4RS = engine_GearPW;
-		engine_CurGearPW = engine_GearPW;
-	}
+	OC4RS = engine_GearPW;
+	engine_CurGearPW = engine_GearPW;
+
 	engine_LastActuatorUpdate = schedule_time;
 }
 
@@ -141,50 +138,50 @@ void engine_UpdateActuators() {
 
 void engine_RequestThrottleAndGear( char throttle, char gear ) {
 
-	short diff;
-
 	engine_TargetGear = gear;
 	engine_TargetThrottle = throttle;
 
-	// engine_ThrottleTimeSteps maintains a simulated RPM counter.
-	// For 3000rpm = 3sek and 100ms task interval use / 3:
+	// We are still waiting for last command to complete.
+	// Resolve cases where we can shortcut to the new desired state.
 
-	// Changing throttle in same gear.
-
-	if( engine_TargetGear == engine_CurrentGear ) {
-		diff = engine_Throttle - engine_TargetThrottle;
-		if( diff < 0 ) diff = -diff;
-		if( engine_GearTimeSteps == 0) {
-			engine_SetThrottle( throttle );
-		}
-		else {
-			engine_TargetThrottle = throttle;
-		}
+	if( engine_GearTimeSteps != 0 ) {
 	}
 
-	// Putting into gear from idle.
-
-	else if( engine_CurrentGear == 0 && engine_TargetGear != 0 ) {
-		diff = 0;
-		engine_SetGear( gear );
-		engine_GearTimeSteps += engine_GEARBOX_DELAY;
-	}
-
-	// Taking out of gear.
-
-	else if( engine_CurrentGear != 0 && engine_TargetGear == 0 ) {
-		diff = engine_Throttle;
-		engine_SetThrottle( 0 );
-	}
-
-	// Reversing.
+	// Last command was completed OK and we can process a new one.
 
 	else {
-		diff = engine_Throttle;
-		engine_SetThrottle( 0 );
-	}
+		// Changing throttle in same gear.
 
-	engine_ThrottleTimeSteps += diff / 3;
+		if( engine_TargetGear == engine_CurrentGear ) {
+			engine_SetThrottle( throttle );
+			return;
+		}
+
+		// Putting into gear from idle.
+
+		if( engine_CurrentGear == 0 && engine_TargetGear != 0 ) {
+			engine_SetThrottle( 0 );
+			engine_SetGear( gear );
+			engine_GearTimeSteps = engine_GEARBOX_DELAY;
+			return;
+		}
+
+		// Taking out of gear.
+
+		if( engine_CurrentGear != 0 && engine_TargetGear == 0 ) {
+			engine_TargetThrottle = 0;
+			engine_SetThrottle( 0 );
+			engine_GearTimeSteps = engine_GEARBOX_DELAY;
+			return;
+		}
+
+		// Reversing.
+
+		{
+			engine_SetThrottle( 0 );
+			engine_GearTimeSteps = engine_GEARBOX_DELAY;
+		}
+	}
 }
 
 
@@ -196,6 +193,8 @@ void engine_SetThrottle(unsigned char level) {
 	float range;
 
 	engine_Throttle = level;
+	engine_CurrentThrottle = level;
+	//nmea_Debug2( 20, level );
 
 	fLevel = ( (float) level ) / 100.0;
 
@@ -230,46 +229,40 @@ void engine_SetGear(char direction) {
 
 	engine_UpdateActuators();
 	engine_CurrentGear = direction;
-	engine_LastGearTime = schedule_time;
+	//nmea_Debug2( 10, direction );
 }
 
 //--------------------------------------------------------------------------------------------
 // Engine Task:
-// Fade approximated engine RPM towards current throttle setting.
-// If a gear change has been requested, do it when the target RPM has been  reached.
+// When putting engine in gear the throttle needs to wait for the longer travel of the
+// gear actuator, so if a gear change has been requested, do it only when
+// engine_GearTimeSteps goes to 0.
 
 void engine_ActuatorTask() {
-	long interval;
-
-	if( engine_ThrottleTimeSteps > 0 ) {
-		engine_ThrottleTimeSteps--;
-	}
-
-	// When putting engine in gear the throttle needs to wait for the longer travel of the
-	// gear actuator.
 
 	if( engine_GearTimeSteps > 0 ) {
 		engine_GearTimeSteps--;
-		if( engine_GearTimeSteps == 0)
-			engine_SetThrottle( engine_TargetThrottle );
+		return;
 	}
 
-	// Any gear change pending?
+	if( engine_GearTimeSteps == 0 ) {
 
-	if( engine_ThrottleTimeSteps == 0 ) {
+		// Any gear change pending?
+
 		if( engine_CurrentGear != engine_TargetGear ) {
-
-			engine_GearTimeSteps += engine_GEARBOX_DELAY;
-
-			// Extra delay if we go straight between fwd and rev.
-
-			if( engine_CurrentGear != 0 && engine_TargetGear != 0 ) {
-				engine_GearTimeSteps += engine_GEARBOX_DELAY;
-			}
-
+			//nmea_Debug2( 1, engine_TargetGear );
+			engine_GearTimeSteps = engine_GEARBOX_DELAY;
 			engine_SetGear( engine_TargetGear );
+			return;
+		}
+
+		if( engine_CurrentThrottle != engine_TargetThrottle ) {
+			//nmea_Debug2( 2, engine_TargetThrottle );
+			engine_SetThrottle( engine_TargetThrottle );
+			return;
 		}
 	}
+
 
 	// Turn off actuators after a timeout period.
 	// There is a small delay turning them on, but this is preferred
@@ -278,12 +271,15 @@ void engine_ActuatorTask() {
 
 	if( engine_LastActuatorUpdate == 0 ) return;
 
-	if( schedule_time > engine_LastActuatorUpdate ) {
-		interval = schedule_time - engine_LastActuatorUpdate;
-		if( interval > hw_Config->engine_Calibration[p_ActuatorsTimeout] ) {
-			hw_WritePort( hw_SWITCH3, 0 );
-			engine_LastActuatorUpdate = 0;
-		}
+	if( schedule_time < engine_LastActuatorUpdate ) {
+		engine_LastActuatorUpdate = schedule_time; // time overflowed!
+		return;
+	}
+
+	if( schedule_time > (engine_LastActuatorUpdate + hw_Config->engine_Calibration[p_ActuatorsTimeout]) ) {
+		hw_WritePort( hw_SWITCH3, 0 );
+		engine_LastActuatorUpdate = 0;
+		//nmea_Debug( 0xFF );
 	}
 }
 
@@ -308,7 +304,7 @@ void engine_JoystickTask() {
 
 		// Only send wake-up if there has been a significant pause since last event.
 
-		if( schedule_time - engine_LastGearTime > schedule_SECOND / 2 ) {
+		if( schedule_time - engine_LastThrottleChangeTime > schedule_SECOND / 2 ) {
 			nmea_Wakeup();
 		}
 
@@ -320,7 +316,7 @@ void engine_JoystickTask() {
 		event.data = engine_Throttle;
 		event.info = engine_Joystick_Level;
 		nmea_SendEvent( &event );
-		engine_LastGearTime = schedule_time;
+		engine_LastThrottleChangeTime = schedule_time;
 	}
 }
 
@@ -511,10 +507,4 @@ void engine_SetMaster(event_t *event) {
 			}
 		}
 	}
-
-
-	// Our device lost master status. Our device doesn't necessarily use the same button
-	// to request master status as the new master, so we need to go through
-	// our config to find which indicator to turn off.
-
 }

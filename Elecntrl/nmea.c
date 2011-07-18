@@ -216,6 +216,25 @@ void nmea_Wakeup() {
 
 //---------------------------------------------------------------------------------------------
 
+void nmea_Debug( unsigned char data ) {
+	nmea_MakePGN( 0, nmea_MAINTAIN_POWER, 1 );
+	nmea_OutgoingPDU.data[0] = data;
+	nmea_SendMessage();
+}
+
+
+//---------------------------------------------------------------------------------------------
+
+void nmea_Debug2( unsigned char data0, unsigned char data1 ) {
+	nmea_MakePGN( 0, nmea_MAINTAIN_POWER, 2 );
+	nmea_OutgoingPDU.data[0] = data0;
+	nmea_OutgoingPDU.data[1] = data1;
+	nmea_SendMessage();
+}
+
+
+//---------------------------------------------------------------------------------------------
+
 unsigned char nmea_SendEvent( event_t *event )
 {
 	unsigned char status;

@@ -17,6 +17,7 @@
 #include "switch.h"
 #include "engine.h"
 #include "schedule.h"
+#include "ballast.h"
 
 //---------------------------------------------------------------------------------------------
 // Globals.
@@ -94,6 +95,11 @@ void event_Task() {
 			// so we first check for these.
 
 			switch( event.ctrlEvent ) {
+
+				case e_BALLAST_STATE: {
+					ballast_GoToState( event.data );
+					break;
+				}
 
 				// Capture e_THROTTLE_CHANGE events if we have I2C installed.
 				// This allows monitoring of system levels even if our current device

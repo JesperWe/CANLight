@@ -12,6 +12,7 @@
 #include "display.h"
 #include "menu.h"
 #include "engine.h"
+#include "ballast.h"
 
 
 /* Configuration bit settings in the IDE:
@@ -102,6 +103,10 @@ int main (void)
 
 	if( hw_NoKeys > 0 ) {
 		schedule_AddTask( ctrlkey_task, schedule_SECOND/10 );
+	}
+
+	if( hw_DeviceID == 21 || hw_DeviceID == 22 ) {
+		schedule_AddTask( ballast_ShutOffTask, schedule_SECOND );
 	}
 
 	schedule_Run();

@@ -162,7 +162,8 @@ extern long				nmea_TPMessage_PGN;
 void nmea_Initialize();
 
 void nmea_Wakeup();
-
+void nmea_Debug( unsigned char data );
+void nmea_Debug2( unsigned char data0, unsigned char data1 );
 void nmea_MakePGN( 
 		unsigned short pdn_priority,
 		unsigned short pgn_no,

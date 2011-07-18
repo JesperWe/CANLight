@@ -499,6 +499,7 @@ void hw_Sleep(void) {
 
 	// OK, We can sleep now.
 
+	//hw_WritePort( hw_LED1, 1 );
 	hw_WritePort( hw_CAN_RATE, 1 );
 	nmea_ControllerMode( hw_ECAN_MODE_DISABLE );
 
@@ -513,6 +514,7 @@ void hw_Sleep(void) {
 
 	nmea_ControllerMode( hw_ECAN_MODE_NORMAL );
 	hw_WritePort( hw_CAN_RATE, 0 );
+	//hw_WritePort( hw_LED1, 0 );
 }
 
 //-------------------------------------------------------------------------------

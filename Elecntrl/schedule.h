@@ -9,7 +9,7 @@
 #ifndef SCHEDULE_H_
 #define SCHEDULE_H_
 
-#define schedule_MAX_NO_TASKS	10
+#define schedule_MAX_NO_TASKS	15
 
 // Number of scheduler ticks per second.
 // NB! You can't change this freely without checking if 16 bit timer

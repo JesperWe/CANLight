@@ -41,10 +41,9 @@ extern short			engine_LastJoystickLevel;
 extern unsigned char	engine_CurMasterDevice;
 extern short 			engine_CurrentRPM;
 extern short 			engine_CurrentRPM;
-extern unsigned long	engine_LastGearTime;
+extern unsigned long	engine_LastThrottleChangeTime;
 extern unsigned long engine_LastActuatorUpdate;
 extern unsigned char	engine_TargetThrottle;
-extern short			engine_ThrottleTimeSteps;
 extern short			engine_GearTimeSteps;
 
 extern char			engine_CurrentGear;
