@@ -220,7 +220,7 @@ void display_Task() {
 			if( (key & 0x80) != 0 ) {
 				failCount++;
 				key = 0;
-				if( failCount > 10 ) {
+				if( failCount > 2 ) {
 					display_IsOn = FALSE;
 				}
 			}

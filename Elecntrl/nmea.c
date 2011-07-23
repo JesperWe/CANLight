@@ -453,7 +453,7 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 	IEC2bits.C1IE = 0;
 
 	// Stay awake for a while to look for traffic.
-	hw_StayAwakeTimer = schedule_SECOND;
+	hw_StayAwakeTimer += schedule_SECOND;
 
 	if( C1INTFbits.ERRIF ) {
 		C1INTFbits.ERRIF = 0;

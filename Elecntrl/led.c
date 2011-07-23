@@ -301,10 +301,17 @@ void led_SetBacklight(event_t *event) {
 	}
 
 	if( hw_I2C_Installed ) {
-		display_SetBrightness( ambientLevel );
+		if( value == 0.0 ) {
+			display_SetBrightness( 255 );
+		}
+		else {
+			display_SetBrightness( ambientLevel );
+		}
 	}
 
-	led_PresetLevel[ led_RED ] = value;
+	if( value != 0.0 ) {
+		led_PresetLevel[ led_RED ] = value;
+	}
 
 	if( value == 0 || value == 1.0 ) {
 		led_SetLevel( led_RED, value, led_NO_ACK );

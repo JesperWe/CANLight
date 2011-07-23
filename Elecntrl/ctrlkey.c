@@ -95,7 +95,7 @@ void ctrlkey_task() {
 		if( ctrlkey_Holding[ keyNo ] ) {
 
 			// Don't fall asleep while holding.
-			hw_StayAwakeTimer = schedule_SECOND;
+			hw_StayAwakeTimer += schedule_SECOND;
 
 			if( hw_ReadPort( port ) == 0 ) continue;
 	
@@ -131,13 +131,13 @@ void ctrlkey_task() {
 					short info;
 
 					if( led_CurrentLevel[ led_RED ] == 0 ) {
-						event = e_TURN_ON;
+						event = e_SET_BACKLIGHT_LEVEL;
 						info = 1000 * led_PresetLevel[ led_RED ];
 						if( info < 10 ) info = 1000;
 					}
 
 					else {
-						event = e_TURN_OFF;
+						event = e_SET_BACKLIGHT_LEVEL;
 						info = 0;
 					}
 
@@ -228,6 +228,7 @@ void __attribute__((interrupt, no_auto_psv)) _CNInterrupt(void) {
 	_CNIF = 0;
 
 	hw_StayAwakeTimer = schedule_SECOND*2;
+	if( hw_I2C_Installed ) hw_StayAwakeTimer = schedule_SECOND*5; // Wait for I2C init
 
 	currentState = ctrlkey_ReadKeys();
 
