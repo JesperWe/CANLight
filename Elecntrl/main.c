@@ -53,7 +53,7 @@ int main (void)
 		menu_Initialize();
 	}
 
-	if( hw_Photodetector_Installed ) {
+	if( hw_Photodetector_Installed || hw_TankSender_Installed ) {
 		ADC_Initialize();
 	}
 

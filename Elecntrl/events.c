@@ -96,6 +96,22 @@ void event_Task() {
 
 			switch( event.ctrlEvent ) {
 
+				case e_REQUEST_TANK_LEVELS: {
+					if( hw_TankSender_Installed ) {
+						event_t event;
+						int tankLevel = ADC_Read( engine_JOYSTICK_AD_CHANNEL );
+						event.PGN = 0;
+						event.groupId = config_GetGroupIdForPort( hw_ANALOG );
+						event.ctrlDev = hw_DeviceID;
+						event.ctrlPort = hw_ANALOG;
+						event.ctrlEvent = e_TANK_LEVEL;
+						event.data = 0;
+						event.info = tankLevel;
+						nmea_SendEvent( &event );
+					}
+					break;
+				}
+
 				case e_BALLAST_STATE: {
 					ballast_GoToState( event.data );
 					break;

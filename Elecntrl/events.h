@@ -28,7 +28,7 @@ enum event_Events_e {
 	/* 09 */ e_FADE_START,
 	/* 10 */ e_FADE_MASTER,
 	/* 11 */ e_FAST_HEARTBEAT,
-	/* 12 */ e_unused,
+	/* 12 */ e_UNUSED,
 	/* 13 */ e_NIGHTMODE,
 	/* 14 */ e_DAYLIGHTMODE,
 	/* 15 */ e_AMBIENT_LIGHT_LEVEL,
@@ -42,7 +42,9 @@ enum event_Events_e {
 	/* 23 */ e_TURN_ON,
 	/* 24 */ e_TURN_OFF,
 	/* 25 */ e_BALLAST_STATE,
-	/* 26 */ e_NO_EVENTS
+	/* 26 */ e_REQUEST_TANK_LEVELS,
+	/* 27 */ e_TANK_LEVEL,
+	/* 28 */ e_NO_EVENTS
 };
 
 enum event_Actions_e {

@@ -32,7 +32,7 @@ unsigned short hw_Type;
 unsigned char hw_I2C_Installed = 0;
 unsigned char hw_Photodetector_Installed = 0;
 unsigned char hw_Joystick_Installed = 0;
-unsigned char hw_TankSensor_Installed = 0;
+unsigned char hw_TankSender_Installed = 0;
 unsigned char hw_Ballast_Cntrl = 0;
 unsigned char hw_Actuators_Installed = 0;
 unsigned char hw_ConfigByte = 0;
@@ -232,7 +232,7 @@ void hw_Initialize(void) {
 	hw_Photodetector_Installed = ( ( hw_ConfigByte & 0x20 ) != 0 ); // XXX Fix bug where unit hangs in ADC if disabled!
 	hw_Joystick_Installed = ( ( hw_ConfigByte & 0x40 ) != 0 );
 	hw_Actuators_Installed = ( ( hw_ConfigByte & 0x80 ) != 0 );
-	hw_TankSensor_Installed = ( ( hw_ConfigByte & 0x04 ) != 0 );
+	hw_TankSender_Installed = ( ( hw_ConfigByte & 0x04 ) != 0 );
 	hw_Ballast_Cntrl = ( ( hw_ConfigByte & 0x02 ) != 0 );
 
 	// Byte 2 is the type of circuit board we are on.
@@ -359,7 +359,7 @@ void hw_Initialize(void) {
 				hw_WritePort( hw_SWITCH3, 0 );
 			}
 
-			if( hw_Joystick_Installed ) {
+			if( hw_Joystick_Installed || hw_TankSender_Installed ) {
 				hw_OutputPort( hw_SWITCH1 );
 			}
 
@@ -371,7 +371,7 @@ void hw_Initialize(void) {
 
 			hw_InitializeOutputSwitches( hw_Mask );
 
-			if( hw_Joystick_Installed ) {
+			if( hw_Joystick_Installed || hw_TankSender_Installed ) {
 				AD1PCFGLbits.PCFG10 = 0;
 				hw_DetectorADCChannel = 0;
 			}
@@ -394,7 +394,11 @@ void hw_Initialize(void) {
 
 	if( !hw_I2C_Installed ) PMD1bits.I2C1MD = 1;
 
-	if( ( !hw_Photodetector_Installed ) && ( !hw_Joystick_Installed ) ) PMD1bits.AD1MD = 1;
+	if(
+		(!hw_Photodetector_Installed) &&
+		(!hw_Joystick_Installed) &&
+		(!hw_TankSender_Installed)
+	) PMD1bits.AD1MD = 1;
 
 	PMD2 = 0xC300; // Disable all Input Captures.
 
@@ -492,6 +496,7 @@ void hw_Sleep(void) {
 	if( hw_StayAwakeTimer > 0 ) return;
 	if( !queue_Empty( events_Queue ) ) return;
 	if( nmea_TX_REQUEST_BIT ) return;
+	if( (nmea_TxQueueTail != nmea_TxQueueHead) || nmea_TxQueueFull ) return;
 	if( display_IsOn ) return;
 	if( engine_CurMasterDevice == hw_DeviceID ) return;
 	if( engine_CurMasterDevice && hw_Actuators_Installed ) return;
@@ -499,7 +504,7 @@ void hw_Sleep(void) {
 
 	// OK, We can sleep now.
 
-	//hw_WritePort( hw_LED1, 1 );
+	hw_WritePort( hw_LED1, 1 );
 	hw_WritePort( hw_CAN_RATE, 1 );
 	nmea_ControllerMode( hw_ECAN_MODE_DISABLE );
 
@@ -514,7 +519,7 @@ void hw_Sleep(void) {
 
 	nmea_ControllerMode( hw_ECAN_MODE_NORMAL );
 	hw_WritePort( hw_CAN_RATE, 0 );
-	//hw_WritePort( hw_LED1, 0 );
+	hw_WritePort( hw_LED1, 0 );
 }
 
 //-------------------------------------------------------------------------------
