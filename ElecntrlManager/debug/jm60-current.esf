@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<systemdescription version="116">
+    <appliance id="-1" description="*"/>
+    <appliance id="1" description="Steering Stbd 1"/>
+    <appliance id="2" description="Engine Control Box"/>
+    <appliance id="3" description="Steering Port 1"/>
+    <appliance id="4" description="Deckhouse Door"/>
+    <appliance id="5" description="Dressing Mirror Switch"/>
+    <appliance id="6" description="Aft Toilet Switch"/>
+    <appliance id="7" description="Salon Keelbox"/>
+    <appliance id="8" description="Navtable Switch 1"/>
+    <appliance id="9" description="Navtable Switch 2"/>
+    <appliance id="10" description="Galley Corner"/>
+    <appliance id="11" description="Port Aft Cabin"/>
+    <appliance id="12" description="Stbd Aft Cabin"/>
+    <appliance id="13" description="Salon Bilge Box 1"/>
+    <appliance id="14" description="Salon Bilge Box 2"/>
+    <appliance id="16" description="Steering Stbd 2"/>
+    <appliance id="17" description="Steering Stbd 3"/>
+    <appliance id="18" description="Steering Port 1"/>
+    <appliance id="19" description="Steering Port 2"/>
+    <appliance id="20" description="Steering Port 3"/>
+    <appliance id="64" description="Deck House Ceiling Light 1"/>
+    <appliance id="65" description="Deck House Ceiling Light 2"/>
+    <appliance id="66" description="Dressing Mirror Aft"/>
+    <appliance id="67" description="Dressing Mirror Fwd"/>
+    <appliance id="68" description="Aft Toilet Light"/>
+    <appliance id="69" description="Salon Aft Stbd"/>
+    <appliance id="70" description="Salon Fwd Stbd"/>
+    <appliance id="71" description="Galley Fwd"/>
+    <appliance id="72" description="Galley Aft"/>
+    <appliance id="73" description="Galley Sink"/>
+    <appliance id="74" description="Salon Aft Port"/>
+    <appliance id="75" description="Salon Fwd Port"/>
+    <appliance id="76" description="Workbench Fwd"/>
+    <appliance id="77" description="Workbench Aft"/>
+    <appliance id="78" description="Corridor Port"/>
+    <appliance id="79" description="Port Aft Cabin"/>
+    <appliance id="80" description="Stbd Aft Cabin"/>
+    <appliance id="81" description="Corridor Stbd "/>
+    <controlgroup id="5" description="Engine Actuators" type="2">
+        <appliance-function id="2" function="19"/>
+    </controlgroup>
+    <controlgroup id="8" description="System Backlight" type="2">
+        <appliance-function id="-1" function="16"/>
+        <appliance-function id="1" function="9"/>
+        <appliance-function id="19" function="11"/>
+    </controlgroup>
+    <controlgroup id="11" description="Bilge Pump" type="2">
+        <appliance-function id="2" function="10"/>
+    </controlgroup>
+    <controlgroup id="12" description="Running Lights" type="2"/>
+    <controlgroup id="14" description="Navtable Display Power" type="2">
+        <appliance-function id="8" function="8"/>
+    </controlgroup>
+    <controlgroup id="16" description="Deckhouse Lights" type="2">
+        <appliance-function id="64" function="15"/>
+        <appliance-function id="65" function="15"/>
+    </controlgroup>
+    <controlgroup id="18" description="Dressing Room Mirror" type="2">
+        <appliance-function id="66" function="15"/>
+        <appliance-function id="67" function="15"/>
+    </controlgroup>
+    <controlgroup id="20" description="Aft Toilet" type="2">
+        <appliance-function id="68" function="15"/>
+    </controlgroup>
+    <controlgroup id="22" description="Salon" type="2">
+        <appliance-function id="69" function="15"/>
+        <appliance-function id="70" function="15"/>
+        <appliance-function id="74" function="15"/>
+        <appliance-function id="75" function="15"/>
+    </controlgroup>
+    <controlgroup id="24" description="Galley" type="2">
+        <appliance-function id="71" function="15"/>
+        <appliance-function id="72" function="15"/>
+        <appliance-function id="73" function="15"/>
+    </controlgroup>
+    <controlgroup id="26" description="Workbench" type="2">
+        <appliance-function id="76" function="15"/>
+        <appliance-function id="77" function="15"/>
+    </controlgroup>
+    <controlgroup id="28" description="Corridor Port" type="2">
+        <appliance-function id="78" function="15"/>
+    </controlgroup>
+    <controlgroup id="30" description="Port Aft Cabin" type="2">
+        <appliance-function id="79" function="15"/>
+    </controlgroup>
+    <controlgroup id="32" description="Port Aft Cabin Reading Lamps" type="2">
+        <appliance-function id="11" function="8"/>
+    </controlgroup>
+    <controlgroup id="34" description="Stbd Aft Cabin" type="2">
+        <appliance-function id="80" function="15"/>
+    </controlgroup>
+    <controlgroup id="36" description="Corridor Stbd" type="2">
+        <appliance-function id="81" function="15"/>
+    </controlgroup>
+    <controlgroup id="38" description="Stbd Aft Cabin Reading Lamps" type="2">
+        <appliance-function id="12" function="8"/>
+    </controlgroup>
+    <controlgroup id="40" description="Deck Light" type="2">
+        <appliance-function id="14" function="11"/>
+    </controlgroup>
+    <controlgroup id="42" description="Anchor Lantern" type="2">
+        <appliance-function id="14" function="8"/>
+    </controlgroup>
+    <controlgroup id="44" description="Underwater Lights" type="2">
+        <appliance-function id="13" function="9"/>
+    </controlgroup>
+    <controlgroup id="46" description="Steaming Lantern" type="2">
+        <appliance-function id="14" function="9"/>
+    </controlgroup>
+    <controlgroup id="48" description="Water Tank Sender Power" type="2">
+        <appliance-function id="13" function="8"/>
+    </controlgroup>
+    <controlgroup id="50" description="Running Lights" type="2">
+        <appliance-function id="19" function="11"/>
+    </controlgroup>
+    <controlgroup id="6" description="Throttle" type="1">
+        <appliance-function id="1" function="17"/>
+        <appliance-function id="1" function="13"/>
+        <appliance-function id="19" function="14"/>
+        <appliance-function id="19" function="17"/>
+        <controlevent type="22" action="4">
+            <targetgroup id="5" parented="1"/>
+        </controlevent>
+        <controlevent type="1" action="4">
+            <targetgroup id="5"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="9" description="Backlight Controllers" type="1">
+        <appliance-function id="8" function="14"/>
+        <appliance-function id="17" function="12"/>
+        <appliance-function id="2" function="12"/>
+        <controlevent type="2" action="2">
+            <targetgroup id="8"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="8"/>
+        </controlevent>
+        <controlevent type="1" action="5">
+            <targetgroup id="8" parented="1"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="8"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="10" description="Bilge Pump Ctrl" type="1">
+        <controlevent type="2" action="0">
+            <targetgroup id="11" parented="1"/>
+        </controlevent>
+        <controlevent type="3" action="1">
+            <targetgroup id="11"/>
+        </controlevent>
+        <controlevent type="1" action="9">
+            <targetgroup id="11"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="13" description="Navtable Display " type="1">
+        <appliance-function id="8" function="12"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="14" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="15" description="Deckhouse Lights" type="1">
+        <appliance-function id="4" function="14"/>
+        <appliance-function id="8" function="13"/>
+        <appliance-function id="5" function="14"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="16" parented="1"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="16"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="16"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="16"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="16"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="17" description="Dressing Room Mirror" type="1">
+        <appliance-function id="5" function="13"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="18"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="18"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="18"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="18"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="18" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="19" description="Aft Toilet" type="1">
+        <appliance-function id="6" function="12"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="20"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="20"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="20"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="20"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="20" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="21" description="Salon" type="1">
+        <appliance-function id="5" function="12"/>
+        <appliance-function id="7" function="13"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="22"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="22"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="22"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="22"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="22" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="23" description="Galley" type="1">
+        <appliance-function id="7" function="14"/>
+        <appliance-function id="10" function="12"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="24"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="24"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="24"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="24"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="24" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="25" description="Workbench" type="1">
+        <appliance-function id="10" function="13"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="26" parented="1"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="26"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="26"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="26"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="26"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="27" description="Corridor Port" type="1">
+        <appliance-function id="10" function="14"/>
+        <appliance-function id="11" function="14"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="28" parented="1"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="28"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="28"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="28"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="28"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="29" description="Port Aft Cabin" type="1">
+        <appliance-function id="11" function="12"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="30" parented="1"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="30"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="30"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="30"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="30"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="31" description="Port Aft Cabin Reading Lamps" type="1">
+        <appliance-function id="11" function="13"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="32" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="33" description="Stbd Aft Cabin" type="1">
+        <appliance-function id="12" function="12"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="34" parented="1"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="34"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="34"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="34"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="34"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="35" description="Corridor Stbd" type="1">
+        <appliance-function id="12" function="14"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="36" parented="1"/>
+        </controlevent>
+        <controlevent type="4" action="6">
+            <targetgroup id="36"/>
+        </controlevent>
+        <controlevent type="5" action="8">
+            <targetgroup id="36"/>
+        </controlevent>
+        <controlevent type="2" action="2">
+            <targetgroup id="36"/>
+        </controlevent>
+        <controlevent type="3" action="3">
+            <targetgroup id="36"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="37" description="Stbd Aft Cabin Reading Lamps" type="1">
+        <appliance-function id="12" function="13"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="38" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="39" description="Deck Light" type="1">
+        <appliance-function id="9" function="12"/>
+        <appliance-function id="1" function="12"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="40" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="41" description="Anchor Lantern" type="1">
+        <appliance-function id="16" function="14"/>
+        <appliance-function id="18" function="14"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="42" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="43" description="Underwater Lights" type="1">
+        <appliance-function id="7" function="12"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="44" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="45" description="Steaming Light" type="1">
+        <appliance-function id="16" function="13"/>
+        <appliance-function id="18" function="13"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="46" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="47" description="Water Tank Sender Power" type="1">
+        <appliance-function id="6" function="13"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="48" parented="1"/>
+        </controlevent>
+    </controlgroup>
+    <controlgroup id="49" description="Running Lights" type="1">
+        <appliance-function id="16" function="12"/>
+        <appliance-function id="18" function="12"/>
+        <controlevent type="1" action="5">
+            <targetgroup id="50" parented="1"/>
+        </controlevent>
+    </controlgroup>
+</systemdescription>
