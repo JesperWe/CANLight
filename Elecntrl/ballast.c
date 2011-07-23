@@ -68,10 +68,6 @@ void ballast_KeyClick( unsigned char key, unsigned char event ) {
 
 		nmea_Wakeup();
 		status = nmea_SendEvent( &event );
-		if( status ) {
-			status++;
-		}
-
 
 		hw_WritePort( hw_LED2, 0 );
 		hw_WritePort( hw_LED3, 0 );

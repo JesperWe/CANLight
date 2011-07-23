@@ -50,6 +50,8 @@ WORD				nmea_HW_Rate_Reg_Bit;
 unsigned short		nmea_msgCounter = 0;
 unsigned short		nmea_overflowCounter = 0;
 unsigned short		nmea_invalidMsgCounter = 0;
+unsigned			nmea_LastICode = 0;
+
 
 //---------------------------------------------------------------------------------------------
 // Set up CAN Module for baud rate = 250kBit, 12 TQ with sample point at 80% of bit time.
@@ -174,6 +176,7 @@ void nmea_Initialize() {
 	memset( hw_1kBuffer, 0xFF, sizeof(hw_1kBuffer) );
 
 	hw_WritePort( hw_CAN_EN, 1);	// Go on bus;
+	nmea_TX_REQUEST_BIT = 0;
 }
 
 
@@ -324,7 +327,7 @@ unsigned char nmea_SendMessage()
 		if( nmea_TxQueueTail == nmea_TxQueueHead ) nmea_TxQueueFull = 1;
 
 		C1INTEbits.TBIE = 1;
-		return nmea_SUCCESS;
+		return nmea_TRANSMIT_QUEUED;
 	}
 
 	C1INTEbits.TBIE = 1;
@@ -450,14 +453,18 @@ void __attribute__((interrupt, no_auto_psv)) _C1Interrupt( void ) {
 	IEC2bits.C1IE = 0;
 
 	// Stay awake for a while to look for traffic.
-	hw_StayAwakeTimer += schedule_SECOND;
+	hw_StayAwakeTimer = schedule_SECOND;
 
-	// IVRIF Invalid Message Received
-	if(C1INTFbits.IVRIF) {
+	if( C1INTFbits.ERRIF ) {
+		C1INTFbits.ERRIF = 0;
+		nmea_invalidMsgCounter++;
+		nmea_LastICode = C1VECbits.ICODE | 0x80;
+	}
+
+	if( C1INTFbits.IVRIF ) {
 		C1INTFbits.IVRIF = 0;
 		nmea_invalidMsgCounter++;
-		nmea_TX_REQUEST_BIT = 0;	// Abort!
-		goto done;
+		nmea_LastICode = C1VECbits.ICODE;
 	}
 
 	if( C1INTFbits.WAKIF ) {

@@ -22,6 +22,7 @@
 #define nmea_CANNOTTRANSMIT		2
 #define nmea_PARAMERROR			3
 #define nmea_TRANSMITTER_BUSY		4
+#define nmea_TRANSMIT_QUEUED	5
 
 
 // Parameter Group Names
@@ -154,6 +155,9 @@ extern WORD				nmea_HW_Rate_Reg_Bit;
 extern unsigned char		nmea_TPMessage_Complete;
 extern short 				nmea_TPMessage_Size;
 extern long				nmea_TPMessage_PGN;
+extern unsigned short		nmea_overflowCounter;
+extern unsigned short		nmea_invalidMsgCounter;
+extern unsigned			nmea_LastICode;
 
 
 //---------------------------------------------------------------------------------------------
