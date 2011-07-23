@@ -141,6 +141,14 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
 
 	switch( pgn ) {
 
+        case nmea_MAINTAIN_POWER: {
+            line += buf.sprintf( "%d", msg->len );
+            if( msg->len > 0 ) line += buf.sprintf( ": %d", msg->data[0] );
+            if( msg->len > 1 ) line += buf.sprintf( " %d", msg->data[1] );
+            if( msg->len > 2 ) line += buf.sprintf( " %d", msg->data[2] );
+            break;
+        }
+
 	case nmea_CM_BAM: {
 			line += buf.sprintf( "TransferProtocol %d bytes, %d packages, Contained PGN %d",
 									 msg->data[ 1 ]<<8 | msg->data[2],
@@ -213,6 +221,8 @@ void __stdcall readCallbackFn( CANMsg* msg ) {
                         case 23: eventName = "e_TURN_ON"; break;
                         case 24: eventName = "e_TURN_OFF"; break;
                         case 25: eventName = "e_BALLAST_STATE"; break;
+                        case 26: eventName = "e_REQUEST_TANK_LEVELS"; break;
+                        case 27: eventName = "e_TANK_LEVEL"; break;
                         default: eventName = "<unknown>";
 			}
 
