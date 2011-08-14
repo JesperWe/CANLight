@@ -16,15 +16,15 @@
  The config "file" is actually a byte sequence sent on update from some master controller
  to all appliances. This "file" is stored in User Flash memory and parsed at runtime.
 
- A "appliance" in the system is a single piece of hardware with its own CPU.
- It has an address (Appliance ID) in the range 0-253.
+ A "device" in the system is a single piece of hardware with its own CPU.
+ It has an address (Device ID) in the range 0-253.
 
- A "function" is one individually controllable I/O channel on this appliance. A function can also
- bundle several channels, like the "Lamp" function is a bundle of all colors of a lamp appliance.
+ A "function" is one individually controllable I/O channel on this device. A function can also
+ bundle several channels, like the "Lamp" function is a bundle of all colors of a lamp device.
 
- A "group" is a collection of functions on one or many appliances that listen to the same events.
+ A "group" is a collection of functions on one or many devices that listen to the same events.
  Group ID is also in the 0-253 range.
- A group can consist of only a single function of a single appliance.
+ A group can consist of only a single function of a single device.
  A function must be part of a group to be able to listen for events.
 
  The config "file" byte sequence follows this pattern:
@@ -36,7 +36,7 @@
  Communication flow:
 
  Controller Group (GID)
- Appliance (AID)/Function
+ Device ID/Function
 
  >>> Sends: Controller Group ID + Event
 
@@ -45,7 +45,7 @@
  <<< Sends: Listener Group ID + Event
 
  Listener Group (GID)
- Appliance (AID)/Function
+ Device ID/Function
 
  */
 
@@ -257,18 +257,19 @@ unsigned char config_GetPortActionFromEvent(unsigned char port, event_t* event) 
 			confDevice = *configPtr++;
 			confPort = *configPtr++;
 
-			if( eventIsInCurrentGroup ) {
+//	???		if( eventIsInCurrentGroup ) {
 
 				if( ( confDevice == hw_DeviceID || confDevice == hw_DEVICE_ANY ) && ( port == confPort ) ) {
 					portIsInCurrentTask = TRUE;
 					config_CurrentTaskGroup = taskGroupID;
 					continue;
 				}
-			}
+//			}
 
-			// Fading events: If the current port is in the same task group as the
-			// Fade Master (but not the fade master itself!) then we map some events
-			// to the corresponding actions.
+			// Feedback events for fade master arbitration and switch indicator led's:
+			// If the current port is in the control group for the
+			// device/port that sent the event, then we map some events
+			// to new actions.
 
 			if( sendingGroupIsTask && portIsInCurrentCntrlGroup ) {
 				if( event->ctrlEvent == e_FADE_START ) {
@@ -286,6 +287,27 @@ unsigned char config_GetPortActionFromEvent(unsigned char port, event_t* event) 
 					config_CurrentGroup = controllerGroupID;
 				}
 			}
+
+			// Feedback events for synchronization of multiple devices in the same
+			// task group: If the sending device has a higher ID than our own, we
+			// synchronize to the state of that device and disregard our own.
+
+			if( sendingGroupIsTask && portIsInCurrentTask ) {
+
+				if( hw_DeviceID < event->ctrlDev ) {
+
+					if( event->ctrlEvent == e_SWITCHED_ON ) {
+						implicitAction = a_SLAVE_SWITCH_ON;
+						config_CurrentGroup = controllerGroupID;
+					}
+
+					if( event->ctrlEvent == e_SWITCHED_OFF ) {
+						implicitAction = a_SLAVE_SWITCH_OFF;
+						config_CurrentGroup = controllerGroupID;
+					}
+				}
+			}
+
 		}
 		while( *configPtr != DELIMITER );
 

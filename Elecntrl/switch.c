@@ -61,6 +61,14 @@ void switch_ProcessEvent( event_t *event, unsigned char port, unsigned char acti
 
 	switch( action ) {
 
+		case a_SLAVE_SWITCH_ON: {
+			setting = 1;
+			break; }
+
+		case a_SLAVE_SWITCH_OFF: {
+			setting = 0;
+			break; }
+
 		case a_SWITCH_ON: {
 			setting = 1;
 			break; }
@@ -97,7 +105,9 @@ void switch_ProcessEvent( event_t *event, unsigned char port, unsigned char acti
 
 	hw_WritePort( port, setting );
 
-	switch_Acknowledge( port, setting );
+	if( action != a_SLAVE_SWITCH_OFF && action != a_SLAVE_SWITCH_ON ) {
+		switch_Acknowledge( port, setting );
+	}
 
 	return;
 }
