@@ -330,6 +330,7 @@ void hw_Initialize(void) {
 			hw_DetectorADCChannel = 0;
 			if( hw_Photodetector_Installed ) AD1PCFGLbits.PCFG0 = 0;
 			if( hw_Joystick_Installed ) AD1PCFGLbits.PCFG10 = 0;
+			if( hw_TankSender_Installed ) AD1PCFGLbits.PCFG10 = 0;
 
 			hw_OutputPort( hw_LED_RED );
 			hw_OutputPort( hw_LED1 );

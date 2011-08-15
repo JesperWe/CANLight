@@ -10,11 +10,13 @@
 #include "nmea.h"
 #include "led.h"
 #include "menu.h"
+#include "schedule.h"
 
 unsigned char display_IsOn;
 unsigned char display_CurrentAdjust = 0;
 short display_Brightness = 0xFF;
 short display_Contrast = 0x80;
+unsigned short display_TankLevels[4];
 queue_t* display_Queue = 0;
 
 void display_Initialize() {
@@ -208,6 +210,7 @@ void display_NumberFormat( char outString[], short digits, short number ) {
 void display_Task() {
 	unsigned short key;
 	static unsigned char failCount = 0;
+	static unsigned char requestCount = 0;
 
 	if( display_IsOn ) {
 		key = display_ReadKeypad();
@@ -228,6 +231,26 @@ void display_Task() {
 				queue_Send( display_Queue, &key );
 			}
 		}
+
+		// In this task we also run the tank level request sender, so
+		// we get tank levels reported from all attached senders as long as
+		// the display is switched on.
+
+		if( requestCount == 0 ) {
+			event_t event;
+			event.PGN = 0;
+			event.groupId = config_GetGroupIdForPort( hw_ANALOG );
+			event.ctrlDev = hw_DeviceID;
+			event.ctrlPort = hw_ANALOG;
+			event.ctrlEvent = e_REQUEST_TANK_LEVELS;
+			event.data = 0;
+			event.info = 0;
+			nmea_Wakeup();
+			nmea_SendEvent( &event );
+		}
+
+		requestCount = (requestCount + 1) % 15;
+
 		return;
 	}
 
@@ -280,3 +303,40 @@ void display_BacklightTask() {
 		nmea_SendEvent( &ambientEvent );
 	}
 }
+
+
+//---------------------------------------------------------------------------------------------
+
+int display_TankMonitor() {
+	display_Clear();
+	display_SetPosition( 1, 1 );
+	display_Write( "Water P:" );
+	display_SetPosition( 1, 2 );
+	display_Write( "Water S:" );
+	display_SetPosition( 2, 3 );
+	display_Write( "Fuel P:" );
+	display_SetPosition( 2, 4 );
+	display_Write( "Fuel S:" );
+
+	schedule_AddTask( display_TankMonitorUpdater, schedule_SECOND );
+	return menu_NO_DISPLAY_UPDATE;
+}
+
+void display_TankMonitorUpdater() {
+	unsigned char tank, level;
+
+	if( menu_CurStateId != menu_HandlerStateId ) {
+		schedule_Finished();
+		return;
+	}
+
+	// Show a graphical representation of the tank levels.
+
+	for( tank=0; tank<4; tank++ ) {
+		level = 1 + display_TankLevels[tank] / 16;
+		display_HorizontalBar( 10, tank+1, level );
+	}
+	return;
+}
+
+

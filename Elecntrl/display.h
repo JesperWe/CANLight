@@ -51,11 +51,14 @@ void display_SetContrast( unsigned char value );
 void display_HorizontalBar( unsigned char col, unsigned char row, unsigned char value );
 void display_NumberFormat( char outString[], short digits, short number );
 void display_BacklightTask();
+int display_TankMonitor();
+void display_TankMonitorUpdater();
 
 unsigned char display_ReadKeypad();
 void display_Task();
 
 extern unsigned char display_IsOn;
 extern queue_t* display_Queue;
+extern unsigned short display_TankLevels[];
 
 #endif

@@ -31,6 +31,7 @@ _psv(M_LARROW)		= "\367";
 _psv(M_Settings)	= "Settings";
 _psv(M_Engine)		= "Engine";
 _psv(M_Lighting)	= "Lighting";
+_psv(M_Tanklevels)	= "Tank Level";
 _psv(M_Navigation)	= "Navigation";
 _psv(M_Config)		= "Config";
 _psv(M_Backlight)	= "Backlight";
@@ -51,6 +52,7 @@ const menu_State_t menu_States[] = {
 
 	{ S_HOMESCREEN, 0, M_TITLE, 3, 0, {
 			{ M_Lighting, S_LIGHTING },
+			{ M_Tanklevels, S_TANKLEVELS },
 			{ M_Engine, S_ENGINE },
 			{ M_Settings, S_SETTINGS }
 	} },
@@ -60,11 +62,15 @@ const menu_State_t menu_States[] = {
 			{ M_Backlight, S_BACKLIGHT }
 	} },
 
-	{ S_LIGHTCONFIG, S_SAVE_CONFIG, M_Calibration, 0, led_CalibrationParams, {
-			{ 0,0 }
-	} },
+		{ S_LIGHTCONFIG, S_SAVE_CONFIG, M_Calibration, 0, led_CalibrationParams, {
+				{ 0,0 }
+		} },
 
-	{ S_BACKLIGHT, S_LIGHTING, M_Backlight, 0, 0, {
+		{ S_BACKLIGHT, S_LIGHTING, M_Backlight, 0, 0, {
+				{ 0,0 }
+		} },
+
+	{ S_TANKLEVELS, S_HOMESCREEN, M_Tanklevels, 0, display_TankMonitor, {
 			{ 0,0 }
 	} },
 
@@ -73,13 +79,13 @@ const menu_State_t menu_States[] = {
 			{ M_Calibration, S_ENGINE_CALIBRATION }
 	} },
 
-	{ S_ENGINE_MONITOR, S_ENGINE, M_Monitor, 0, engine_ThrottleMonitor, {
-			{ 0,0 }
-	} },
+		{ S_ENGINE_MONITOR, S_ENGINE, M_Monitor, 0, engine_ThrottleMonitor, {
+				{ 0,0 }
+		} },
 
-	{ S_ENGINE_CALIBRATION, S_SAVE_CONFIG, M_Calibration, 0, engine_CalibrationParams, {
-			{ 0,0 }
-	} },
+		{ S_ENGINE_CALIBRATION, S_SAVE_CONFIG, M_Calibration, 0, engine_CalibrationParams, {
+				{ 0,0 }
+		} },
 
 	{ S_SAVE_CONFIG, -1, M_Ask_Save, 2, 0, {
 			{ M_YES, S_CONFIG_DO_SAVE },

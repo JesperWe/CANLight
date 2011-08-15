@@ -146,7 +146,7 @@ void ballast_GoToState( unsigned char state ) {
 	}
 
 	if( hw_DeviceID == 9 ) {
-		hw_WritePort( hw_SWITCH3, pump );
+		hw_WritePort( hw_SWITCH1, pump );
 	}
 
 	if( hw_DeviceID == 21 ) {

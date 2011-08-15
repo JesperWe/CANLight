@@ -98,16 +98,32 @@ void event_Task() {
 
 				case e_REQUEST_TANK_LEVELS: {
 					if( hw_TankSender_Installed ) {
-						event_t event;
+						event_t levelEvent;
 						int tankLevel = ADC_Read( engine_JOYSTICK_AD_CHANNEL );
-						event.PGN = 0;
-						event.groupId = config_GetGroupIdForPort( hw_ANALOG );
-						event.ctrlDev = hw_DeviceID;
-						event.ctrlPort = hw_ANALOG;
-						event.ctrlEvent = e_TANK_LEVEL;
-						event.data = 0;
-						event.info = tankLevel;
-						nmea_SendEvent( &event );
+						levelEvent.PGN = 0;
+						levelEvent.groupId = config_GetGroupIdForPort( hw_ANALOG );
+						levelEvent.ctrlDev = hw_DeviceID;
+						levelEvent.ctrlPort = hw_ANALOG;
+						levelEvent.ctrlEvent = e_TANK_LEVEL;
+						levelEvent.data = 0;
+						levelEvent.info = tankLevel;
+						nmea_SendEvent( &levelEvent );
+					}
+					break;
+				}
+
+				case e_TANK_LEVEL: {
+					if( hw_I2C_Installed ) {
+
+						// Device IDs are hardcoded below! Should be made configureable
+						// for fancier systems....
+
+						switch( event.ctrlDev ) {
+							case 13: { display_TankLevels[0] = event.info; break; }
+							case 14: { display_TankLevels[1] = event.info; break; }
+							case  9: { display_TankLevels[2] = event.info; break; }
+							case  5: { display_TankLevels[3] = event.info; break; }
+						}
 					}
 					break;
 				}
