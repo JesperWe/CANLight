@@ -333,7 +333,7 @@ void display_TankMonitorUpdater() {
 	// Show a graphical representation of the tank levels.
 
 	for( tank=0; tank<4; tank++ ) {
-		level = 1 + display_TankLevels[tank] / 16;
+		level = 1 + display_TankLevels[tank] / 14; // Max level is about 700.
 		display_HorizontalBar( 10, tank+1, level );
 	}
 	return;
