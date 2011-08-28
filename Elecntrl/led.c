@@ -174,6 +174,7 @@ void led_SetLevel(unsigned char color, float level, unsigned char sendAck) {
 		response.ctrlDev = hw_DeviceID;
 		response.ctrlPort = led_CurrentPort;
 		response.ctrlEvent = ( level == 0.0 ) ? e_SWITCHED_OFF : e_SWITCHED_ON;
+		response.data = color;
 
 		// No "off" response if other channel is still on.
 		if( response.ctrlEvent == e_SWITCHED_OFF && led_CurrentLevel[1 - color] > 0.0 && led_CurrentPort == hw_LED_LIGHT ) return;
@@ -358,6 +359,16 @@ void led_ProcessEvent(event_t *event, unsigned char port, unsigned char action) 
 			led_SetLevel( eventColor, 0.0, led_NO_ACK );
 			break;
 		}
+		case a_SLAVE_SWITCH_ON: {
+			eventColor = event->data;
+			led_CurrentColor = eventColor;
+			led_SetLevel( eventColor, event->info / 1000.0 , led_NO_ACK );
+			break; }
+		case a_SLAVE_SWITCH_OFF: {
+			eventColor = event->data;
+			led_CurrentColor = eventColor;
+			led_SetLevel( eventColor, 0.0, led_NO_ACK );
+			break; }
 		case a_CHANGE_COLOR: {
 
 			if( hw_Type == hw_LEDLAMP && port == hw_LED_LIGHT ) {

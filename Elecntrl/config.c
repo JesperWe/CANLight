@@ -257,14 +257,16 @@ unsigned char config_GetPortActionFromEvent(unsigned char port, event_t* event) 
 			confDevice = *configPtr++;
 			confPort = *configPtr++;
 
-//	???		if( eventIsInCurrentGroup ) {
+			if( port == confPort ) {
 
-				if( ( confDevice == hw_DeviceID || confDevice == hw_DEVICE_ANY ) && ( port == confPort ) ) {
+				if(	( confDevice == hw_DeviceID) ||
+					((confDevice == hw_DEVICE_ANY) && eventIsInCurrentGroup ) )
+				{
 					portIsInCurrentTask = TRUE;
 					config_CurrentTaskGroup = taskGroupID;
 					continue;
 				}
-//			}
+			}
 
 			// Feedback events for fade master arbitration and switch indicator led's:
 			// If the current port is in the control group for the

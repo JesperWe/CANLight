@@ -50,7 +50,7 @@ _psv(M_)			= "";
 
 const menu_State_t menu_States[] = {
 
-	{ S_HOMESCREEN, 0, M_TITLE, 3, 0, {
+	{ S_HOMESCREEN, 0, M_TITLE, 4, 0, {
 			{ M_Lighting, S_LIGHTING },
 			{ M_Tanklevels, S_TANKLEVELS },
 			{ M_Engine, S_ENGINE },
