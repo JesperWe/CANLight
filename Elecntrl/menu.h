@@ -8,7 +8,7 @@
 #ifndef MENU_H_
 #define MENU_H_
 
-#define menu_MAX_EVENTS		3
+#define menu_MAX_EVENTS		4
 #define menu_NO_DISPLAY_UPDATE	17	// Tells state machine that this event handler wants to manage it's own display.
 
 #define _psv(name)	char name[] __attribute__((space(auto_psv)))
