@@ -130,16 +130,18 @@ void ctrlkey_task() {
 				if( groupId == config_GROUP_BROADCAST ) {
 					short info;
 
-					if( led_CurrentLevel[ led_RED ] == 0 ) {
-						event = e_SET_BACKLIGHT_LEVEL;
+					if( event == e_KEY_TRIPLECLICKED ) {
+						info = 50;
+					}
+					else if( led_CurrentLevel[ led_RED ] == 0 ) {
 						info = 1000 * led_PresetLevel[ led_RED ];
 						if( info < 10 ) info = 1000;
 					}
-
 					else {
-						event = e_SET_BACKLIGHT_LEVEL;
 						info = 0;
 					}
+
+					event = e_SET_BACKLIGHT_LEVEL;
 
 	 				events_Push( e_IO_EVENT, 0,
 							config_CurrentGroup, hw_DeviceID,

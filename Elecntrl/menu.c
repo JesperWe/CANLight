@@ -299,7 +299,7 @@ char menu_ProcessKey(unsigned char keypress) {
 			if( menu_CurState->parent > 0 ) menu_NextStateId = menu_CurState->parent;
 			menu_NextIndex = 0;
 			engine_JoystickCalibrationMonitor = FALSE;
-			break;;
+			break;
 		}
 
 		case DISPLAY_KEY_PLAY: { // Show more available commands if there are any.
