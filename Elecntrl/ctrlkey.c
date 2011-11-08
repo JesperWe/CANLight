@@ -176,7 +176,9 @@ void ctrlkey_task() {
 				ctrlkey_Holding[ keyNo ] = TRUE;
 				groupId = config_GetGroupIdForPort( port );
 
-				led_FadeMaster = 0xFF;
+				if( config_GroupHasFadeEvent( groupId ) ) {
+					led_FadeMaster = 0xFF;
+				}
 
 				if( groupId != config_GROUP_BROADCAST ) {
 					events_Push( e_IO_EVENT, 0,

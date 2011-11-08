@@ -20,6 +20,7 @@ void config_Initialize();
 void config_UninitializedTask();
 void config_Update( unsigned short configBytes );
 unsigned char config_GetGroupIdForPort( unsigned char port );
+unsigned char config_GroupHasFadeEvent( unsigned char groupId );
 unsigned char config_GetControllingGroup( unsigned char listenerGroup );
 unsigned char config_GetPortActionFromEvent( unsigned char port, event_t* event );
 

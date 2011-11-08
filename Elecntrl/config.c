@@ -133,6 +133,62 @@ unsigned char config_GetGroupIdForPort(unsigned char port) {
 }
 
 //-------------------------------------------------------------------------------
+
+unsigned char config_GroupHasFadeEvent( unsigned char groupId ) {
+	unsigned char controllerGroupID;
+	unsigned char listenerGroupID;
+	unsigned char event;
+	unsigned char action;
+
+	const unsigned char* configPtr = config_Data;
+
+	// Skip through config file until we find the events for this group.
+
+	configPtr += 4;
+
+	do {
+		controllerGroupID = *configPtr++;
+		if( controllerGroupID == groupId ) {
+			do {
+				configPtr++; // Device
+				configPtr++; // Port
+			}
+			while( *configPtr != DELIMITER );
+
+			// Listener groups.
+
+			configPtr++; // Delimiter
+
+			listenerGroupID = *configPtr++;
+
+			do {
+				configPtr++; // Device
+				configPtr++; // Port
+			}
+			while( *configPtr != DELIMITER );
+
+			// Now look at event/actions to see if we are using any fades in this group.
+
+			configPtr++;
+			while( *configPtr != DELIMITER ) {
+				event = *configPtr++;
+				action = *configPtr++;
+
+				// We can return immediately since we found the right group!
+
+				if( action == a_START_FADE ) return TRUE;
+			}
+			while( *configPtr == DELIMITER ) {
+				configPtr++;
+			}
+		}
+	}
+	while( *configPtr != END_OF_FILE );
+
+	return FALSE;
+}
+
+//-------------------------------------------------------------------------------
 // Return the controller group for a specific listener group.
 
 unsigned char config_GetControllingGroup( unsigned char listenerGroup ) {

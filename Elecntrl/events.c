@@ -115,7 +115,7 @@ void event_Task() {
 				case e_TANK_LEVEL: {
 					if( hw_I2C_Installed ) {
 
-						// Device IDs are hardcoded below! Should be made configureable
+						// Device IDs are hard-coded below! Should be made configurable
 						// for fancier systems....
 
 						switch( event.ctrlDev ) {
