@@ -6,6 +6,8 @@
  */
 
 #include "hw.h"
+#include <pps.h>
+
 #include "config.h"
 #include "nmea.h"
 #include "schedule.h"
@@ -317,8 +319,8 @@ void hw_Initialize(void) {
 			hw_OutputPort( hw_LED_WHITE );
 
 			PPSUnLock;
-			PPSOutput( PPS_OC1, PPS_RP20 ); // Red PWM to RP20.
-			PPSOutput( PPS_OC2, PPS_RP21 ); // White PWM to RP21.
+			PPSOutput( OUT_FN_PPS_OC1, OUT_PIN_PPS_RP20 ); // Red PWM to RP20.
+			PPSOutput( OUT_FN_PPS_OC2, OUT_PIN_PPS_RP21 ); // White PWM to RP21.
 			RPOR6bits.RP12R = 0x10; // CAN Transmit to RP12.
 			RPINR26bits.C1RXR = 13; // CAN Receive from pin RP13.
 			PPSLock;
@@ -348,14 +350,14 @@ void hw_Initialize(void) {
 			// They get configured on first use instead.
 
 			PPSUnLock;
-			PPSOutput( PPS_OC1, PPS_RP5 ); // Red Backlight PWM to pin 41.
+			PPSOutput( OUT_FN_PPS_OC1, OUT_PIN_PPS_RP5 ); // Red Backlight PWM to pin 41.
 			hw_PWMInverted = 1;
 			RPOR6bits.RP12R = 0x10; // CAN Transmit to pin 10.
 			RPINR26bits.C1RXR = 0; // CAN Receive from pin 21.
 
 			if( hw_Actuators_Installed ) {
-				PPSOutput( PPS_OC3, PPS_RP2 ); // Ch1: Throttle to pin 23.
-				PPSOutput( PPS_OC4, PPS_RP18 ); // Ch1: Gear box to pin 27.
+				PPSOutput( OUT_FN_PPS_OC3, OUT_PIN_PPS_RP2 ); // Ch1: Throttle to pin 23.
+				PPSOutput( OUT_FN_PPS_OC4, OUT_PIN_PPS_RP18 ); // Ch1: Gear box to pin 27.
 				hw_OutputPort( hw_SWITCH3 );
 				hw_WritePort( hw_SWITCH3, 0 );
 			}
