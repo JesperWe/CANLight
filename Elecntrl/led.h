@@ -3,9 +3,9 @@
 
 #define led_MAX_NO_CHANNELS	2
 #define led_RED				0
-#define led_WHITE				1
-#define led_NO_ACK				0
-#define led_SEND_ACK			1
+#define led_WHITE			1
+#define led_NO_ACK			0
+#define led_SEND_ACK		1
 #define led_FADE_MASTER_EXPECTED 0xFF
 #define led_INDICATOR_BRIGTNESS_MULTIPLIER 2
 

@@ -350,7 +350,7 @@ void hw_Initialize(void) {
 			// They get configured on first use instead.
 
 			PPSUnLock;
-			PPSOutput( OUT_FN_PPS_OC1, OUT_PIN_PPS_RP5 ); // Red Backlight PWM to pin 41.
+			PPSOutput( OUT_FN_PPS_OC1, OUT_PIN_PPS_RP5 ); // Red Back-light PWM to pin 41.
 			hw_PWMInverted = 1;
 			RPOR6bits.RP12R = 0x10; // CAN Transmit to pin 10.
 			RPINR26bits.C1RXR = 0; // CAN Receive from pin 21.

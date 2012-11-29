@@ -471,23 +471,32 @@ void config_UninitializedTask() {
 		if( hw_Type == hw_LEDLAMP ) led_SetLevel( led_WHITE, 0.0, led_NO_ACK );
 
 		timer = schedule_time + schedule_SECOND;
-		while( schedule_time < timer )
-			;
+		while( schedule_time < timer );
 
 		// Number of flashes indicates type of config problem.
 
 		for( i = 0; i < config_Invalid; i++ ) {
-			led_SetLevel( led_RED, 1.0, led_NO_ACK );
+			if( hw_Type == hw_LEDLAMP )
+				led_SetLevel( led_RED, 1.0, led_NO_ACK );
+			else {
+				hw_WritePort( hw_LED1, 1 );
+				hw_WritePort( hw_LED2, 1 );
+				hw_WritePort( hw_LED3, 1 );
+			}
 
 			timer = schedule_time + schedule_SECOND / 5;
-			while( schedule_time < timer )
-				;
+			while( schedule_time < timer );
 
-			led_SetLevel( led_RED, 0.0, led_NO_ACK );
+			if( hw_Type == hw_LEDLAMP )
+				led_SetLevel( led_RED, 0.0, led_NO_ACK );
+			else {
+				hw_WritePort( hw_LED1, 0 );
+				hw_WritePort( hw_LED2, 0 );
+				hw_WritePort( hw_LED3, 0 );
+			}
 
 			timer = schedule_time + schedule_SECOND / 5;
-			while( schedule_time < timer )
-				;
+			while( schedule_time < timer );
 
 			asm volatile ("CLRWDT");
 		}

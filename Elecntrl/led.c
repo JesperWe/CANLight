@@ -116,7 +116,7 @@ void led_SetLevel(unsigned char color, float level, unsigned char sendAck) {
 
 	modLevel = ( 0.1 + 0.9 * level ) * level;
 
-	// Trick to lower levels for backlight.
+	// Trick to lower levels for back-light.
 
 	if( color==led_RED && hw_Type==1 ) { modLevel = modLevel/2; }
 
